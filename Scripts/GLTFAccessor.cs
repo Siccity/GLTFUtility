@@ -22,23 +22,20 @@ namespace Siccity.GLTFUtility {
                 Debug.LogError("Type mismatch! Expected VEC4 got " + type);
                 return new Vector4[count];
             }
-            if (componentType != GLType.FLOAT) {
-                Debug.LogError("Non-float componentType not supported. Got " + (int) componentType);
-                return new Vector4[count];
-            }
 
             Vector4[] verts = new Vector4[count];
             byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject);
             int componentSize = GetComponentSize();
+            Func<byte[], int, float> converter = GetFloatConverter();
             for (int i = 0; i < count; i++) {
                 int startIndex = i * componentSize;
-                verts[i].x = System.BitConverter.ToSingle(bytes, startIndex);
+                verts[i].x = converter(bytes, startIndex);
                 startIndex += GetComponentTypeSize(componentType);
-                verts[i].y = System.BitConverter.ToSingle(bytes, startIndex);
+                verts[i].y = converter(bytes, startIndex);
                 startIndex += GetComponentTypeSize(componentType);
-                verts[i].z = System.BitConverter.ToSingle(bytes, startIndex);
+                verts[i].z = converter(bytes, startIndex);
                 startIndex += GetComponentTypeSize(componentType);
-                verts[i].w = System.BitConverter.ToSingle(bytes, startIndex);
+                verts[i].w = converter(bytes, startIndex);
             }
             return verts;
         }
@@ -48,21 +45,18 @@ namespace Siccity.GLTFUtility {
                 Debug.LogError("Type mismatch! Expected VEC3 got " + type);
                 return new Vector3[count];
             }
-            if (componentType != GLType.FLOAT) {
-                Debug.LogError("Non-float componentType not supported. Got " + (int) componentType);
-                return new Vector3[count];
-            }
 
             Vector3[] verts = new Vector3[count];
             byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject);
             int componentSize = GetComponentSize();
+            Func<byte[], int, float> converter = GetFloatConverter();
             for (int i = 0; i < count; i++) {
                 int startIndex = i * componentSize;
-                verts[i].x = System.BitConverter.ToSingle(bytes, startIndex);
+                verts[i].x = converter(bytes, startIndex);
                 startIndex += GetComponentTypeSize(componentType);
-                verts[i].y = System.BitConverter.ToSingle(bytes, startIndex);
+                verts[i].y = converter(bytes, startIndex);
                 startIndex += GetComponentTypeSize(componentType);
-                verts[i].z = System.BitConverter.ToSingle(bytes, startIndex);
+                verts[i].z = converter(bytes, startIndex);
             }
             return verts;
         }
@@ -80,11 +74,12 @@ namespace Siccity.GLTFUtility {
             Vector2[] verts = new Vector2[count];
             byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject);
             int componentSize = GetComponentSize();
+            Func<byte[], int, float> converter = GetFloatConverter();
             for (int i = 0; i < count; i++) {
                 int startIndex = i * componentSize;
-                verts[i].x = System.BitConverter.ToSingle(bytes, startIndex);
+                verts[i].x = converter(bytes, startIndex);
                 startIndex += GetComponentTypeSize(componentType);
-                verts[i].y = System.BitConverter.ToSingle(bytes, startIndex);
+                verts[i].y = converter(bytes, startIndex);
                 startIndex += GetComponentTypeSize(componentType);
             }
             return verts;
@@ -110,6 +105,23 @@ namespace Siccity.GLTFUtility {
             return ints;
         }
 
+        public Func<byte[], int, float> GetFloatConverter() {
+            switch (componentType) {
+                case GLType.BYTE:
+                    return (x, y) =>(float) (sbyte) x[y];
+                case GLType.UNSIGNED_BYTE:
+                    return (x, y) =>(float) x[y];
+                case GLType.FLOAT:
+                    return System.BitConverter.ToSingle;
+                case GLType.SHORT:
+                    return (x, y) =>(float) System.BitConverter.ToInt16(x, y);
+                case GLType.UNSIGNED_SHORT:
+                    return (x, y) =>(float) System.BitConverter.ToUInt16(x, y);
+                default:
+                    Debug.LogWarning("No componentType defined");
+                    return System.BitConverter.ToSingle;
+            }
+        }
         /// <summary> Get the size of the attribute type, in bytes </summary>
         public int GetComponentSize() {
             return GetComponentNumber(type) * GetComponentTypeSize(componentType);

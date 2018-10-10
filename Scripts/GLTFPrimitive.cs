@@ -24,8 +24,14 @@ namespace Siccity.GLTFUtility {
             public int TEXCOORD_1 = -1;
             public int TEXCOORD_2 = -1;
             public int TEXCOORD_3 = -1;
+            public int JOINTS_0 = -1;
+            public int JOINTS_1 = -1;
+            public int JOINTS_2 = -1;
+            public int JOINTS_3 = -1;
             public int WEIGHTS_0 = -1;
             public int WEIGHTS_1 = -1;
+            public int WEIGHTS_2 = -1;
+            public int WEIGHTS_3 = -1;
         }
     }
 }

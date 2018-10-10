@@ -17,5 +17,6 @@ namespace Siccity.GLTFUtility {
         public List<GLTFBuffer> buffers;
         public List<GLTFBufferView> bufferViews;
         public List<GLTFAccessor> accessors;
+        public List<GLTFSkin> skins;
     }
 }

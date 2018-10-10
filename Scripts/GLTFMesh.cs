@@ -43,6 +43,22 @@ namespace Siccity.GLTFUtility {
                         cache.tangents = gLTFObject.accessors[primitives[0].attributes.TANGENT].ReadVec4(gLTFObject);
                     } else cache.RecalculateTangents();
 
+                    // Weights
+                    /*if (primitives[0].attributes.WEIGHTS_0 != -1 && primitives[0].attributes.JOINTS_0 != -1) {
+                        Vector4[] weights0 = gLTFObject.accessors[primitives[0].attributes.WEIGHTS_0].ReadVec4(gLTFObject);
+                        Vector4[] joints0 = gLTFObject.accessors[primitives[0].attributes.JOINTS_0].ReadVec4(gLTFObject);
+                        if (joints0.Length == weights0.Length) {
+                            BoneWeight[] boneWeights = new BoneWeight[weights0.Length];
+                            for (int i = 0; i < boneWeights.Length; i++) {
+                                boneWeights[i].weight0 = weights0[i].x;
+                                boneWeights[i].weight1 = weights0[i].y;
+                                boneWeights[i].weight2 = weights0[i].z;
+                                boneWeights[i].weight0 = weights0[i].x;
+                                boneWeights[i].boneIndex0 = gLTFObject.skins. Mathf.Round(joints0[i].w);
+                            }
+                        } else Debug.LogWarning("WEIGHTS_0 and JOINTS_0 not same length. Skipped");
+                    }*/
+
                     // UVs
                     if (primitives[0].attributes.TEXCOORD_0 != -1) { // UV 1
                         Vector2[] uvs = gLTFObject.accessors[primitives[0].attributes.TEXCOORD_0].ReadVec2(gLTFObject);

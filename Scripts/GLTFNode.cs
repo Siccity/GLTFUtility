@@ -21,7 +21,7 @@ namespace Siccity.GLTFUtility {
         public float[] scale;
 
         public int mesh = -1;
-
+        public int skin = -1;
         public int camera = -1;
 
         public GameObject Create(GLTFObject gLTFObject, Transform parent) {
