@@ -20,6 +20,10 @@ namespace Siccity.GLTFUtility {
         /// <summary> Local scale </summary>
         public float[] scale;
 
+        public Vector3 Position { get { return new Vector3(translation[0], translation[1], translation[2]); } }
+        public Vector3 Scale { get { return new Vector3(scale[0], scale[1], scale[2]); } }
+        public Quaternion Rotation { get { return new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]); } }
+
         public int mesh = -1;
         public int skin = -1;
         public int camera = -1;
@@ -36,7 +40,7 @@ namespace Siccity.GLTFUtility {
             if (scale != null) cache.transform.localScale = new Vector3(scale[0], scale[1], scale[2]);
 
             if (mesh != -1) {
-                Mesh mesh = gLTFObject.meshes[0].GetMesh(gLTFObject, gLTFObject.skins[skin]);
+                Mesh mesh = gLTFObject.meshes[0].GetMesh(gLTFObject);
                 Renderer renderer;
                 if (skin != -1) {
                     SkinnedMeshRenderer smr = cache.AddComponent<SkinnedMeshRenderer>();

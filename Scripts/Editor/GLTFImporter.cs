@@ -29,6 +29,11 @@ namespace Siccity.GLTFUtility {
             GameObject root = gltfObject.nodes[0].Create(gltfObject, null);
             ctx.SetMainAsset("main obj", root);
 
+            // Setup bindposes
+            for (int i = 0; i < gltfObject.meshes.Count; i++) {
+                gltfObject.meshes[i].SetupBindposes(gltfObject, gltfObject.skins[0]);
+            }
+
             // Add meshes
             for (int i = 0; i < gltfObject.meshes.Count; i++) {
                 ctx.AddSubAsset(gltfObject.meshes[i].name, gltfObject.meshes[i].GetCachedMesh());

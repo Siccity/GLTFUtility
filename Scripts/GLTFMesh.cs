@@ -13,7 +13,7 @@ namespace Siccity.GLTFUtility {
 
         private Mesh cache;
 
-        public Mesh GetMesh(GLTFObject gLTFObject, GLTFSkin skin) {
+        public Mesh GetMesh(GLTFObject gLTFObject) {
             if (cache == null) {
                 if (primitives.Count == 0) {
                     cache = new Mesh() { name = name };
@@ -63,12 +63,6 @@ namespace Siccity.GLTFUtility {
                         } else Debug.LogWarning("WEIGHTS_0 and JOINTS_0 not same length. Skipped");
                     }
 
-                    // Bindposes
-                    if (skin.inverseBindMatrices != -1) {
-                        Matrix4x4[] bindPoses = gLTFObject.accessors[skin.inverseBindMatrices].ReadMatrix4x4(gLTFObject);
-                        cache.bindposes = bindPoses;
-                    }
-
                     // UVs
                     if (primitives[0].attributes.TEXCOORD_0 != -1) { // UV 1
                         Vector2[] uvs = gLTFObject.accessors[primitives[0].attributes.TEXCOORD_0].ReadVec2(gLTFObject);
@@ -98,6 +92,19 @@ namespace Siccity.GLTFUtility {
                 }
             }
             return cache;
+        }
+
+        public void SetupBindposes(GLTFObject gLTFObject, GLTFSkin skin) {
+            // Bindposes
+            if (skin.inverseBindMatrices != -1) {
+                Matrix4x4 m = gLTFObject.nodes[0].GetCached().transform.localToWorldMatrix;
+                Matrix4x4[] bindPoses = new Matrix4x4[skin.joints.Length];
+                for (int i = 0; i < skin.joints.Length; i++) {
+                    bindPoses[i] = gLTFObject.nodes[skin.joints[i]].GetCached().transform.worldToLocalMatrix * m;
+                }
+                //Matrix4x4[] bindPoses = gLTFObject.accessors[skin.inverseBindMatrices].ReadMatrix4x4(gLTFObject);
+                cache.bindposes = bindPoses;
+            }
         }
 
         public void FlipY(ref Vector2[] uv) {
