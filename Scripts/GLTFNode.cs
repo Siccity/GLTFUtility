@@ -28,36 +28,61 @@ namespace Siccity.GLTFUtility {
         public int skin = -1;
         public int camera = -1;
 
-        private GameObject cache;
+        private Transform transform;
 
-        public GameObject Create(GLTFObject gLTFObject, Transform parent) {
-            if (!cache) cache = new GameObject();
-            cache.name = name;
-            cache.transform.parent = parent;
+        /// <summary> Recursively set up this node's transform in the scene, followed by its children </summary>
+        public Transform CreateTransform(GLTFObject gLTFObject, Transform parent) {
+            if (transform == null) transform = new GameObject().transform;
+            transform.parent = parent;
+            transform.gameObject.name = name;
             if (matrix != null) Debug.LogWarning("MatrixTRS not supported.");
-            if (translation != null) cache.transform.localPosition = new Vector3(translation[0], translation[1], translation[2]);
-            if (rotation != null) cache.transform.localRotation = new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]);
-            if (scale != null) cache.transform.localScale = new Vector3(scale[0], scale[1], scale[2]);
+            if (translation != null) transform.localPosition = new Vector3(translation[0], translation[1], translation[2]);
+            if (rotation != null) transform.localRotation = new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]);
+            if (scale != null) transform.localScale = new Vector3(scale[0], scale[1], scale[2]);
 
-            if (mesh != -1) {
-                Mesh mesh = gLTFObject.meshes[0].GetMesh(gLTFObject);
+            for (int i = 0; i < children.Count; i++) {
+                gLTFObject.nodes[children[i]].CreateTransform(gLTFObject, transform);
+            }
+
+            return transform;
+        }
+
+        /// <summary> Set up various components defined in the node. Call after all transforms have been set up </summary>
+        public void SetupComponents(GLTFObject gLTFObject) {
+            if (transform == null) {
+                Debug.LogWarning("Transform is null. Call CreateTransform before calling SetupComponents");
+                return;
+            }
+            if (this.mesh != -1) {
+                GLTFMesh gLTFMesh = gLTFObject.meshes[this.mesh];
+                Mesh mesh = gLTFMesh.GetMesh(gLTFObject);
                 Renderer renderer;
                 if (skin != -1) {
-                    SkinnedMeshRenderer smr = cache.AddComponent<SkinnedMeshRenderer>();
-                    smr.sharedMesh = mesh;
-                    GLTFSkin skinObj = gLTFObject.skins[skin];
-                    Transform[] bones = new Transform[skinObj.joints.Length];
+                    SkinnedMeshRenderer smr = transform.gameObject.AddComponent<SkinnedMeshRenderer>();
+                    GLTFSkin gLTFSkin = gLTFObject.skins[skin];
+                    Transform[] bones = new Transform[gLTFSkin.joints.Length];
                     for (int i = 0; i < bones.Length; i++) {
-                        int jointNodeIndex = skinObj.joints[i];
+                        int jointNodeIndex = gLTFSkin.joints[i];
                         GLTFNode jointNode = gLTFObject.nodes[jointNodeIndex];
-                        bones[i] = jointNode.GetCached().transform;
+                        bones[i] = jointNode.transform;
                     }
                     smr.bones = bones;
                     smr.rootBone = bones[0];
                     renderer = smr;
+
+                    // Bindposes
+                    if (gLTFSkin.inverseBindMatrices != -1) {
+                        Matrix4x4 m = gLTFObject.nodes[0].transform.localToWorldMatrix;
+                        Matrix4x4[] bindPoses = new Matrix4x4[gLTFSkin.joints.Length];
+                        for (int i = 0; i < gLTFSkin.joints.Length; i++) {
+                            bindPoses[i] = gLTFObject.nodes[gLTFSkin.joints[i]].transform.worldToLocalMatrix * m;
+                        }
+                        mesh.bindposes = bindPoses;
+                    }
+                    smr.sharedMesh = mesh;
                 } else {
-                    MeshRenderer mr = cache.AddComponent<MeshRenderer>();
-                    MeshFilter mf = cache.AddComponent<MeshFilter>();
+                    MeshRenderer mr = transform.gameObject.AddComponent<MeshRenderer>();
+                    MeshFilter mf = transform.gameObject.AddComponent<MeshFilter>();
                     renderer = mr;
                 }
 
@@ -65,18 +90,6 @@ namespace Siccity.GLTFUtility {
                 renderer.material = UnityEditor.AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat");
 #endif
             }
-
-            for (int i = 0; i < children.Count; i++) {
-                gLTFObject.nodes[children[i]].Create(gLTFObject, cache.transform);
-            }
-
-            return cache;
-        }
-
-        /// <summary> Return the last GameObject created by this Node </summary>
-        public GameObject GetCached() {
-            if (!cache) cache = new GameObject();
-            return cache;
         }
     }
 }

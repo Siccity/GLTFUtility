@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
@@ -18,5 +19,29 @@ namespace Siccity.GLTFUtility {
         public List<GLTFBufferView> bufferViews;
         public List<GLTFAccessor> accessors;
         public List<GLTFSkin> skins;
+
+        public GameObject Create(string directoryRoot) {
+            // Read buffers
+            for (int i = 0; i < buffers.Count; i++) {
+                buffers[i].Read(directoryRoot);
+            }
+
+            // Get root node indices from scenes
+            int[] rootNodes = scenes.SelectMany(x => x.nodes).ToArray();
+
+            if (rootNodes.Length != 1) {
+                Debug.LogError("Only one root node is currently supported");
+                return null;
+            }
+
+            // Recursively construct transform hierarchy
+            Transform root = nodes[0].CreateTransform(this, null);
+
+            // Setup mesh renderers and such
+            for (int i = 0; i < nodes.Count; i++) {
+                nodes[i].SetupComponents(this);
+            }
+            return root.gameObject;
+        }
     }
 }

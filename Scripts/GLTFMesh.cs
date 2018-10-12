@@ -14,34 +14,37 @@ namespace Siccity.GLTFUtility {
         private Mesh cache;
 
         public Mesh GetMesh(GLTFObject gLTFObject) {
-            if (cache == null) {
+            if (cache) return cache;
+            else {
                 if (primitives.Count == 0) {
-                    cache = new Mesh() { name = name };
+                    Debug.LogWarning("0 primitives in mesh");
+                    return null;
                 } else if (primitives.Count == 1) {
-                    cache = new Mesh();
+                    Mesh mesh;
+                    mesh = new Mesh();
 
                     // Name
-                    cache.name = name;
+                    mesh.name = name;
 
                     // Verts
                     if (primitives[0].attributes.POSITION != -1) {
-                        cache.vertices = gLTFObject.accessors[primitives[0].attributes.POSITION].ReadVec3(gLTFObject);
+                        mesh.vertices = gLTFObject.accessors[primitives[0].attributes.POSITION].ReadVec3(gLTFObject);
                     }
 
                     // Tris
                     if (primitives[0].indices != -1) {
-                        cache.triangles = gLTFObject.accessors[primitives[0].indices].ReadInt(gLTFObject);
+                        mesh.triangles = gLTFObject.accessors[primitives[0].indices].ReadInt(gLTFObject);
                     }
 
                     // Normals
                     if (primitives[0].attributes.NORMAL != -1) {
-                        cache.normals = gLTFObject.accessors[primitives[0].attributes.NORMAL].ReadVec3(gLTFObject);
-                    } else cache.RecalculateNormals();
+                        mesh.normals = gLTFObject.accessors[primitives[0].attributes.NORMAL].ReadVec3(gLTFObject);
+                    } else mesh.RecalculateNormals();
 
                     // Tangents
                     if (primitives[0].attributes.TANGENT != -1) {
-                        cache.tangents = gLTFObject.accessors[primitives[0].attributes.TANGENT].ReadVec4(gLTFObject);
-                    } else cache.RecalculateTangents();
+                        mesh.tangents = gLTFObject.accessors[primitives[0].attributes.TANGENT].ReadVec4(gLTFObject);
+                    } else mesh.RecalculateTangents();
 
                     // Weights
                     if (primitives[0].attributes.WEIGHTS_0 != -1 && primitives[0].attributes.JOINTS_0 != -1) {
@@ -59,7 +62,7 @@ namespace Siccity.GLTFUtility {
                                 boneWeights[i].boneIndex2 = Mathf.RoundToInt(joints0[i].z);
                                 boneWeights[i].boneIndex3 = Mathf.RoundToInt(joints0[i].w);
                             }
-                            cache.boneWeights = boneWeights;
+                            mesh.boneWeights = boneWeights;
                         } else Debug.LogWarning("WEIGHTS_0 and JOINTS_0 not same length. Skipped");
                     }
 
@@ -67,43 +70,31 @@ namespace Siccity.GLTFUtility {
                     if (primitives[0].attributes.TEXCOORD_0 != -1) { // UV 1
                         Vector2[] uvs = gLTFObject.accessors[primitives[0].attributes.TEXCOORD_0].ReadVec2(gLTFObject);
                         FlipY(ref uvs);
-                        cache.uv = uvs;
+                        mesh.uv = uvs;
                     }
                     if (primitives[0].attributes.TEXCOORD_1 != -1) { // UV 2
                         Vector2[] uvs = gLTFObject.accessors[primitives[0].attributes.TEXCOORD_1].ReadVec2(gLTFObject);
                         FlipY(ref uvs);
-                        cache.uv2 = uvs;
+                        mesh.uv2 = uvs;
                     }
                     if (primitives[0].attributes.TEXCOORD_2 != -1) { // UV 3
                         Vector2[] uvs = gLTFObject.accessors[primitives[0].attributes.TEXCOORD_2].ReadVec2(gLTFObject);
                         FlipY(ref uvs);
-                        cache.uv3 = uvs;
+                        mesh.uv3 = uvs;
                     }
                     if (primitives[0].attributes.TEXCOORD_3 != -1) { // UV 4
                         Vector2[] uvs = gLTFObject.accessors[primitives[0].attributes.TEXCOORD_3].ReadVec2(gLTFObject);
                         FlipY(ref uvs);
-                        cache.uv4 = uvs;
+                        mesh.uv4 = uvs;
                     }
 
-                    cache.RecalculateBounds();
+                    mesh.RecalculateBounds();
+                    cache = mesh;
+                    return mesh;
                 } else {
                     Debug.LogError("Multiple primitives per mesh not supported");
-                    return new Mesh() { name = name };
+                    return null;
                 }
-            }
-            return cache;
-        }
-
-        public void SetupBindposes(GLTFObject gLTFObject, GLTFSkin skin) {
-            // Bindposes
-            if (skin.inverseBindMatrices != -1) {
-                Matrix4x4 m = gLTFObject.nodes[0].GetCached().transform.localToWorldMatrix;
-                Matrix4x4[] bindPoses = new Matrix4x4[skin.joints.Length];
-                for (int i = 0; i < skin.joints.Length; i++) {
-                    bindPoses[i] = gLTFObject.nodes[skin.joints[i]].GetCached().transform.worldToLocalMatrix * m;
-                }
-                //Matrix4x4[] bindPoses = gLTFObject.accessors[skin.inverseBindMatrices].ReadMatrix4x4(gLTFObject);
-                cache.bindposes = bindPoses;
             }
         }
 

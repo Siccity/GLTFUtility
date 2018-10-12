@@ -9,30 +9,15 @@ namespace Siccity.GLTFUtility {
     public class GLTFImporter : ScriptedImporter {
 
         public override void OnImportAsset(AssetImportContext ctx) {
+            // Load file and get directory
             GLTFObject gltfObject = JsonUtility.FromJson<GLTFObject>(File.ReadAllText(ctx.assetPath));
             string directoryRoot = Directory.GetParent(ctx.assetPath).ToString() + "/";
 
-            // Read buffers
-            for (int i = 0; i < gltfObject.buffers.Count; i++) {
-                gltfObject.buffers[i].Read(directoryRoot);
-            }
+            // Create gameobject structure
+            GameObject root = gltfObject.Create(directoryRoot);
 
-            // Get root node indices from scenes
-            int[] rootNodes = gltfObject.scenes.SelectMany(x => x.nodes).ToArray();
-
-            if (rootNodes.Length != 1) {
-                Debug.LogError("Only one root node is currently supported");
-                return;
-            }
-
-            // Parse root node
-            GameObject root = gltfObject.nodes[0].Create(gltfObject, null);
+            // Save to asset
             ctx.SetMainAsset("main obj", root);
-
-            // Setup bindposes
-            for (int i = 0; i < gltfObject.meshes.Count; i++) {
-                gltfObject.meshes[i].SetupBindposes(gltfObject, gltfObject.skins[0]);
-            }
 
             // Add meshes
             for (int i = 0; i < gltfObject.meshes.Count; i++) {
