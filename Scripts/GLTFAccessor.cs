@@ -17,6 +17,53 @@ namespace Siccity.GLTFUtility {
         public Sparse sparse;
         public Indices indices;
 
+        public Matrix4x4[] ReadMatrix4x4(GLTFObject gLTFObject) {
+            if (type != "MAT4") {
+                Debug.LogError("Type mismatch! Expected MAT4 got " + type);
+                return new Matrix4x4[count];
+            }
+
+            Matrix4x4[] m = new Matrix4x4[count];
+            byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject);
+            int componentSize = GetComponentSize();
+            Func<byte[], int, float> converter = GetFloatConverter();
+            for (int i = 0; i < count; i++) {
+                int startIndex = i * componentSize;
+                m[i].m00 = converter(bytes, startIndex);
+                startIndex += GetComponentTypeSize(componentType);
+                m[i].m01 = converter(bytes, startIndex);
+                startIndex += GetComponentTypeSize(componentType);
+                m[i].m02 = converter(bytes, startIndex);
+                startIndex += GetComponentTypeSize(componentType);
+                m[i].m03 = converter(bytes, startIndex);
+                startIndex += GetComponentTypeSize(componentType);
+                m[i].m10 = converter(bytes, startIndex);
+                startIndex += GetComponentTypeSize(componentType);
+                m[i].m11 = converter(bytes, startIndex);
+                startIndex += GetComponentTypeSize(componentType);
+                m[i].m12 = converter(bytes, startIndex);
+                startIndex += GetComponentTypeSize(componentType);
+                m[i].m13 = converter(bytes, startIndex);
+                startIndex += GetComponentTypeSize(componentType);
+                m[i].m20 = converter(bytes, startIndex);
+                startIndex += GetComponentTypeSize(componentType);
+                m[i].m21 = converter(bytes, startIndex);
+                startIndex += GetComponentTypeSize(componentType);
+                m[i].m22 = converter(bytes, startIndex);
+                startIndex += GetComponentTypeSize(componentType);
+                m[i].m23 = converter(bytes, startIndex);
+                startIndex += GetComponentTypeSize(componentType);
+                m[i].m30 = converter(bytes, startIndex);
+                startIndex += GetComponentTypeSize(componentType);
+                m[i].m31 = converter(bytes, startIndex);
+                startIndex += GetComponentTypeSize(componentType);
+                m[i].m32 = converter(bytes, startIndex);
+                startIndex += GetComponentTypeSize(componentType);
+                m[i].m33 = converter(bytes, startIndex);
+            }
+            return m;
+        }
+
         public Vector4[] ReadVec4(GLTFObject gLTFObject) {
             if (type != "VEC4") {
                 Debug.LogError("Type mismatch! Expected VEC4 got " + type);

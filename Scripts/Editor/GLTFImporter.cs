@@ -25,14 +25,14 @@ namespace Siccity.GLTFUtility {
                 return;
             }
 
-            // Add meshes
-            for (int i = 0; i < gltfObject.meshes.Count; i++) {
-                ctx.AddSubAsset(gltfObject.meshes[i].name, gltfObject.meshes[i].GetMesh(gltfObject));
-            }
-
             // Parse root node
             GameObject root = gltfObject.nodes[0].Create(gltfObject, null);
             ctx.SetMainAsset("main obj", root);
+
+            // Add meshes
+            for (int i = 0; i < gltfObject.meshes.Count; i++) {
+                ctx.AddSubAsset(gltfObject.meshes[i].name, gltfObject.meshes[i].GetCachedMesh());
+            }
         }
     }
 }

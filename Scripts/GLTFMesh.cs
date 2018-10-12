@@ -13,7 +13,7 @@ namespace Siccity.GLTFUtility {
 
         private Mesh cache;
 
-        public Mesh GetMesh(GLTFObject gLTFObject) {
+        public Mesh GetMesh(GLTFObject gLTFObject, GLTFSkin skin) {
             if (cache == null) {
                 if (primitives.Count == 0) {
                     cache = new Mesh() { name = name };
@@ -44,7 +44,7 @@ namespace Siccity.GLTFUtility {
                     } else cache.RecalculateTangents();
 
                     // Weights
-                    /*if (primitives[0].attributes.WEIGHTS_0 != -1 && primitives[0].attributes.JOINTS_0 != -1) {
+                    if (primitives[0].attributes.WEIGHTS_0 != -1 && primitives[0].attributes.JOINTS_0 != -1) {
                         Vector4[] weights0 = gLTFObject.accessors[primitives[0].attributes.WEIGHTS_0].ReadVec4(gLTFObject);
                         Vector4[] joints0 = gLTFObject.accessors[primitives[0].attributes.JOINTS_0].ReadVec4(gLTFObject);
                         if (joints0.Length == weights0.Length) {
@@ -54,10 +54,20 @@ namespace Siccity.GLTFUtility {
                                 boneWeights[i].weight1 = weights0[i].y;
                                 boneWeights[i].weight2 = weights0[i].z;
                                 boneWeights[i].weight0 = weights0[i].x;
-                                boneWeights[i].boneIndex0 = gLTFObject.skins. Mathf.Round(joints0[i].w);
+                                boneWeights[i].boneIndex0 = Mathf.RoundToInt(joints0[i].x);
+                                boneWeights[i].boneIndex1 = Mathf.RoundToInt(joints0[i].y);
+                                boneWeights[i].boneIndex2 = Mathf.RoundToInt(joints0[i].z);
+                                boneWeights[i].boneIndex3 = Mathf.RoundToInt(joints0[i].w);
                             }
+                            cache.boneWeights = boneWeights;
                         } else Debug.LogWarning("WEIGHTS_0 and JOINTS_0 not same length. Skipped");
-                    }*/
+                    }
+
+                    // Bindposes
+                    if (skin.inverseBindMatrices != -1) {
+                        Matrix4x4[] bindPoses = gLTFObject.accessors[skin.inverseBindMatrices].ReadMatrix4x4(gLTFObject);
+                        cache.bindposes = bindPoses;
+                    }
 
                     // UVs
                     if (primitives[0].attributes.TEXCOORD_0 != -1) { // UV 1
@@ -94,6 +104,11 @@ namespace Siccity.GLTFUtility {
             for (int i = 0; i < uv.Length; i++) {
                 uv[i].y = 1 - uv[i].y;
             }
+        }
+
+        public Mesh GetCachedMesh() {
+            if (!cache) Debug.LogWarning("No mesh cached for " + name);
+            return cache;
         }
     }
 }
