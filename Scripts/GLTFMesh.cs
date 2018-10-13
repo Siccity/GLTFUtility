@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
@@ -26,24 +27,24 @@ namespace Siccity.GLTFUtility {
                     // Name
                     mesh.name = name;
 
-                    // Verts
+                    // Verts - (Z points backwards in GLTF)
                     if (primitives[0].attributes.POSITION != -1) {
-                        mesh.vertices = gLTFObject.accessors[primitives[0].attributes.POSITION].ReadVec3(gLTFObject);
+                        mesh.vertices = gLTFObject.accessors[primitives[0].attributes.POSITION].ReadVec3(gLTFObject).Select(v => { v.z = -v.z; return v; }).ToArray();
                     }
 
-                    // Tris
+                    // Tris - (Instead of flipping each triangle, just flip the entire array. Much easier)
                     if (primitives[0].indices != -1) {
-                        mesh.triangles = gLTFObject.accessors[primitives[0].indices].ReadInt(gLTFObject);
+                        mesh.triangles = gLTFObject.accessors[primitives[0].indices].ReadInt(gLTFObject).Reverse().ToArray();
                     }
 
-                    // Normals
+                    // Normals - (Z points backwards in GLTF)
                     if (primitives[0].attributes.NORMAL != -1) {
-                        mesh.normals = gLTFObject.accessors[primitives[0].attributes.NORMAL].ReadVec3(gLTFObject);
+                        mesh.normals = gLTFObject.accessors[primitives[0].attributes.NORMAL].ReadVec3(gLTFObject).Select(v => { v.z = -v.z; return v; }).ToArray();
                     } else mesh.RecalculateNormals();
 
-                    // Tangents
+                    // Tangents - (Z points backwards in GLTF)
                     if (primitives[0].attributes.TANGENT != -1) {
-                        mesh.tangents = gLTFObject.accessors[primitives[0].attributes.TANGENT].ReadVec4(gLTFObject);
+                        mesh.tangents = gLTFObject.accessors[primitives[0].attributes.TANGENT].ReadVec4(gLTFObject).Select(v => { v.z = -v.z; return v; }).ToArray();
                     } else mesh.RecalculateTangents();
 
                     // Weights
@@ -53,6 +54,7 @@ namespace Siccity.GLTFUtility {
                         if (joints0.Length == weights0.Length) {
                             BoneWeight[] boneWeights = new BoneWeight[weights0.Length];
                             for (int i = 0; i < boneWeights.Length; i++) {
+                                NormalizeWeights(ref weights0[i]);
                                 boneWeights[i].weight0 = weights0[i].x;
                                 boneWeights[i].weight1 = weights0[i].y;
                                 boneWeights[i].weight2 = weights0[i].z;
@@ -96,6 +98,15 @@ namespace Siccity.GLTFUtility {
                     return null;
                 }
             }
+        }
+
+        public void NormalizeWeights(ref Vector4 weights) {
+            float total = weights.x + weights.y + weights.z + weights.w;
+            float mult = 1f / total;
+            weights.x *= mult;
+            weights.y *= mult;
+            weights.z *= mult;
+            weights.w *= mult;
         }
 
         public void FlipY(ref Vector2[] uv) {
