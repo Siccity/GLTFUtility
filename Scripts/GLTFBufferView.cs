@@ -9,7 +9,7 @@ namespace Siccity.GLTFUtility {
     [Serializable]
     public class GLTFBufferView {
         public int buffer = -1;
-        public int byteOffset = -1;
+        public int byteOffset = 0;
         public int byteLength = -1;
         public int byteStride = -1;
         /// <summary> OpenGL buffer target </summary>
