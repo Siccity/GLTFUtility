@@ -14,7 +14,7 @@ Allows you to import and export GTLF files during runtime and in editor.
 - [x] Vertex colors
 - [ ] Materials
 - [ ] Textures
-- [x] Rig (Has issues)
+- [x] Rig
 - [ ] Animations
 - [ ] Morph targets
 - [x] GLTF format
