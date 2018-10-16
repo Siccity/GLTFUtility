@@ -63,7 +63,7 @@ namespace Siccity.GLTFUtility {
                                 boneWeights[i].weight0 = weights0[i].x;
                                 boneWeights[i].weight1 = weights0[i].y;
                                 boneWeights[i].weight2 = weights0[i].z;
-                                boneWeights[i].weight0 = weights0[i].x;
+                                boneWeights[i].weight3 = weights0[i].w;
                                 boneWeights[i].boneIndex0 = Mathf.RoundToInt(joints0[i].x);
                                 boneWeights[i].boneIndex1 = Mathf.RoundToInt(joints0[i].y);
                                 boneWeights[i].boneIndex2 = Mathf.RoundToInt(joints0[i].z);
