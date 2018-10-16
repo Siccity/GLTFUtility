@@ -47,6 +47,11 @@ namespace Siccity.GLTFUtility {
                         mesh.tangents = gLTFObject.accessors[primitives[0].attributes.TANGENT].ReadVec4(gLTFObject).Select(v => { v.z = -v.z; return v; }).ToArray();
                     } else mesh.RecalculateTangents();
 
+                    // Vertex colors
+                    if (primitives[0].attributes.COLOR_0 != -1) {
+                        mesh.colors = gLTFObject.accessors[primitives[0].attributes.COLOR_0].ReadColor(gLTFObject);
+                    }
+
                     // Weights
                     if (primitives[0].attributes.WEIGHTS_0 != -1 && primitives[0].attributes.JOINTS_0 != -1) {
                         Vector4[] weights0 = gLTFObject.accessors[primitives[0].attributes.WEIGHTS_0].ReadVec4(gLTFObject);

@@ -87,6 +87,55 @@ namespace Siccity.GLTFUtility {
             return verts;
         }
 
+        public Color[] ReadColor(GLTFObject gLTFObject) {
+            if (type != "VEC4" && type != "VEC3") {
+                Debug.LogError("Type mismatch! Expected VEC4 or VEC3 got " + type);
+                return new Color[count];
+            }
+
+            Color[] colors = new Color[count];
+            byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject);
+            int componentSize = GetComponentSize();
+            if (componentType == GLType.BYTE || componentType == GLType.UNSIGNED_BYTE) {
+                Color32 color;
+                for (int i = 0; i < count; i++) {
+                    int startIndex = i * componentSize;
+                    color.r = bytes[startIndex];
+                    startIndex += GetComponentTypeSize(componentType);
+                    color.g = bytes[startIndex];
+                    startIndex += GetComponentTypeSize(componentType);
+                    color.b = bytes[startIndex];
+                    if (type == "VEC4") {
+                        startIndex += GetComponentTypeSize(componentType);
+                        color.a = bytes[startIndex];
+                    } else {
+                        color.a = (byte) 255;
+                    }
+                    colors[i] = color;
+                }
+            } else if (componentType == GLType.FLOAT) {
+                Func<byte[], int, float> converter = GetFloatConverter();
+                for (int i = 0; i < count; i++) {
+                    int startIndex = i * componentSize;
+                    colors[i].r = converter(bytes, startIndex);
+                    startIndex += GetComponentTypeSize(componentType);
+                    colors[i].g = converter(bytes, startIndex);
+                    startIndex += GetComponentTypeSize(componentType);
+                    colors[i].b = converter(bytes, startIndex);
+                    if (type == "VEC4") {
+                        startIndex += GetComponentTypeSize(componentType);
+                        colors[i].a = converter(bytes, startIndex);
+                    } else {
+                        colors[i].a = 1;
+                    }
+                }
+            } else {
+                Debug.LogWarning("Unexpected componentType! " + componentType);
+            }
+
+            return colors;
+        }
+
         public Vector3[] ReadVec3(GLTFObject gLTFObject) {
             if (type != "VEC3") {
                 Debug.LogError("Type mismatch! Expected VEC3 got " + type);
@@ -169,6 +218,7 @@ namespace Siccity.GLTFUtility {
                     return System.BitConverter.ToSingle;
             }
         }
+
         /// <summary> Get the size of the attribute type, in bytes </summary>
         public int GetComponentSize() {
             return GetComponentNumber(type) * GetComponentTypeSize(componentType);

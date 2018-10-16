@@ -11,7 +11,7 @@ Allows you to import and export GTLF files during runtime and in editor.
 - [x] UVs
 - [x] Normals
 - [x] Tangents
-- [ ] Vertex colors
+- [x] Vertex colors
 - [ ] Materials
 - [ ] Textures
 - [x] Rig (Has issues)
