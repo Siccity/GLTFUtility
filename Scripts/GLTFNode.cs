@@ -28,7 +28,7 @@ namespace Siccity.GLTFUtility {
         public int skin = -1;
         public int camera = -1;
 
-        private Transform transform;
+        public Transform transform { get; private set; }
 
         /// <summary> Recursively set up this node's transform in the scene, followed by its children </summary>
         public Transform CreateTransform(GLTFObject gLTFObject, Transform parent) {
@@ -36,9 +36,9 @@ namespace Siccity.GLTFUtility {
             transform.parent = parent;
             transform.gameObject.name = name;
             if (matrix != null) Debug.LogWarning("MatrixTRS not supported.");
-            if (translation != null) transform.localPosition = new Vector3(translation[0], translation[1], translation[2]);
-            if (rotation != null) transform.localRotation = new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]);
-            if (scale != null) transform.localScale = new Vector3(scale[0], scale[1], scale[2]);
+            if (translation != null) transform.localPosition = Position;
+            if (rotation != null) transform.localRotation = Rotation;
+            if (scale != null) transform.localScale = Scale;
 
             for (int i = 0; i < children.Count; i++) {
                 gLTFObject.nodes[children[i]].CreateTransform(gLTFObject, transform);
