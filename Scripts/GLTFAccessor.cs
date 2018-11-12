@@ -97,7 +97,7 @@ namespace Siccity.GLTFUtility {
             byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject);
             int componentSize = GetComponentSize();
             if (componentType == GLType.BYTE || componentType == GLType.UNSIGNED_BYTE) {
-                Color32 color;
+                Color32 color = Color.black;
                 for (int i = 0; i < count; i++) {
                     int startIndex = i * componentSize;
                     color.r = bytes[startIndex];
