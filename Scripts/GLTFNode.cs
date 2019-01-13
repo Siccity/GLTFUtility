@@ -84,6 +84,7 @@ namespace Siccity.GLTFUtility {
                     MeshRenderer mr = transform.gameObject.AddComponent<MeshRenderer>();
                     MeshFilter mf = transform.gameObject.AddComponent<MeshFilter>();
                     renderer = mr;
+                    mf.sharedMesh = mesh;
                 }
 
 #if UNITY_EDITOR
