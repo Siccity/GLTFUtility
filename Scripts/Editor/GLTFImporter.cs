@@ -12,9 +12,10 @@ namespace Siccity.GLTFUtility {
             // Load file and get directory
             GLTFObject gltfObject = JsonUtility.FromJson<GLTFObject>(File.ReadAllText(ctx.assetPath));
             string directoryRoot = Directory.GetParent(ctx.assetPath).ToString() + "/";
+            string mainFile = Path.GetFileName(ctx.assetPath);
 
             // Create gameobject structure
-            GameObject root = gltfObject.Create(directoryRoot);
+            GameObject root = gltfObject.Create(directoryRoot, mainFile);
 
             // Save to asset
 #if UNITY_2018_2_OR_NEWER

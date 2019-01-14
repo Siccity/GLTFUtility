@@ -24,22 +24,18 @@ namespace Siccity.GLTFUtility {
                 return;
             }
             uint length = System.BitConverter.ToUInt32(bytes, 8);
-            
+
             // Chunk 0 (json)
             uint chunkLength = System.BitConverter.ToUInt32(bytes, 12);
-            Debug.Log(chunkLength);
             string chunkType = Encoding.ASCII.GetString(bytes.SubArray(16, 4));
-            Debug.Log(chunkType);
-            string json = Encoding.ASCII.GetString(bytes.SubArray(20, (int)chunkLength));
-            Debug.Log(json);
-            return;
+            string json = Encoding.ASCII.GetString(bytes.SubArray(20, (int) chunkLength));
 
             // Load file and get directory
-            GLTFObject glbObject = JsonUtility.FromJson<GLTFObject>(File.ReadAllText(ctx.assetPath));
+            GLTFObject glbObject = JsonUtility.FromJson<GLTFObject>(json);
             string directoryRoot = Directory.GetParent(ctx.assetPath).ToString() + "/";
-
+            string mainFile = Path.GetFileName(ctx.assetPath);
             // Create gameobject structure
-            GameObject root = glbObject.Create(directoryRoot);
+            GameObject root = glbObject.Create(directoryRoot, mainFile);
 
             // Save to asset
 #if UNITY_2018_2_OR_NEWER

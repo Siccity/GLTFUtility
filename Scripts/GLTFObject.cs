@@ -20,10 +20,10 @@ namespace Siccity.GLTFUtility {
         public List<GLTFAccessor> accessors;
         public List<GLTFSkin> skins;
 
-        public GameObject Create(string directoryRoot) {
+        public GameObject Create(string directoryRoot, string mainFile) {
             // Read buffers
             for (int i = 0; i < buffers.Count; i++) {
-                buffers[i].Read(directoryRoot);
+                buffers[i].Read(directoryRoot, mainFile);
             }
 
             // Get root node indices from scenes

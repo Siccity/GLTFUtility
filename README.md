@@ -18,4 +18,4 @@ Allows you to import and export GTLF files during runtime and in editor.
 - [ ] Animations
 - [ ] Morph targets
 - [x] GLTF format
-- [ ] GLB format
+- [x] GLB format
