@@ -1,5 +1,7 @@
 ### GLTFUtility
-Allows you to import and export GTLF files during runtime and in editor.
+Allows you to import and export glTF files during runtime and in editor.
+glTF is a new opensource 3d model transmission format which supports everything you'll ever need from a format in Unity.
+[Read more about glTF here](https://www.khronos.org/gltf/)
 
 **NOTICE** This is a work in progress. Current features can be tracked below:
 
