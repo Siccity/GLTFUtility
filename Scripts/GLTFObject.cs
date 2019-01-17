@@ -19,6 +19,7 @@ namespace Siccity.GLTFUtility {
         public List<GLTFBufferView> bufferViews;
         public List<GLTFAccessor> accessors;
         public List<GLTFSkin> skins;
+        public List<GLTFMaterial> materials;
 
         public GameObject[] Create(string directoryRoot, string mainFile) {
             // Read buffers
