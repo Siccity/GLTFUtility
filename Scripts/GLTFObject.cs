@@ -20,7 +20,7 @@ namespace Siccity.GLTFUtility {
         public List<GLTFAccessor> accessors;
         public List<GLTFSkin> skins;
 
-        public GameObject Create(string directoryRoot, string mainFile) {
+        public GameObject[] Create(string directoryRoot, string mainFile) {
             // Read buffers
             for (int i = 0; i < buffers.Count; i++) {
                 buffers[i].Read(directoryRoot, mainFile);
@@ -29,13 +29,11 @@ namespace Siccity.GLTFUtility {
             // Get root node indices from scenes
             int[] rootNodes = scenes.SelectMany(x => x.nodes).ToArray();
 
-            if (rootNodes.Length != 1) {
-                Debug.LogError("Only one root node is currently supported");
-                return null;
+            GameObject[] roots = new GameObject[rootNodes.Length];
+            for (int i = 0; i < rootNodes.Length; i++) {
+                // Recursively construct transform hierarchy
+                roots[i] = nodes[i].CreateTransform(this, null).gameObject;
             }
-
-            // Recursively construct transform hierarchy
-            Transform root = nodes[0].CreateTransform(this, null);
 
             // Flip the entire node tree on the global Z axis
             var worldTransforms = nodes.Where(x => x.transform != null).Select(x => new {
@@ -53,7 +51,7 @@ namespace Siccity.GLTFUtility {
             for (int i = 0; i < nodes.Count; i++) {
                 nodes[i].SetupComponents(this);
             }
-            return root.gameObject;
+            return roots;
         }
     }
 }

@@ -141,6 +141,10 @@ namespace Siccity.GLTFUtility {
                 Debug.LogError("Type mismatch! Expected VEC3 got " + type);
                 return new Vector3[count];
             }
+            if (bufferView == -1) {
+                Debug.LogError("Accessor bufferView was unassigned");
+                return new Vector3[count];
+            }
 
             Vector3[] verts = new Vector3[count];
             byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject);

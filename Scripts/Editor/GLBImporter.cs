@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
     [ScriptedImporter(1, "glb")]
-    public class GLBImporter : ScriptedImporter {
+    public class GLBImporter : GLTFImporterBase {
 
         public override void OnImportAsset(AssetImportContext ctx) {
             byte[] bytes = File.ReadAllBytes(ctx.assetPath);
@@ -31,30 +31,16 @@ namespace Siccity.GLTFUtility {
             string json = Encoding.ASCII.GetString(bytes.SubArray(20, (int) chunkLength));
 
             // Load file and get directory
-            GLTFObject glbObject = JsonUtility.FromJson<GLTFObject>(json);
+            GLTFObject gltfObject = JsonUtility.FromJson<GLTFObject>(json);
             string directoryRoot = Directory.GetParent(ctx.assetPath).ToString() + "/";
             string mainFile = Path.GetFileName(ctx.assetPath);
+
             // Create gameobject structure
-            GameObject root = glbObject.Create(directoryRoot, mainFile);
+            GameObject[] roots = gltfObject.Create(directoryRoot, mainFile);
 
-            // Save to asset
-#if UNITY_2018_2_OR_NEWER
-            ctx.AddObjectToAsset("main", root);
-            ctx.SetMainObject(root);
-#else
-            ctx.SetMainAsset("main obj", root);
-#endif
+            SaveToAsset(ctx, roots);
 
-            // Add meshes
-#if UNITY_2018_2_OR_NEWER
-            for (int i = 0; i < gltfObject.meshes.Count; i++) {
-                ctx.AddObjectToAsset(gltfObject.meshes[i].name, gltfObject.meshes[i].GetCachedMesh());
-            }
-#else
-            for (int i = 0; i < glbObject.meshes.Count; i++) {
-                ctx.AddSubAsset(glbObject.meshes[i].name, glbObject.meshes[i].GetCachedMesh());
-            }
-#endif
+            AddMeshes(ctx, gltfObject);
         }
     }
 }
