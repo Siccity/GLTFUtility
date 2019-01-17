@@ -190,17 +190,14 @@ namespace Siccity.GLTFUtility {
                 Debug.LogError("Type mismatch! Expected SCALAR got " + type);
                 return new int[count];
             }
-            if (componentType != GLType.UNSIGNED_SHORT) {
-                Debug.LogError("Non-ushort componentType not supported. Got " + (int) componentType);
-                return new int[count];
-            }
 
             int[] ints = new int[count];
             byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject);
             int componentSize = GetComponentSize();
+            Func<byte[], int, int> converter = GetIntConverter();
             for (int i = 0; i < count; i++) {
                 int startIndex = i * componentSize;
-                ints[i] = System.BitConverter.ToUInt16(bytes, startIndex);
+                ints[i] = converter(bytes, startIndex);
             }
             return ints;
         }
@@ -208,18 +205,36 @@ namespace Siccity.GLTFUtility {
         public Func<byte[], int, float> GetFloatConverter() {
             switch (componentType) {
                 case GLType.BYTE:
-                    return (x, y) =>(float) (sbyte) x[y];
+                    return (x, y) => (float) (sbyte) x[y];
                 case GLType.UNSIGNED_BYTE:
-                    return (x, y) =>(float) x[y];
+                    return (x, y) => (float) x[y];
                 case GLType.FLOAT:
                     return System.BitConverter.ToSingle;
                 case GLType.SHORT:
-                    return (x, y) =>(float) System.BitConverter.ToInt16(x, y);
+                    return (x, y) => (float) System.BitConverter.ToInt16(x, y);
                 case GLType.UNSIGNED_SHORT:
-                    return (x, y) =>(float) System.BitConverter.ToUInt16(x, y);
+                    return (x, y) => (float) System.BitConverter.ToUInt16(x, y);
                 default:
                     Debug.LogWarning("No componentType defined");
                     return System.BitConverter.ToSingle;
+            }
+        }
+
+        public Func<byte[], int, int> GetIntConverter() {
+            switch (componentType) {
+                case GLType.BYTE:
+                    return (x, y) => (int) (sbyte) x[y];
+                case GLType.UNSIGNED_BYTE:
+                    return (x, y) => (int) x[y];
+                case GLType.FLOAT:
+                    return (x, y) => (int) System.BitConverter.ToSingle(x, y);
+                case GLType.SHORT:
+                    return (x, y) => (int) System.BitConverter.ToInt16(x, y);
+                case GLType.UNSIGNED_SHORT:
+                    return (x, y) => (int) System.BitConverter.ToUInt16(x, y);
+                default:
+                    Debug.LogWarning("No componentType defined");
+                    return (x, y) => (int) System.BitConverter.ToUInt16(x, y);
             }
         }
 
