@@ -10,6 +10,7 @@ namespace Siccity.GLTFUtility {
 
         public void SaveToAsset(AssetImportContext ctx, GameObject[] roots) {
 #if UNITY_2018_2_OR_NEWER
+            // Add GameObjects
             if (roots.Length == 1) {
                 ctx.AddObjectToAsset("main", roots[0]);
                 ctx.SetMainObject(roots[0]);
@@ -22,6 +23,7 @@ namespace Siccity.GLTFUtility {
                 ctx.SetMainObject(root);
             }
 #else
+            // Add GameObjects
             if (roots.Length == 1) {
                 ctx.SetMainAsset("main obj", roots[0]);
             } else {
@@ -44,6 +46,33 @@ namespace Siccity.GLTFUtility {
                 ctx.AddSubAsset(glbObject.meshes[i].name, glbObject.meshes[i].GetCachedMesh());
             }
 #endif
+        }
+
+        public void AddMaterials(AssetImportContext ctx, GLTFObject gltfObject) {
+#if UNITY_2018_2_OR_NEWER
+            for (int i = 0; i < gltfObject.materials.Count; i++) {
+                ctx.AddObjectToAsset(gltfObject.materials[i].name, gltfObject.materials[i].GetMaterial());
+            }
+#else
+            for (int i = 0; i < glbObject.materials.Count; i++) {
+                ctx.AddSubAsset(glbObject.materials[i].name, glbObject.materials[i].GetMaterial());
+            }
+#endif
+        }
+
+        public void AddTextures(AssetImportContext ctx, GLTFObject gltfObject) {
+            for (int i = 0; i < gltfObject.images.Count; i++) {
+                // Dont add asset textures
+                if (gltfObject.images[i].imageIsAsset) continue;
+
+                Texture2D tex = gltfObject.images[i].GetTexture();
+                if (string.IsNullOrEmpty(tex.name)) tex.name = i.ToString();
+#if UNITY_2018_2_OR_NEWER
+                ctx.AddObjectToAsset(i.ToString(), tex);
+#else
+                ctx.AddSubAsset(i.ToString(), glbObject.images[i].GetTexture());
+#endif
+            }
         }
     }
 }

@@ -18,8 +18,9 @@ namespace Siccity.GLTFUtility {
             GameObject[] roots = gltfObject.Create(directoryRoot, mainFile);
 
             SaveToAsset(ctx, roots);
-
             AddMeshes(ctx, gltfObject);
+            AddMaterials(ctx, gltfObject);
+            AddTextures(ctx, gltfObject);
         }
     }
 }

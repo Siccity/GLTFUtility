@@ -30,7 +30,12 @@ namespace Siccity.GLTFUtility {
 
             // Load textures
             for (int i = 0; i < images.Count; i++) {
-                images[i].Initialize(directoryRoot);
+                images[i].Initialize(this, directoryRoot);
+            }
+
+            // Load materials
+            for (int i = 0; i < materials.Count; i++) {
+                materials[i].Initialize(images);
             }
 
             // Get root node indices from scenes
