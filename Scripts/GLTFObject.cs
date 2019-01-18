@@ -19,12 +19,18 @@ namespace Siccity.GLTFUtility {
         public List<GLTFBufferView> bufferViews;
         public List<GLTFAccessor> accessors;
         public List<GLTFSkin> skins;
+        public List<GLTFImage> images;
         public List<GLTFMaterial> materials;
 
         public GameObject[] Create(string directoryRoot, string mainFile) {
             // Read buffers
             for (int i = 0; i < buffers.Count; i++) {
                 buffers[i].Read(directoryRoot, mainFile);
+            }
+
+            // Load textures
+            for (int i = 0; i < images.Count; i++) {
+                images[i].Initialize(directoryRoot);
             }
 
             // Get root node indices from scenes

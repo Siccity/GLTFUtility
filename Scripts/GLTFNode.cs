@@ -86,10 +86,11 @@ namespace Siccity.GLTFUtility {
                     renderer = mr;
                     mf.sharedMesh = mesh;
                 }
-
-#if UNITY_EDITOR
-                renderer.material = UnityEditor.AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat");
-#endif
+                
+                //Materials
+                if (gLTFMesh.primitives.Count == 1) {
+                    renderer.material = gLTFObject.materials[gLTFMesh.primitives[0].material].GetMaterial();
+                } else Debug.LogWarning("Only 1 primitive per mesh supported");
             }
         }
     }
