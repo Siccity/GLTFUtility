@@ -14,6 +14,8 @@ namespace Siccity.GLTFUtility {
 		public bool initialized { get { return cache != null; } }
 		/// <summary> True if image was loaded from a Texture2D asset. False if it was loaded from binary or from another source </summary>
 		public bool imageIsAsset { get; private set; }
+		public bool isNormalMap { get; private set; }
+		public bool isMetallicRoughnessFixed { get; private set; }
 
 		private Texture2D cache;
 
@@ -47,9 +49,46 @@ namespace Siccity.GLTFUtility {
 			}
 		}
 
+		public Texture2D GetNormalMap() {
+			if (isNormalMap || imageIsAsset) return cache;
+			Color32[] pixels = cache.GetPixels32();
+			for (int i = 0; i < pixels.Length; i++) {
+				Color32 c = pixels[i];
+				c.a = pixels[i].r;
+				c.r = c.b = c.g;
+				pixels[i] = c;
+			}
+			cache.SetPixels32(pixels);
+			cache.Apply();
+			isNormalMap = true;
+			return cache;
+		}
+
 		public Texture2D GetTexture() {
 			if (initialized) return cache;
 			else {
+				Debug.Log("GLTFImage not initialized");
+				return null;
+			}
+		}
+
+		// glTF stores Metallic in blue channel and roughness in green channel. Unity stores Metallic in red and roughness in alpha. This method returns a unity-fixed texture
+		public Texture2D GetFixedMetallicRoughness() {
+			if (initialized) {
+				if (!isMetallicRoughnessFixed && !imageIsAsset) {
+					Color32[] pixels = cache.GetPixels32();
+					for (int i = 0; i < pixels.Length; i++) {
+						Color32 c = pixels[i];
+						c.r = pixels[i].b;
+						c.a = pixels[i].g;
+						pixels[i] = c;
+					}
+					cache.SetPixels32(pixels);
+					cache.Apply();
+					isMetallicRoughnessFixed = true;
+				}
+				return cache;
+			} else {
 				Debug.Log("GLTFImage not initialized");
 				return null;
 			}

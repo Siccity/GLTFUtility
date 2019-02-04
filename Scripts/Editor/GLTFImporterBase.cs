@@ -37,27 +37,29 @@ namespace Siccity.GLTFUtility {
         }
 
         public void AddMeshes(AssetImportContext ctx, GLTFObject gltfObject) {
-#if UNITY_2018_2_OR_NEWER
             for (int i = 0; i < gltfObject.meshes.Count; i++) {
+                Mesh mesh = gltfObject.meshes[i].GetMesh(gltfObject);
+                if (string.IsNullOrEmpty(mesh.name)) mesh.name = i.ToString();
+
+#if UNITY_2018_2_OR_NEWER
                 ctx.AddObjectToAsset(gltfObject.meshes[i].name, gltfObject.meshes[i].GetCachedMesh());
-            }
 #else
-            for (int i = 0; i < glbObject.meshes.Count; i++) {
                 ctx.AddSubAsset(glbObject.meshes[i].name, glbObject.meshes[i].GetCachedMesh());
-            }
 #endif
+            }
         }
 
         public void AddMaterials(AssetImportContext ctx, GLTFObject gltfObject) {
-#if UNITY_2018_2_OR_NEWER
             for (int i = 0; i < gltfObject.materials.Count; i++) {
+                Material mat = gltfObject.materials[i].GetMaterial();
+                if (string.IsNullOrEmpty(mat.name)) mat.name = i.ToString();
+
+#if UNITY_2018_2_OR_NEWER
                 ctx.AddObjectToAsset(gltfObject.materials[i].name, gltfObject.materials[i].GetMaterial());
-            }
 #else
-            for (int i = 0; i < glbObject.materials.Count; i++) {
                 ctx.AddSubAsset(glbObject.materials[i].name, glbObject.materials[i].GetMaterial());
-            }
 #endif
+            }
         }
 
         public void AddTextures(AssetImportContext ctx, GLTFObject gltfObject) {
