@@ -14,8 +14,8 @@ glTF is a new opensource 3d model transmission format which supports everything 
 - [x] Normals
 - [x] Tangents
 - [x] Vertex colors
-- [ ] Materials
-- [ ] Textures
+- [x] Materials
+- [x] Textures
 - [x] Rig
 - [ ] Animations
 - [ ] Morph targets
