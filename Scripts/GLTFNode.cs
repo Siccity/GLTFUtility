@@ -89,7 +89,8 @@ namespace Siccity.GLTFUtility {
                 
                 //Materials
                 if (gLTFMesh.primitives.Count == 1) {
-                    renderer.material = gLTFObject.materials[gLTFMesh.primitives[0].material].GetMaterial();
+                    // Create material if id is positive or 0
+                    if (gLTFMesh.primitives[0].material != -1) renderer.material = gLTFObject.materials[gLTFMesh.primitives[0].material].GetMaterial();
                 } else Debug.LogWarning("Only 1 primitive per mesh supported");
             }
         }

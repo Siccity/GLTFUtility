@@ -15,6 +15,7 @@ namespace Siccity.GLTFUtility {
         public List<GLTFScene> scenes;
         public List<GLTFNode> nodes;
         public List<GLTFMesh> meshes;
+        public List<GLTFAnimation> animations;
         public List<GLTFBuffer> buffers;
         public List<GLTFBufferView> bufferViews;
         public List<GLTFAccessor> accessors;
