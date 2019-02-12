@@ -22,7 +22,6 @@ namespace Siccity.GLTFUtility {
             } else {
                 string b64 = uri.Substring(embeddedPrefix.Length, uri.Length - embeddedPrefix.Length);
                 cache = Convert.FromBase64String(b64);
-                byteLength = cache.Length;
             }
 
             // Sometimes the buffer is part of a larger file. Since we dont have a byteOffset we have to assume it's at the end of the file.
