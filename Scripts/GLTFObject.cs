@@ -45,7 +45,8 @@ namespace Siccity.GLTFUtility {
             GameObject[] roots = new GameObject[rootNodes.Length];
             for (int i = 0; i < rootNodes.Length; i++) {
                 // Recursively construct transform hierarchy
-                roots[i] = nodes[i].CreateTransform(this, null).gameObject;
+                int nodeIndex = rootNodes[i];
+                roots[i] = nodes[nodeIndex].CreateTransform(this, null).gameObject;
             }
 
             // Flip the entire node tree on the global Z axis
