@@ -48,6 +48,15 @@ namespace Siccity.GLTFUtility {
                     continue;
                 }
                 Sampler sampler = samplers[channel.sampler];
+
+                string relativePath = "";
+                GLTFNode node = gLTFObject.nodes[channel.target.node];
+                while (node != null && !node.IsRootTransform(gLTFObject)) {
+                    if (string.IsNullOrEmpty(relativePath)) relativePath = node.name;
+                    else relativePath = node.name + "/" + relativePath;
+                    node = node.GetParentNode(gLTFObject);
+                }
+
                 float[] keyframeInput = gLTFObject.accessors[sampler.input].ReadFloat(gLTFObject).ToArray();
                 switch (channel.target.path) {
                     case "translation":
@@ -60,9 +69,9 @@ namespace Siccity.GLTFUtility {
                             posY.AddKey(keyframeInput[k], pos[k].y);
                             posZ.AddKey(keyframeInput[k], pos[k].z);
                         }
-                        clip.SetCurve("", typeof(Transform), "localPosition.x", posX);
-                        clip.SetCurve("", typeof(Transform), "localPosition.y", posY);
-                        clip.SetCurve("", typeof(Transform), "localPosition.z", posZ);
+                        clip.SetCurve(relativePath, typeof(Transform), "localPosition.x", posX);
+                        clip.SetCurve(relativePath, typeof(Transform), "localPosition.y", posY);
+                        clip.SetCurve(relativePath, typeof(Transform), "localPosition.z", posZ);
                         break;
                     case "rotation":
                         Vector4[] rot = gLTFObject.accessors[sampler.output].ReadVec4(gLTFObject).ToArray();
@@ -76,10 +85,10 @@ namespace Siccity.GLTFUtility {
                             rotZ.AddKey(keyframeInput[k], rot[k].z);
                             rotW.AddKey(keyframeInput[k], rot[k].w);
                         }
-                        clip.SetCurve("", typeof(Transform), "localRotation.x", rotX);
-                        clip.SetCurve("", typeof(Transform), "localRotation.y", rotY);
-                        clip.SetCurve("", typeof(Transform), "localRotation.z", rotZ);
-                        clip.SetCurve("", typeof(Transform), "localRotation.w", rotW);
+                        clip.SetCurve(relativePath, typeof(Transform), "localRotation.x", rotX);
+                        clip.SetCurve(relativePath, typeof(Transform), "localRotation.y", rotY);
+                        clip.SetCurve(relativePath, typeof(Transform), "localRotation.z", rotZ);
+                        clip.SetCurve(relativePath, typeof(Transform), "localRotation.w", rotW);
                         break;
                     case "scale":
                         Vector3[] scale = gLTFObject.accessors[sampler.output].ReadVec3(gLTFObject).ToArray();
@@ -91,9 +100,9 @@ namespace Siccity.GLTFUtility {
                             scaleY.AddKey(keyframeInput[k], scale[k].y);
                             scaleZ.AddKey(keyframeInput[k], scale[k].z);
                         }
-                        clip.SetCurve("", typeof(Transform), "localScale.x", scaleX);
-                        clip.SetCurve("", typeof(Transform), "localScale.y", scaleY);
-                        clip.SetCurve("", typeof(Transform), "localScale.z", scaleZ);
+                        clip.SetCurve(relativePath, typeof(Transform), "localScale.x", scaleX);
+                        clip.SetCurve(relativePath, typeof(Transform), "localScale.y", scaleY);
+                        clip.SetCurve(relativePath, typeof(Transform), "localScale.z", scaleZ);
                         break;
                     case "weights":
                         Debug.Log("Not supported");

@@ -89,13 +89,42 @@ namespace Siccity.GLTFUtility {
                     renderer = mr;
                     mf.sharedMesh = mesh;
                 }
-                
+
                 //Materials
                 if (gLTFMesh.primitives.Count == 1) {
                     // Create material if id is positive or 0
                     if (gLTFMesh.primitives[0].material != -1) renderer.material = gLTFObject.materials[gLTFMesh.primitives[0].material].GetMaterial();
                 } else Debug.LogWarning("Only 1 primitive per mesh supported");
             }
+        }
+
+        public GLTFNode GetParentNode(GLTFObject gLTFObject) {
+            int nodeIndex = gLTFObject.nodes.IndexOf(this);
+            for (int i = 0; i < gLTFObject.nodes.Count; i++) {
+                if (gLTFObject.nodes[i].children.Contains(nodeIndex)) return gLTFObject.nodes[i];
+            }
+            return null;
+        }
+
+        /// <summary>  Returns true if this node is referenced directly in a scene </summary>
+        public bool IsRootNode(GLTFObject gLTFObject) {
+            int nodeIndex = gLTFObject.nodes.IndexOf(this);
+            for (int i = 0; i < gLTFObject.scenes.Count; i++) {
+                if (gLTFObject.scenes[i].nodes.Contains(nodeIndex)) return true;
+            }
+            return false;
+        }
+
+        /// <summary> 
+        /// Same as IsRootNode except returns false if the scene has more root nodes, 
+        /// which means that it will create an extra transform object as root
+        /// </summary>
+        public bool IsRootTransform(GLTFObject gLTFObject) {
+            int nodeIndex = gLTFObject.nodes.IndexOf(this);
+            for (int i = 0; i < gLTFObject.scenes.Count; i++) {
+                if (gLTFObject.scenes[i].nodes.Contains(nodeIndex) && gLTFObject.scenes[i].nodes.Count == 1) return true;
+            }
+            return false;
         }
     }
 }
