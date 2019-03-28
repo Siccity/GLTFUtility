@@ -34,7 +34,10 @@ namespace Siccity.GLTFUtility {
         public Transform CreateTransform(GLTFObject gLTFObject, Transform parent) {
             if (transform == null) transform = new GameObject().transform;
             transform.parent = parent;
+
+            if (string.IsNullOrEmpty(name)) name = "node " + gLTFObject.nodes.IndexOf(this);
             transform.gameObject.name = name;
+
             if (matrix != null) Debug.LogWarning("MatrixTRS not supported.");
             if (translation != null) transform.localPosition = Position;
             if (rotation != null) transform.localRotation = Rotation;

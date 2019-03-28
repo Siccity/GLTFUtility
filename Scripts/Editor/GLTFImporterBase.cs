@@ -39,7 +39,7 @@ namespace Siccity.GLTFUtility {
         public void AddMeshes(AssetImportContext ctx, GLTFObject gltfObject) {
             for (int i = 0; i < gltfObject.meshes.Count; i++) {
                 Mesh mesh = gltfObject.meshes[i].GetMesh(gltfObject);
-                if (string.IsNullOrEmpty(mesh.name)) mesh.name = i.ToString();
+                if (string.IsNullOrEmpty(mesh.name)) mesh.name = "mesh " + i.ToString();
 
 #if UNITY_2018_2_OR_NEWER
                 ctx.AddObjectToAsset(gltfObject.meshes[i].name, gltfObject.meshes[i].GetCachedMesh());
@@ -52,7 +52,7 @@ namespace Siccity.GLTFUtility {
         public void AddMaterials(AssetImportContext ctx, GLTFObject gltfObject) {
             for (int i = 0; i < gltfObject.materials.Count; i++) {
                 Material mat = gltfObject.materials[i].GetMaterial();
-                if (string.IsNullOrEmpty(mat.name)) mat.name = i.ToString();
+                if (string.IsNullOrEmpty(mat.name)) mat.name = "material " + i.ToString();
 
 #if UNITY_2018_2_OR_NEWER
                 ctx.AddObjectToAsset(mat.name, mat);
@@ -65,7 +65,7 @@ namespace Siccity.GLTFUtility {
         public void AddAnimactionClips(AssetImportContext ctx, GLTFObject gltfObject) {
             for (int i = 0; i < gltfObject.animations.Count; i++) {
                 AnimationClip clip = gltfObject.animations[i].GetAnimationClip(gltfObject);
-                if (string.IsNullOrEmpty(clip.name)) clip.name = i.ToString();
+                if (string.IsNullOrEmpty(clip.name)) clip.name = "animation " + i.ToString();
 
 #if UNITY_2018_2_OR_NEWER
                 ctx.AddObjectToAsset(clip.name, clip);
@@ -81,7 +81,7 @@ namespace Siccity.GLTFUtility {
                 if (gltfObject.images[i].imageIsAsset) continue;
 
                 Texture2D tex = gltfObject.images[i].GetTexture();
-                if (string.IsNullOrEmpty(tex.name)) tex.name = i.ToString();
+                if (string.IsNullOrEmpty(tex.name)) tex.name = "texture " + i.ToString();
 #if UNITY_2018_2_OR_NEWER
                 ctx.AddObjectToAsset(i.ToString(), tex);
 #else
