@@ -35,7 +35,7 @@ namespace Siccity.GLTFUtility {
 				if (baseColorTexture != null && baseColorTexture.index >= 0) {
 					mat.SetTexture("_MainTex", images[baseColorTexture.index].GetTexture());
 				}
-				if (metallicRoughnessTexture != null && baseColorTexture.index >= 0) {
+				if (metallicRoughnessTexture != null && metallicRoughnessTexture.index >= 0) {
 					mat.SetTexture("_MetallicGlossMap", images[metallicRoughnessTexture.index].GetFixedMetallicRoughness());
 					mat.EnableKeyword("_METALLICGLOSSMAP");
 				}
