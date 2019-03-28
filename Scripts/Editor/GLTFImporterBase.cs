@@ -55,9 +55,22 @@ namespace Siccity.GLTFUtility {
                 if (string.IsNullOrEmpty(mat.name)) mat.name = i.ToString();
 
 #if UNITY_2018_2_OR_NEWER
-                ctx.AddObjectToAsset(gltfObject.materials[i].name, gltfObject.materials[i].GetMaterial());
+                ctx.AddObjectToAsset(mat.name, mat);
 #else
-                ctx.AddSubAsset(glbObject.materials[i].name, glbObject.materials[i].GetMaterial());
+                ctx.AddSubAsset(mat.name, mat);
+#endif
+            }
+        }
+
+        public void AddAnimactionClips(AssetImportContext ctx, GLTFObject gltfObject) {
+            for (int i = 0; i < gltfObject.animations.Count; i++) {
+                AnimationClip clip = gltfObject.animations[i].GetAnimationClip(gltfObject);
+                if (string.IsNullOrEmpty(clip.name)) clip.name = i.ToString();
+
+#if UNITY_2018_2_OR_NEWER
+                ctx.AddObjectToAsset(clip.name, clip);
+#else
+                ctx.AddSubAsset(clip.name, clip);
 #endif
             }
         }

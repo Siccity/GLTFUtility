@@ -17,9 +17,10 @@ namespace Siccity.GLTFUtility {
 
         private byte[] cache;
 
-        public byte[] GetBytes(GLTFObject gLTFObject) {
-            if (cache == null) cache = gLTFObject.buffers[buffer].GetBytes().SubArray(byteOffset, byteLength);
-            return cache;
+        public byte[] GetBytes(GLTFObject gLTFObject, int byteOffset = 0) {
+            if (cache == null) cache = gLTFObject.buffers[buffer].GetBytes().SubArray(this.byteOffset, byteLength);
+            if (byteOffset != 0) return cache.SubArray(byteOffset, byteLength - byteOffset);
+            else return cache;
         }
     }
 }

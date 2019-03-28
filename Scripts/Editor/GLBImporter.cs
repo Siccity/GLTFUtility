@@ -42,6 +42,7 @@ namespace Siccity.GLTFUtility {
             AddMeshes(ctx, gltfObject);
             AddMaterials(ctx, gltfObject);
             AddTextures(ctx, gltfObject);
+            AddAnimactionClips(ctx, gltfObject);
         }
     }
 }

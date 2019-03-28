@@ -8,7 +8,7 @@ namespace Siccity.GLTFUtility {
     [Serializable]
     public class GLTFAccessor {
         public int bufferView = -1;
-        public int byteOffset = -1;
+        public int byteOffset = 0;
         public string type;
         public GLType componentType = GLType.UNSET;
         public int count = -1;
@@ -24,7 +24,7 @@ namespace Siccity.GLTFUtility {
             }
 
             Matrix4x4[] m = new Matrix4x4[count];
-            byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject);
+            byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject, byteOffset);
             int componentSize = GetComponentSize();
             Func<byte[], int, float> converter = GetFloatConverter();
             for (int i = 0; i < count; i++) {
@@ -71,7 +71,7 @@ namespace Siccity.GLTFUtility {
             }
 
             Vector4[] verts = new Vector4[count];
-            byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject);
+            byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject, byteOffset);
             int componentSize = GetComponentSize();
             Func<byte[], int, float> converter = GetFloatConverter();
             for (int i = 0; i < count; i++) {
@@ -94,7 +94,7 @@ namespace Siccity.GLTFUtility {
             }
 
             Color[] colors = new Color[count];
-            byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject);
+            byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject, byteOffset);
             int componentSize = GetComponentSize();
             if (componentType == GLType.BYTE || componentType == GLType.UNSIGNED_BYTE) {
                 Color32 color = Color.black;
@@ -147,7 +147,7 @@ namespace Siccity.GLTFUtility {
             }
 
             Vector3[] verts = new Vector3[count];
-            byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject);
+            byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject, byteOffset);
             int componentSize = GetComponentSize();
             Func<byte[], int, float> converter = GetFloatConverter();
             for (int i = 0; i < count; i++) {
@@ -172,7 +172,7 @@ namespace Siccity.GLTFUtility {
             }
 
             Vector2[] verts = new Vector2[count];
-            byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject);
+            byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject, byteOffset);
             int componentSize = GetComponentSize();
             Func<byte[], int, float> converter = GetFloatConverter();
             for (int i = 0; i < count; i++) {
@@ -185,6 +185,23 @@ namespace Siccity.GLTFUtility {
             return verts;
         }
 
+        public float[] ReadFloat(GLTFObject gLTFObject) {
+            if (type != "SCALAR") {
+                Debug.LogError("Type mismatch! Expected SCALAR got " + type);
+                return new float[count];
+            }
+
+            float[] floats = new float[count];
+            byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject, byteOffset);
+            int componentSize = GetComponentSize();
+            Func<byte[], int, float> converter = GetFloatConverter();
+            for (int i = 0; i < count; i++) {
+                int startIndex = i * componentSize;
+                floats[i] = converter(bytes, startIndex);
+            }
+            return floats;
+        }
+
         public int[] ReadInt(GLTFObject gLTFObject) {
             if (type != "SCALAR") {
                 Debug.LogError("Type mismatch! Expected SCALAR got " + type);
@@ -192,7 +209,7 @@ namespace Siccity.GLTFUtility {
             }
 
             int[] ints = new int[count];
-            byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject);
+            byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject, byteOffset);
             int componentSize = GetComponentSize();
             Func<byte[], int, int> converter = GetIntConverter();
             for (int i = 0; i < count; i++) {
