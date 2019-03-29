@@ -7,6 +7,7 @@ using UnityEngine;
 namespace Siccity.GLTFUtility {
     [Serializable]
     public class GLTFAnimation {
+        public string name;
         public Sampler[] samplers = null;
         /// <summary> Connects the output values of the key frame animation to a specific node in the hierarchy </summary>
         public Channel[] channels = null;
@@ -41,6 +42,10 @@ namespace Siccity.GLTFUtility {
 
         public AnimationClip GetAnimationClip(GLTFObject gLTFObject) {
             AnimationClip clip = new AnimationClip();
+
+            if (string.IsNullOrEmpty(name)) name = "animation " + gLTFObject.animations.IndexOf(this);
+            clip.name = name;
+            
             for (int i = 0; i < channels.Length; i++) {
                 Channel channel = channels[i];
                 if (samplers.Length <= channel.sampler) {

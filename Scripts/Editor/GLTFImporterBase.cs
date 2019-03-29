@@ -62,11 +62,9 @@ namespace Siccity.GLTFUtility {
             }
         }
 
-        public void AddAnimactionClips(AssetImportContext ctx, GLTFObject gltfObject) {
+        public void AddAnimations(AssetImportContext ctx, GLTFObject gltfObject) {
             for (int i = 0; i < gltfObject.animations.Count; i++) {
                 AnimationClip clip = gltfObject.animations[i].GetAnimationClip(gltfObject);
-                if (string.IsNullOrEmpty(clip.name)) clip.name = "animation " + i.ToString();
-
 #if UNITY_2018_2_OR_NEWER
                 ctx.AddObjectToAsset(clip.name, clip);
 #else
