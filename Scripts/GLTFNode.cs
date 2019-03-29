@@ -38,10 +38,25 @@ namespace Siccity.GLTFUtility {
             if (string.IsNullOrEmpty(name)) name = "node " + gLTFObject.nodes.IndexOf(this);
             transform.gameObject.name = name;
 
-            if (matrix != null) Debug.LogWarning("MatrixTRS not supported.");
-            if (translation != null) transform.localPosition = Position;
-            if (rotation != null) transform.localRotation = Rotation;
-            if (scale != null) transform.localScale = Scale;
+            if (matrix != null) {
+                if (matrix.Length != 16) {
+                    Debug.LogWarning("Matrix length expected to be 16 but is " + matrix.Length);
+                }
+                Matrix4x4 trs = new Matrix4x4(
+                    new Vector4(matrix[0], matrix[1], matrix[2], matrix[3]),
+                    new Vector4(matrix[4], matrix[5], matrix[6], matrix[7]),
+                    new Vector4(matrix[8], matrix[9], matrix[10], matrix[11]),
+                    new Vector4(matrix[12], matrix[13], matrix[14], matrix[15])
+                );
+                Vector3 pos = trs.GetColumn(3);
+                transform.localPosition = pos;
+                transform.localRotation = trs.rotation;
+                transform.localScale = trs.lossyScale;
+            } else {
+                if (translation != null) transform.localPosition = Position;
+                if (rotation != null) transform.localRotation = Rotation;
+                if (scale != null) transform.localScale = Scale;
+            }
 
             for (int i = 0; i < children.Count; i++) {
                 gLTFObject.nodes[children[i]].CreateTransform(gLTFObject, transform);
