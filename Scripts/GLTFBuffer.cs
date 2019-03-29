@@ -12,12 +12,14 @@ namespace Siccity.GLTFUtility {
 
         public int byteLength = -1;
         public string uri = null;
-        public bool isEmbedded { get { return checkEmbedded(); } }
+        public bool isEmbedded { get { return CheckEmbedded(); } }
 
         public byte[] cache;
 
         public void Read(string directoryRoot, string mainFile) {
-            if (!isEmbedded) {
+            if (string.IsNullOrEmpty(uri)) {
+                cache = File.ReadAllBytes(directoryRoot + mainFile);
+            } else if (!isEmbedded) {
                 cache = File.ReadAllBytes(directoryRoot + uri);
             } else {
                 string b64 = uri.Substring(embeddedPrefix.Length, uri.Length - embeddedPrefix.Length);
@@ -35,8 +37,7 @@ namespace Siccity.GLTFUtility {
             return cache;
         }
 
-        private bool checkEmbedded() {
-            
+        private bool CheckEmbedded() {
             if (uri.Length < embeddedPrefix.Length) {
                 return false;
             }
