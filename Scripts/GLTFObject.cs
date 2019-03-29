@@ -8,7 +8,7 @@ namespace Siccity.GLTFUtility {
     public enum GLType { UNSET = -1, BYTE = 5120, UNSIGNED_BYTE = 5121, SHORT = 5122, UNSIGNED_SHORT = 5123, FLOAT = 5126 }
 
     [Serializable]
-    public class GLTFObject {
+    public class GLTFObject : ISerializationCallbackReceiver {
 
         /// <summary> Default scene </summary>
         int scene = -1;
@@ -66,6 +66,38 @@ namespace Siccity.GLTFUtility {
                 nodes[i].SetupComponents(this);
             }
             return roots;
+        }
+
+        public void OnBeforeSerialize() {
+            return;
+        }
+
+        public void OnAfterDeserialize() {
+            InitializeProperties(
+                scenes,
+                nodes,
+                meshes,
+                animations,
+                buffers,
+                bufferViews,
+                accessors,
+                skins,
+                images,
+                materials
+            );
+        }
+
+        private void InitializeProperties(params List<GLTFProperty>[] properties) {
+            for (int i = 0; i < properties.Length; i++) {
+                for (int k = 0; k < properties[i].Count; k++) {
+                    properties[i][k].glTFObject = this;
+                }
+            }
+            for (int i = 0; i < properties.Length; i++) {
+                for (int k = 0; k < properties[i].Count; k++) {
+                    properties[i][k].Initialize();
+                }
+            }
         }
     }
 }
