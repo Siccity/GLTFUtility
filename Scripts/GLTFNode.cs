@@ -35,7 +35,10 @@ namespace Siccity.GLTFUtility {
             if (transform == null) transform = new GameObject().transform;
             transform.parent = parent;
 
-            if (string.IsNullOrEmpty(name)) name = "node " + gLTFObject.nodes.IndexOf(this);
+            if (string.IsNullOrEmpty(name)) {
+                if (IsJoint(gLTFObject)) name = "joint" + gLTFObject.nodes.IndexOf(this);
+                else name = "node" + gLTFObject.nodes.IndexOf(this);
+            }
             transform.gameObject.name = name;
 
             if (matrix != null) {
@@ -138,6 +141,17 @@ namespace Siccity.GLTFUtility {
             int nodeIndex = gLTFObject.nodes.IndexOf(this);
             for (int i = 0; i < gLTFObject.scenes.Count; i++) {
                 if (gLTFObject.scenes[i].nodes.Contains(nodeIndex) && gLTFObject.scenes[i].nodes.Count == 1) return true;
+            }
+            return false;
+        }
+
+        public bool IsJoint(GLTFObject gLTFObject) {
+            if (gLTFObject.skins == null || gLTFObject.skins.Count == 0) return false;
+            int nodeIndex = gLTFObject.nodes.IndexOf(this);
+            for (int i = 0; i < gLTFObject.skins.Count; i++) {
+                for (int k = 0; k < gLTFObject.skins[i].joints.Length; k++) {
+                    if (gLTFObject.skins[i].joints[k] == nodeIndex) return true;
+                }
             }
             return false;
         }
