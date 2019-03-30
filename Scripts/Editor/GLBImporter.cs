@@ -39,6 +39,7 @@ namespace Siccity.GLTFUtility {
             // Create gameobject structure
             GameObject[] roots = gltfObject.Create();
 
+            ApplyDefaultMaterial(roots);
             SaveToAsset(ctx, roots);
             AddMeshes(ctx, gltfObject);
             AddMaterials(ctx, gltfObject);

@@ -2,11 +2,15 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
     public abstract class GLTFImporterBase : ScriptedImporter {
+
+        public static Material defaultMaterial { get { return _defaultMaterial != null ? _defaultMaterial : AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat"); } }
+        private static Material _defaultMaterial;
 
         public void SaveToAsset(AssetImportContext ctx, GameObject[] roots) {
 #if UNITY_2018_2_OR_NEWER
@@ -36,6 +40,17 @@ namespace Siccity.GLTFUtility {
 #endif
         }
 
+        public void ApplyDefaultMaterial(GameObject[] roots) {
+            MeshRenderer[] renderers = roots.SelectMany(x => x.GetComponentsInChildren<MeshRenderer>(true)).ToArray();
+            for (int i = 0; i < renderers.Length; i++) {
+                Material[] mats = renderers[i].sharedMaterials;
+                for (int k = 0; k < mats.Length; k++) {
+                    if (mats[k] == null) mats[k] = defaultMaterial;
+                }
+                renderers[i].sharedMaterials = mats;
+            }
+        }
+
         public void AddMeshes(AssetImportContext ctx, GLTFObject gltfObject) {
             for (int i = 0; i < gltfObject.meshes.Count; i++) {
                 Mesh mesh = gltfObject.meshes[i].GetMesh();
@@ -55,7 +70,7 @@ namespace Siccity.GLTFUtility {
         public void AddMaterials(AssetImportContext ctx, GLTFObject gltfObject) {
             for (int i = 0; i < gltfObject.materials.Count; i++) {
                 Material mat = gltfObject.materials[i].GetMaterial();
-                if (string.IsNullOrEmpty(mat.name)) mat.name = "material " + i.ToString();
+                if (string.IsNullOrEmpty(mat.name)) mat.name = "material" + i.ToString();
 
 #if UNITY_2018_2_OR_NEWER
                 ctx.AddObjectToAsset(mat.name, mat);
@@ -82,7 +97,7 @@ namespace Siccity.GLTFUtility {
                 if (gltfObject.images[i].imageIsAsset) continue;
 
                 Texture2D tex = gltfObject.images[i].GetTexture();
-                if (string.IsNullOrEmpty(tex.name)) tex.name = "texture " + i.ToString();
+                if (string.IsNullOrEmpty(tex.name)) tex.name = "texture" + i.ToString();
 #if UNITY_2018_2_OR_NEWER
                 ctx.AddObjectToAsset(i.ToString(), tex);
 #else

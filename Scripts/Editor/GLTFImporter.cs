@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
+using UnityEditor;
 
 namespace Siccity.GLTFUtility {
     [ScriptedImporter(1, "gltf")]
@@ -18,6 +19,7 @@ namespace Siccity.GLTFUtility {
             // Create gameobject structure
             GameObject[] roots = gltfObject.Create();
 
+            ApplyDefaultMaterial(roots);
             SaveToAsset(ctx, roots);
             AddMeshes(ctx, gltfObject);
             AddMaterials(ctx, gltfObject);
