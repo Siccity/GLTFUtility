@@ -29,22 +29,34 @@ namespace Siccity.GLTFUtility {
 			if (pbrMetallicRoughness != null) cache = pbrMetallicRoughness.CreateMaterial(glTFObject.images);
 			else cache = new Material(Shader.Find("Standard"));
 			if (normalTexture != null && normalTexture.index >= 0) {
-				Texture2D tex = glTFObject.images[normalTexture.index].GetNormalMap();
-				cache.SetTexture("_BumpMap", tex);
-				cache.EnableKeyword("_NORMALMAP");
+				if (glTFObject.images.Count <= normalTexture.index) {
+					Debug.LogWarning("Attempted to get normal texture from image index " + normalTexture.index + " when only " + glTFObject.images.Count + " exist");
+				} else {
+					Texture2D tex = glTFObject.images[normalTexture.index].GetNormalMap();
+					cache.SetTexture("_BumpMap", tex);
+					cache.EnableKeyword("_NORMALMAP");
+				}
 			}
 			if (occlusionTexture != null && occlusionTexture.index >= 0) {
-				Texture2D tex = glTFObject.images[occlusionTexture.index].GetTexture();
-				cache.SetTexture("_OcclusionMap", tex);
+				if (glTFObject.images.Count <= occlusionTexture.index) {
+					Debug.LogWarning("Attempted to get occlusion texture from image index " + occlusionTexture.index + " when only " + glTFObject.images.Count + " exist");
+				} else {
+					Texture2D tex = glTFObject.images[occlusionTexture.index].GetTexture();
+					cache.SetTexture("_OcclusionMap", tex);
+				}
 			}
 			if (emissiveFactor != null && emissiveFactor.Length == 3) {
 				cache.SetColor("_EmissionColor", EmissiveFactor);
 				cache.EnableKeyword("_EMISSION");
 			}
 			if (emissiveTexture != null && emissiveTexture.index >= 0) {
-				Texture2D tex = glTFObject.images[emissiveTexture.index].GetTexture();
-				cache.SetTexture("_EmissionMap", tex);
-				cache.EnableKeyword("_EMISSION");
+				if (glTFObject.images.Count <= emissiveTexture.index) {
+					Debug.LogWarning("Attempted to get emissive texture from image index " + emissiveTexture.index + " when only " + glTFObject.images.Count + " exist");
+				} else {
+					Texture2D tex = glTFObject.images[emissiveTexture.index].GetTexture();
+					cache.SetTexture("_EmissionMap", tex);
+					cache.EnableKeyword("_EMISSION");
+				}
 			}
 			// Name
 			if (string.IsNullOrEmpty(name)) cache.name = "material" + glTFObject.materials.IndexOf(this);
@@ -67,11 +79,19 @@ namespace Siccity.GLTFUtility {
 				mat.SetFloat("_Metallic", metallicFactor);
 				mat.SetFloat("_Glossiness", 1 - roughnessFactor);
 				if (baseColorTexture != null && baseColorTexture.index >= 0) {
-					mat.SetTexture("_MainTex", images[baseColorTexture.index].GetTexture());
+					if (images.Count <= baseColorTexture.index) {
+						Debug.LogWarning("Attempted to get basecolor texture from image index " + baseColorTexture.index + " when only " + images.Count + " exist");
+					} else {
+						mat.SetTexture("_MainTex", images[baseColorTexture.index].GetTexture());
+					}
 				}
 				if (metallicRoughnessTexture != null && metallicRoughnessTexture.index >= 0) {
-					mat.SetTexture("_MetallicGlossMap", images[metallicRoughnessTexture.index].GetFixedMetallicRoughness());
-					mat.EnableKeyword("_METALLICGLOSSMAP");
+					if (images.Count <= metallicRoughnessTexture.index) {
+						Debug.LogWarning("Attempted to get metallicRoughness texture from image index " + metallicRoughnessTexture.index + " when only " + images.Count + " exist");
+					} else {
+						mat.SetTexture("_MetallicGlossMap", images[metallicRoughnessTexture.index].GetFixedMetallicRoughness());
+						mat.EnableKeyword("_METALLICGLOSSMAP");
+					}
 				}
 				return mat;
 			}
