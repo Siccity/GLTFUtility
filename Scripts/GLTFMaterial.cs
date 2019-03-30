@@ -23,11 +23,16 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 		public override void Load() {
+			if (pbrMetallicRoughness != null) {
+				pbrMetallicRoughness.glTFObject = glTFObject;
+				pbrMetallicRoughness.Load();
+				cache = pbrMetallicRoughness.Material;
+			}
+			else cache = new Material(Shader.Find("Standard"));
+
 			// EmissiveFactor
 			if (emissiveFactor != null && emissiveFactor.Length == 3) EmissiveFactor = new Color(emissiveFactor[0], emissiveFactor[1], emissiveFactor[2]);
 
-			if (pbrMetallicRoughness != null) cache = pbrMetallicRoughness.CreateMaterial(glTFObject.images);
-			else cache = new Material(Shader.Find("Standard"));
 			if (normalTexture != null && normalTexture.index >= 0) {
 				if (glTFObject.images.Count <= normalTexture.index) {
 					Debug.LogWarning("Attempted to get normal texture from image index " + normalTexture.index + " when only " + glTFObject.images.Count + " exist");
@@ -64,36 +69,47 @@ namespace Siccity.GLTFUtility {
 		}
 
 		[Serializable]
-		public class PbrMetalRoughness {
-			public float[] baseColorFactor;
+		public class PbrMetalRoughness : GLTFProperty {
+
+#region Serialized fields
+			[SerializeField] private float[] baseColorFactor;
 			public float metallicFactor;
 			public float roughnessFactor = 1f;
 			public TextureReference baseColorTexture;
 			public TextureReference metallicRoughnessTexture;
+#endregion
 
-			public Color BaseColor { get { return (baseColorFactor != null && baseColorFactor.Length == 3) ? new Color(baseColorFactor[0], baseColorFactor[1], baseColorFactor[2]) : Color.white; } }
+#region Non-serialized fields
+			public Color BaseColor { get; private set; }
+			public Material Material { get; private set; }
+#endregion
 
-			public Material CreateMaterial(List<GLTFImage> images) {
-				Material mat = new Material(Shader.Find("Standard"));
-				mat.color = BaseColor;
-				mat.SetFloat("_Metallic", metallicFactor);
-				mat.SetFloat("_Glossiness", 1 - roughnessFactor);
+			public override void Load() {
+				// Base Color
+				if (baseColorFactor != null && baseColorFactor.Length == 3) BaseColor = new Color(baseColorFactor[0], baseColorFactor[1], baseColorFactor[2]);
+				if (baseColorFactor != null && baseColorFactor.Length == 4) BaseColor = new Color(baseColorFactor[0], baseColorFactor[1], baseColorFactor[2], baseColorFactor[3]);
+				else BaseColor = Color.white;
+
+				// Material
+				Material = new Material(Shader.Find("Standard"));
+				Material.color = BaseColor;
+				Material.SetFloat("_Metallic", metallicFactor);
+				Material.SetFloat("_Glossiness", 1 - roughnessFactor);
 				if (baseColorTexture != null && baseColorTexture.index >= 0) {
-					if (images.Count <= baseColorTexture.index) {
-						Debug.LogWarning("Attempted to get basecolor texture from image index " + baseColorTexture.index + " when only " + images.Count + " exist");
+					if (glTFObject.images.Count <= baseColorTexture.index) {
+						Debug.LogWarning("Attempted to get basecolor texture from image index " + baseColorTexture.index + " when only " + glTFObject.images.Count + " exist");
 					} else {
-						mat.SetTexture("_MainTex", images[baseColorTexture.index].GetTexture());
+						Material.SetTexture("_MainTex", glTFObject.images[baseColorTexture.index].GetTexture());
 					}
 				}
 				if (metallicRoughnessTexture != null && metallicRoughnessTexture.index >= 0) {
-					if (images.Count <= metallicRoughnessTexture.index) {
-						Debug.LogWarning("Attempted to get metallicRoughness texture from image index " + metallicRoughnessTexture.index + " when only " + images.Count + " exist");
+					if (glTFObject.images.Count <= metallicRoughnessTexture.index) {
+						Debug.LogWarning("Attempted to get metallicRoughness texture from image index " + metallicRoughnessTexture.index + " when only " + glTFObject.images.Count + " exist");
 					} else {
-						mat.SetTexture("_MetallicGlossMap", images[metallicRoughnessTexture.index].GetFixedMetallicRoughness());
-						mat.EnableKeyword("_METALLICGLOSSMAP");
+						Material.SetTexture("_MetallicGlossMap", glTFObject.images[metallicRoughnessTexture.index].GetFixedMetallicRoughness());
+						Material.EnableKeyword("_METALLICGLOSSMAP");
 					}
 				}
-				return mat;
 			}
 		}
 
