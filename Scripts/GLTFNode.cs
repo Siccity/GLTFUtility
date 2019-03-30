@@ -117,10 +117,13 @@ namespace Siccity.GLTFUtility {
                 }
 
                 //Materials
-                if (glTFMesh.primitives.Count == 1) {
+                Material[] materials = new Material[glTFMesh.primitives.Count];
+                for (int i = 0; i < glTFMesh.primitives.Count; i++) {
+                    GLTFPrimitive primitive = glTFMesh.primitives[i];
                     // Create material if id is positive or 0
-                    if (glTFMesh.primitives[0].material != -1) renderer.material = glTFObject.materials[glTFMesh.primitives[0].material].GetMaterial();
-                } else Debug.LogWarning("Only 1 primitive per mesh supported");
+                    if (primitive.material != -1) materials[i] = glTFObject.materials[primitive.material].GetMaterial();
+                }
+                renderer.materials = materials;
             }
         }
 

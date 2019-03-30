@@ -22,87 +22,115 @@ namespace Siccity.GLTFUtility {
         public override void Load() {
             if (primitives.Count == 0) {
                 Debug.LogWarning("0 primitives in mesh");
-            } else if (primitives.Count >= 1) {
-                if (primitives.Count > 1) Debug.LogWarning("Multiple primitives per mesh not supported");
-
+            } else {
                 Mesh mesh;
                 mesh = new Mesh();
-
-                // Name
                 if (string.IsNullOrEmpty(name)) mesh.name = "mesh" + glTFObject.meshes.IndexOf(this);
                 else mesh.name = name;
 
-                // Verts - (Z points backwards in GLTF)
-                if (primitives[0].attributes.POSITION != -1) {
-                    mesh.vertices = glTFObject.accessors[primitives[0].attributes.POSITION].ReadVec3().Select(v => { v.z = -v.z; return v; }).ToArray();
-                }
+                List<Vector3> normals = new List<Vector3>();
+                List<List<int>> submeshTris = new List<List<int>>();
+                List<Vector3> verts = new List<Vector3>();
+                List<Vector4> tangents = new List<Vector4>();
+                List<Color> colors = new List<Color>();
+                List<BoneWeight> weights = new List<BoneWeight>();
+                List<Vector2> uv1 = new List<Vector2>();
+                List<Vector2> uv2 = new List<Vector2>();
+                List<Vector2> uv3 = new List<Vector2>();
+                List<Vector2> uv4 = new List<Vector2>();
+                List<Vector2> uv5 = new List<Vector2>();
+                List<Vector2> uv6 = new List<Vector2>();
+                List<Vector2> uv7 = new List<Vector2>();
+                List<Vector2> uv8 = new List<Vector2>();
 
-                // Tris - (Instead of flipping each triangle, just flip the entire array. Much easier)
-                if (primitives[0].indices != -1) {
-                    mesh.triangles = glTFObject.accessors[primitives[0].indices].ReadInt().Reverse().ToArray();
-                }
+                for (int i = 0; i < primitives.Count; i++) {
+                    GLTFPrimitive primitive = primitives[i];
 
-                // Normals - (Z points backwards in GLTF)
-                if (primitives[0].attributes.NORMAL != -1) {
-                    mesh.normals = glTFObject.accessors[primitives[0].attributes.NORMAL].ReadVec3().Select(v => { v.z = -v.z; return v; }).ToArray();
-                } else mesh.RecalculateNormals();
+                    int vertStartIndex = verts.Count;
 
-                // Tangents - (Z points backwards in GLTF)
-                if (primitives[0].attributes.TANGENT != -1) {
-                    mesh.tangents = glTFObject.accessors[primitives[0].attributes.TANGENT].ReadVec4().Select(v => { v.z = -v.z; return v; }).ToArray();
-                } else mesh.RecalculateTangents();
+                    // Verts - (Z points backwards in GLTF)
+                    if (primitive.attributes.POSITION != -1) {
+                        verts.AddRange(glTFObject.accessors[primitive.attributes.POSITION].ReadVec3().Select(v => { v.z = -v.z; return v; }));
+                    }
 
-                // Vertex colors
-                if (primitives[0].attributes.COLOR_0 != -1) {
-                    mesh.colors = glTFObject.accessors[primitives[0].attributes.COLOR_0].ReadColor();
-                }
+                    // Tris - (Invert all triangles. Instead of flipping each triangle, just flip the entire array. Much easier)
+                    if (primitive.indices != -1) {
+                        submeshTris.Add(new List<int>(glTFObject.accessors[primitive.indices].ReadInt().Reverse().Select(x => x + vertStartIndex)));
+                    }
 
-                // Weights
-                if (primitives[0].attributes.WEIGHTS_0 != -1 && primitives[0].attributes.JOINTS_0 != -1) {
-                    Vector4[] weights0 = glTFObject.accessors[primitives[0].attributes.WEIGHTS_0].ReadVec4();
-                    Vector4[] joints0 = glTFObject.accessors[primitives[0].attributes.JOINTS_0].ReadVec4();
-                    if (joints0.Length == weights0.Length) {
-                        BoneWeight[] boneWeights = new BoneWeight[weights0.Length];
-                        for (int i = 0; i < boneWeights.Length; i++) {
-                            NormalizeWeights(ref weights0[i]);
-                            boneWeights[i].weight0 = weights0[i].x;
-                            boneWeights[i].weight1 = weights0[i].y;
-                            boneWeights[i].weight2 = weights0[i].z;
-                            boneWeights[i].weight3 = weights0[i].w;
-                            boneWeights[i].boneIndex0 = Mathf.RoundToInt(joints0[i].x);
-                            boneWeights[i].boneIndex1 = Mathf.RoundToInt(joints0[i].y);
-                            boneWeights[i].boneIndex2 = Mathf.RoundToInt(joints0[i].z);
-                            boneWeights[i].boneIndex3 = Mathf.RoundToInt(joints0[i].w);
-                        }
-                        mesh.boneWeights = boneWeights;
-                    } else Debug.LogWarning("WEIGHTS_0 and JOINTS_0 not same length. Skipped");
-                }
+                    /// Normals - (Z points backwards in GLTF)
+                    if (primitive.attributes.NORMAL != -1) {
+                        normals.AddRange(glTFObject.accessors[primitive.attributes.NORMAL].ReadVec3().Select(v => { v.z = -v.z; return v; }));
+                    } else mesh.RecalculateNormals();
 
-                // UVs
-                if (primitives[0].attributes.TEXCOORD_0 != -1) { // UV 1
-                    Vector2[] uvs = glTFObject.accessors[primitives[0].attributes.TEXCOORD_0].ReadVec2();
-                    FlipY(ref uvs);
-                    mesh.uv = uvs;
+                    // Tangents - (Z points backwards in GLTF)
+                    if (primitive.attributes.TANGENT != -1) {
+                        tangents.AddRange(glTFObject.accessors[primitive.attributes.TANGENT].ReadVec4().Select(v => { v.z = -v.z; return v; }));
+                    } else mesh.RecalculateTangents();
+
+                    // Vertex colors
+                    if (primitive.attributes.COLOR_0 != -1) {
+                        colors.AddRange(glTFObject.accessors[primitive.attributes.COLOR_0].ReadColor());
+                    }
+
+                    // Weights
+                    if (primitive.attributes.WEIGHTS_0 != -1 && primitive.attributes.JOINTS_0 != -1) {
+                        Vector4[] weights0 = glTFObject.accessors[primitive.attributes.WEIGHTS_0].ReadVec4();
+                        Vector4[] joints0 = glTFObject.accessors[primitive.attributes.JOINTS_0].ReadVec4();
+                        if (joints0.Length == weights0.Length) {
+                            BoneWeight[] boneWeights = new BoneWeight[weights0.Length];
+                            for (int k = 0; k < boneWeights.Length; k++) {
+                                NormalizeWeights(ref weights0[k]);
+                                boneWeights[k].weight0 = weights0[k].x;
+                                boneWeights[k].weight1 = weights0[k].y;
+                                boneWeights[k].weight2 = weights0[k].z;
+                                boneWeights[k].weight3 = weights0[k].w;
+                                boneWeights[k].boneIndex0 = Mathf.RoundToInt(joints0[k].x);
+                                boneWeights[k].boneIndex1 = Mathf.RoundToInt(joints0[k].y);
+                                boneWeights[k].boneIndex2 = Mathf.RoundToInt(joints0[k].z);
+                                boneWeights[k].boneIndex3 = Mathf.RoundToInt(joints0[k].w);
+                            }
+                            weights.AddRange(boneWeights);
+                        } else Debug.LogWarning("WEIGHTS_0 and JOINTS_0 not same length. Skipped");
+                    }
+
+                    // UVs
+                    ReadUVs(ref uv1, primitive.attributes.TEXCOORD_0);
+                    ReadUVs(ref uv2, primitive.attributes.TEXCOORD_1);
+                    ReadUVs(ref uv3, primitive.attributes.TEXCOORD_2);
+                    ReadUVs(ref uv4, primitive.attributes.TEXCOORD_3);
+                    ReadUVs(ref uv5, primitive.attributes.TEXCOORD_4);
+                    ReadUVs(ref uv6, primitive.attributes.TEXCOORD_5);
+                    ReadUVs(ref uv7, primitive.attributes.TEXCOORD_6);
+                    ReadUVs(ref uv8, primitive.attributes.TEXCOORD_7);
                 }
-                if (primitives[0].attributes.TEXCOORD_1 != -1) { // UV 2
-                    Vector2[] uvs = glTFObject.accessors[primitives[0].attributes.TEXCOORD_1].ReadVec2();
-                    FlipY(ref uvs);
-                    mesh.uv2 = uvs;
+                mesh.vertices = verts.ToArray();
+                mesh.subMeshCount = submeshTris.Count;
+                for (int i = 0; i < submeshTris.Count; i++) {
+                    mesh.SetTriangles(submeshTris[i].ToArray(), i);
                 }
-                if (primitives[0].attributes.TEXCOORD_2 != -1) { // UV 3
-                    Vector2[] uvs = glTFObject.accessors[primitives[0].attributes.TEXCOORD_2].ReadVec2();
-                    FlipY(ref uvs);
-                    mesh.uv3 = uvs;
-                }
-                if (primitives[0].attributes.TEXCOORD_3 != -1) { // UV 4
-                    Vector2[] uvs = glTFObject.accessors[primitives[0].attributes.TEXCOORD_3].ReadVec2();
-                    FlipY(ref uvs);
-                    mesh.uv4 = uvs;
-                }
+                mesh.normals = normals.ToArray();
+                mesh.tangents = tangents.ToArray();
+                mesh.colors = colors.ToArray();
+                mesh.uv = uv1.ToArray();
+                mesh.uv2 = uv2.ToArray();
+                mesh.uv3 = uv3.ToArray();
+                mesh.uv4 = uv4.ToArray();
+                mesh.uv5 = uv5.ToArray();
+                mesh.uv6 = uv6.ToArray();
+                mesh.uv7 = uv7.ToArray();
+                mesh.uv8 = uv8.ToArray();
 
                 mesh.RecalculateBounds();
                 cache = mesh;
             }
+        }
+
+        private void ReadUVs(ref List<Vector2> uvs, int texcoord) {
+            if (texcoord == -1) return;
+            Vector2[] _uvs = glTFObject.accessors[texcoord].ReadVec2();
+            FlipY(ref _uvs);
+            uvs.AddRange(_uvs);
         }
 
         public Mesh GetMesh() {

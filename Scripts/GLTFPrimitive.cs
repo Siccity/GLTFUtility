@@ -25,6 +25,10 @@ namespace Siccity.GLTFUtility {
             public int TEXCOORD_1 = -1;
             public int TEXCOORD_2 = -1;
             public int TEXCOORD_3 = -1;
+            public int TEXCOORD_4 = -1;
+            public int TEXCOORD_5 = -1;
+            public int TEXCOORD_6 = -1;
+            public int TEXCOORD_7 = -1;
             public int JOINTS_0 = -1;
             public int JOINTS_1 = -1;
             public int JOINTS_2 = -1;
