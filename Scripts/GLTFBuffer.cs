@@ -7,20 +7,24 @@ using UnityEngine;
 namespace Siccity.GLTFUtility {
     /// <summary> Contains raw binary data </summary>
     [Serializable]
-    public class GLTFBuffer {
-        private const string embeddedPrefix = "data:application/octet-stream;base64,";
+    public class GLTFBuffer : GLTFProperty {
 
+#region Serialized fields
         public int byteLength = -1;
         public string uri = null;
+#endregion
+
+#region Non-serialized fields
+        private const string embeddedPrefix = "data:application/octet-stream;base64,";
+        private byte[] cache;
         public bool isEmbedded { get { return CheckEmbedded(); } }
+#endregion
 
-        public byte[] cache;
-
-        public void Read(string directoryRoot, string mainFile) {
+        public override void Load() {
             if (string.IsNullOrEmpty(uri)) {
-                cache = File.ReadAllBytes(directoryRoot + mainFile);
+                cache = File.ReadAllBytes(glTFObject.directoryRoot + glTFObject.mainFile);
             } else if (!isEmbedded) {
-                cache = File.ReadAllBytes(directoryRoot + uri);
+                cache = File.ReadAllBytes(glTFObject.directoryRoot + uri);
             } else {
                 string b64 = uri.Substring(embeddedPrefix.Length, uri.Length - embeddedPrefix.Length);
                 cache = Convert.FromBase64String(b64);
@@ -33,7 +37,6 @@ namespace Siccity.GLTFUtility {
         }
 
         public byte[] GetBytes() {
-            if (cache == null) Debug.LogError("Need to call Read(directoryRoot) on GLTFBuffer before GetBytes()");
             return cache;
         }
 

@@ -6,12 +6,20 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
     [Serializable]
-    public class GLTFAnimation {
-        public string name;
+    public class GLTFAnimation : GLTFProperty {
+
+#region Serialized fields
+        [SerializeField] private string name;
         public Sampler[] samplers = null;
         /// <summary> Connects the output values of the key frame animation to a specific node in the hierarchy </summary>
         public Channel[] channels = null;
+#endregion
 
+#region Non-serialized fields
+        public AnimationClip Clip { get; private set; }
+#endregion
+
+#region Classes
         [Serializable]
         public class Sampler {
             /// <summary> The index of an accessor containing keyframe input values, e.g., time. </summary>
@@ -39,13 +47,15 @@ namespace Siccity.GLTFUtility {
             /// <summary> Which property to animate. Valid names are: "translation", "rotation", "scale", "weights" </summary>
             public string path;
         }
+#endregion
 
-        public AnimationClip GetAnimationClip(GLTFObject gLTFObject) {
-            AnimationClip clip = new AnimationClip();
+        public override void Load() {
+            Clip = new AnimationClip();
 
-            if (string.IsNullOrEmpty(name)) name = "animation " + gLTFObject.animations.IndexOf(this);
-            clip.name = name;
-            
+            // Name
+            if (string.IsNullOrEmpty(name)) Clip.name = "animation" + glTFObject.animations.IndexOf(this);
+            else Clip.name = name;
+
             for (int i = 0; i < channels.Length; i++) {
                 Channel channel = channels[i];
                 if (samplers.Length <= channel.sampler) {
@@ -55,17 +65,17 @@ namespace Siccity.GLTFUtility {
                 Sampler sampler = samplers[channel.sampler];
 
                 string relativePath = "";
-                GLTFNode node = gLTFObject.nodes[channel.target.node];
-                while (node != null && !node.IsRootTransform(gLTFObject)) {
-                    if (string.IsNullOrEmpty(relativePath)) relativePath = node.name;
-                    else relativePath = node.name + "/" + relativePath;
-                    node = node.GetParentNode(gLTFObject);
+                GLTFNode node = glTFObject.nodes[channel.target.node];
+                while (node != null && !node.IsRootTransform()) {
+                    if (string.IsNullOrEmpty(relativePath)) relativePath = node.Name;
+                    else relativePath = node.Name + "/" + relativePath;
+                    node = node.GetParentNode();
                 }
 
-                float[] keyframeInput = gLTFObject.accessors[sampler.input].ReadFloat(gLTFObject).ToArray();
+                float[] keyframeInput = glTFObject.accessors[sampler.input].ReadFloat().ToArray();
                 switch (channel.target.path) {
                     case "translation":
-                        Vector3[] pos = gLTFObject.accessors[sampler.output].ReadVec3(gLTFObject).ToArray();
+                        Vector3[] pos = glTFObject.accessors[sampler.output].ReadVec3().ToArray();
                         AnimationCurve posX = new AnimationCurve();
                         AnimationCurve posY = new AnimationCurve();
                         AnimationCurve posZ = new AnimationCurve();
@@ -74,12 +84,12 @@ namespace Siccity.GLTFUtility {
                             posY.AddKey(keyframeInput[k], pos[k].y);
                             posZ.AddKey(keyframeInput[k], pos[k].z);
                         }
-                        clip.SetCurve(relativePath, typeof(Transform), "localPosition.x", posX);
-                        clip.SetCurve(relativePath, typeof(Transform), "localPosition.y", posY);
-                        clip.SetCurve(relativePath, typeof(Transform), "localPosition.z", posZ);
+                        Clip.SetCurve(relativePath, typeof(Transform), "localPosition.x", posX);
+                        Clip.SetCurve(relativePath, typeof(Transform), "localPosition.y", posY);
+                        Clip.SetCurve(relativePath, typeof(Transform), "localPosition.z", posZ);
                         break;
                     case "rotation":
-                        Vector4[] rot = gLTFObject.accessors[sampler.output].ReadVec4(gLTFObject).ToArray();
+                        Vector4[] rot = glTFObject.accessors[sampler.output].ReadVec4().ToArray();
                         AnimationCurve rotX = new AnimationCurve();
                         AnimationCurve rotY = new AnimationCurve();
                         AnimationCurve rotZ = new AnimationCurve();
@@ -90,13 +100,13 @@ namespace Siccity.GLTFUtility {
                             rotZ.AddKey(keyframeInput[k], rot[k].z);
                             rotW.AddKey(keyframeInput[k], rot[k].w);
                         }
-                        clip.SetCurve(relativePath, typeof(Transform), "localRotation.x", rotX);
-                        clip.SetCurve(relativePath, typeof(Transform), "localRotation.y", rotY);
-                        clip.SetCurve(relativePath, typeof(Transform), "localRotation.z", rotZ);
-                        clip.SetCurve(relativePath, typeof(Transform), "localRotation.w", rotW);
+                        Clip.SetCurve(relativePath, typeof(Transform), "localRotation.x", rotX);
+                        Clip.SetCurve(relativePath, typeof(Transform), "localRotation.y", rotY);
+                        Clip.SetCurve(relativePath, typeof(Transform), "localRotation.z", rotZ);
+                        Clip.SetCurve(relativePath, typeof(Transform), "localRotation.w", rotW);
                         break;
                     case "scale":
-                        Vector3[] scale = gLTFObject.accessors[sampler.output].ReadVec3(gLTFObject).ToArray();
+                        Vector3[] scale = glTFObject.accessors[sampler.output].ReadVec3().ToArray();
                         AnimationCurve scaleX = new AnimationCurve();
                         AnimationCurve scaleY = new AnimationCurve();
                         AnimationCurve scaleZ = new AnimationCurve();
@@ -105,16 +115,15 @@ namespace Siccity.GLTFUtility {
                             scaleY.AddKey(keyframeInput[k], scale[k].y);
                             scaleZ.AddKey(keyframeInput[k], scale[k].z);
                         }
-                        clip.SetCurve(relativePath, typeof(Transform), "localScale.x", scaleX);
-                        clip.SetCurve(relativePath, typeof(Transform), "localScale.y", scaleY);
-                        clip.SetCurve(relativePath, typeof(Transform), "localScale.z", scaleZ);
+                        Clip.SetCurve(relativePath, typeof(Transform), "localScale.x", scaleX);
+                        Clip.SetCurve(relativePath, typeof(Transform), "localScale.y", scaleY);
+                        Clip.SetCurve(relativePath, typeof(Transform), "localScale.z", scaleZ);
                         break;
                     case "weights":
-                        Debug.Log("Not supported");
+                        Debug.LogWarning("morph weights not supported");
                         break;
                 }
             }
-            return clip;
         }
     }
 }

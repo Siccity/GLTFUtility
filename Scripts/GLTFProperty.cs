@@ -7,6 +7,6 @@ namespace Siccity.GLTFUtility {
 	public abstract class GLTFProperty {
 		[NonSerialized] public GLTFObject glTFObject;
 
-		public abstract void Initialize();
+		public abstract void Load();
 	}
 }

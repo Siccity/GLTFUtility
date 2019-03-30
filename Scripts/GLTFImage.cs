@@ -7,45 +7,47 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
 	[Serializable]
-	public class GLTFImage {
+	public class GLTFImage : GLTFProperty {
+
+#region Serialized fields
 		public string uri;
 		public string mimeType;
 		public int bufferView = -1;
-		public bool initialized { get { return cache != null; } }
+#endregion
+
+#region Non-serialized fields
+		private Texture2D cache;
 		/// <summary> True if image was loaded from a Texture2D asset. False if it was loaded from binary or from another source </summary>
 		public bool imageIsAsset { get; private set; }
 		public bool isNormalMap { get; private set; }
 		public bool isMetallicRoughnessFixed { get; private set; }
+		public bool initialized { get { return cache != null; } }
+#endregion
 
-		private Texture2D cache;
-
-		public bool Initialize(GLTFObject gLTFObject, string directoryRoot) {
-			if (!string.IsNullOrEmpty(uri) && File.Exists(directoryRoot + uri)) {
+		public override void Load() {
+			imageIsAsset = false;
+			if (!string.IsNullOrEmpty(uri) && File.Exists(glTFObject.directoryRoot + uri)) {
 #if UNITY_EDITOR
-				cache = UnityEditor.AssetDatabase.LoadAssetAtPath(directoryRoot + uri, typeof(Texture2D)) as Texture2D;
+				cache = UnityEditor.AssetDatabase.LoadAssetAtPath(glTFObject.directoryRoot + uri, typeof(Texture2D)) as Texture2D;
 				if (cache != null) {
 					imageIsAsset = true;
-					return true;
+					return;
 				}
 #endif
-				Debug.Log("Couldn't load texture at " + directoryRoot + uri);
-				imageIsAsset = false;
-				return false;
+				Debug.Log("Couldn't load texture at " + glTFObject.directoryRoot + uri);
+				return;
 			} else if (bufferView != -1 && !string.IsNullOrEmpty(mimeType)) {
-				byte[] bytes = gLTFObject.bufferViews[bufferView].GetBytes(gLTFObject);
+				byte[] bytes = glTFObject.bufferViews[bufferView].GetBytes();
 				cache = new Texture2D(2, 2);
 				if (cache.LoadImage(bytes)) {
-					imageIsAsset = false;
-					return true;
+					return;
 				} else {
 					Debug.Log("mimeType not supported: " + mimeType);
-					imageIsAsset = false;
-					return false;
+					return;
 				}
 			} else {
-				Debug.Log("Couldn't find texture at " + directoryRoot + uri);
-				imageIsAsset = false;
-				return false;
+				Debug.Log("Couldn't find texture at " + glTFObject.directoryRoot + uri);
+				return;
 			}
 		}
 

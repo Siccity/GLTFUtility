@@ -5,8 +5,15 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
     [Serializable]
-    public class GLTFScene {
+    public class GLTFScene : GLTFProperty {
+
+#region Serialized fields
         /// <summary> Indices of nodes </summary>
         public List<int> nodes;
+#endregion
+
+        public override void Load() {
+            
+        }
     }
 }

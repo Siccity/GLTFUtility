@@ -5,13 +5,13 @@ using System.Linq;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
-    public enum GLType { UNSET = -1, BYTE = 5120, UNSIGNED_BYTE = 5121, SHORT = 5122, UNSIGNED_SHORT = 5123, FLOAT = 5126 }
+    public enum GLType { UNSET = -1, BYTE = 5120, UNSIGNED_BYTE = 5121, SHORT = 5122, UNSIGNED_SHORT = 5123, UNSIGNED_INT = 5125, FLOAT = 5126 }
 
     [Serializable]
-    public class GLTFObject : ISerializationCallbackReceiver {
+    public class GLTFObject {
 
-        /// <summary> Default scene </summary>
-        int scene = -1;
+#region Serialized fields
+        public int scene = -1;
         public List<GLTFScene> scenes;
         public List<GLTFNode> nodes;
         public List<GLTFMesh> meshes;
@@ -22,18 +22,15 @@ namespace Siccity.GLTFUtility {
         public List<GLTFSkin> skins;
         public List<GLTFImage> images;
         public List<GLTFMaterial> materials;
+#endregion
 
-        public GameObject[] Create(string directoryRoot, string mainFile) {
-            // Read buffers
-            for (int i = 0; i < buffers.Count; i++) {
-                buffers[i].Read(directoryRoot, mainFile);
-            }
+#region Non-serialized fields
+        public bool loaded { get; private set; }
+        public string directoryRoot { get; private set; }
+        public string mainFile { get; private set; }
+#endregion
 
-            // Load textures
-            for (int i = 0; i < images.Count; i++) {
-                images[i].Initialize(this, directoryRoot);
-            }
-
+        public GameObject[] Create() {
             // Load materials
             for (int i = 0; i < materials.Count; i++) {
                 materials[i].Initialize(images);
@@ -46,12 +43,12 @@ namespace Siccity.GLTFUtility {
             for (int i = 0; i < rootNodes.Length; i++) {
                 // Recursively construct transform hierarchy
                 int nodeIndex = rootNodes[i];
-                roots[i] = nodes[nodeIndex].CreateTransform(this, null).gameObject;
+                roots[i] = nodes[nodeIndex].CreateTransform(null).gameObject;
             }
 
             // Flip the entire node tree on the global Z axis
-            var worldTransforms = nodes.Where(x => x.transform != null).Select(x => new {
-                transform = x.transform, worldPos = x.transform.position, worldRot = x.transform.rotation,
+            var worldTransforms = nodes.Where(x => x.Transform != null).Select(x => new {
+                transform = x.Transform, worldPos = x.Transform.position, worldRot = x.Transform.rotation,
             }).ToArray();
             for (int i = 0; i < worldTransforms.Length; i++) {
                 var x = worldTransforms[i];
@@ -63,40 +60,37 @@ namespace Siccity.GLTFUtility {
 
             // Setup mesh renderers and such
             for (int i = 0; i < nodes.Count; i++) {
-                nodes[i].SetupComponents(this);
+                nodes[i].SetupComponents();
             }
             return roots;
         }
 
-        public void OnBeforeSerialize() {
-            return;
-        }
-
-        public void OnAfterDeserialize() {
-            InitializeProperties(
-                scenes,
-                nodes,
-                meshes,
-                animations,
-                buffers,
-                bufferViews,
-                accessors,
-                skins,
-                images,
-                materials
-            );
-        }
-
-        private void InitializeProperties(params List<GLTFProperty>[] properties) {
-            for (int i = 0; i < properties.Length; i++) {
-                for (int k = 0; k < properties[i].Count; k++) {
-                    properties[i][k].glTFObject = this;
-                }
+        public void Load(string directoryRoot, string mainFile) {
+            if (loaded) {
+                Debug.LogWarning("GLTFObject already loaded");
+                return;
             }
-            for (int i = 0; i < properties.Length; i++) {
-                for (int k = 0; k < properties[i].Count; k++) {
-                    properties[i][k].Initialize();
-                }
+            this.directoryRoot = directoryRoot;
+            this.mainFile = mainFile;
+            Load(buffers);
+            Load(bufferViews);
+            Load(accessors);
+            Load(images);
+            Load(materials);
+            Load(scenes);
+            Load(nodes);
+            Load(meshes);
+            Load(animations);
+            Load(skins);
+            loaded = true;
+        }
+
+        private void Load<T>(List<T> properties) where T : GLTFProperty {
+            for (int i = 0; i < properties.Count; i++) {
+                properties[i].glTFObject = this;
+            }
+            for (int i = 0; i < properties.Count; i++) {
+                properties[i].Load();
             }
         }
     }

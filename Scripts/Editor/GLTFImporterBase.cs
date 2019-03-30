@@ -38,12 +38,11 @@ namespace Siccity.GLTFUtility {
 
         public void AddMeshes(AssetImportContext ctx, GLTFObject gltfObject) {
             for (int i = 0; i < gltfObject.meshes.Count; i++) {
-                Mesh mesh = gltfObject.meshes[i].GetMesh(gltfObject);
+                Mesh mesh = gltfObject.meshes[i].GetMesh();
                 if (mesh == null) {
                     Debug.LogWarning("Mesh at index " + i + " was null");
                     continue;
                 }
-                if (string.IsNullOrEmpty(mesh.name)) mesh.name = "mesh " + i.ToString();
 
 #if UNITY_2018_2_OR_NEWER
                 ctx.AddObjectToAsset(gltfObject.meshes[i].name, gltfObject.meshes[i].GetCachedMesh());
@@ -68,7 +67,7 @@ namespace Siccity.GLTFUtility {
 
         public void AddAnimations(AssetImportContext ctx, GLTFObject gltfObject) {
             for (int i = 0; i < gltfObject.animations.Count; i++) {
-                AnimationClip clip = gltfObject.animations[i].GetAnimationClip(gltfObject);
+                AnimationClip clip = gltfObject.animations[i].Clip;
 #if UNITY_2018_2_OR_NEWER
                 ctx.AddObjectToAsset(clip.name, clip);
 #else

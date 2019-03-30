@@ -34,9 +34,10 @@ namespace Siccity.GLTFUtility {
             GLTFObject gltfObject = JsonUtility.FromJson<GLTFObject>(json);
             string directoryRoot = Directory.GetParent(ctx.assetPath).ToString() + "/";
             string mainFile = Path.GetFileName(ctx.assetPath);
+            gltfObject.Load(directoryRoot, mainFile);
 
             // Create gameobject structure
-            GameObject[] roots = gltfObject.Create(directoryRoot, mainFile);
+            GameObject[] roots = gltfObject.Create();
 
             SaveToAsset(ctx, roots);
             AddMeshes(ctx, gltfObject);

@@ -6,16 +6,50 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
 	[Serializable]
-	public class GLTFMaterial {
-		public string name;
+	public class GLTFMaterial : GLTFProperty {
+
+#region Serialized fields
+		[SerializeField] private string name;
 		public TextureReference occlusionTexture = null;
 		public TextureReference normalTexture = null;
 		public PbrMetalRoughness pbrMetallicRoughness = null;
 		public TextureReference emissiveTexture = null;
 		public float[] emissiveFactor = null;
-		public Color EmissiveFactor { get { return new Color(emissiveFactor[0], emissiveFactor[1], emissiveFactor[2]); } }
+#endregion
 
+#region Non-serialized fields
 		private Material cache = null;
+		public Color EmissiveFactor { get; private set; }
+#endregion
+
+		public override void Load() {
+			// EmissiveFactor
+			if (emissiveFactor != null && emissiveFactor.Length == 3) EmissiveFactor = new Color(emissiveFactor[0], emissiveFactor[1], emissiveFactor[2]);
+
+			if (pbrMetallicRoughness != null) cache = pbrMetallicRoughness.CreateMaterial(glTFObject.images);
+			else cache = new Material(Shader.Find("Standard"));
+			if (normalTexture != null && normalTexture.index >= 0) {
+				Texture2D tex = glTFObject.images[normalTexture.index].GetNormalMap();
+				cache.SetTexture("_BumpMap", tex);
+				cache.EnableKeyword("_NORMALMAP");
+			}
+			if (occlusionTexture != null && occlusionTexture.index >= 0) {
+				Texture2D tex = glTFObject.images[occlusionTexture.index].GetTexture();
+				cache.SetTexture("_OcclusionMap", tex);
+			}
+			if (emissiveFactor != null && emissiveFactor.Length == 3) {
+				cache.SetColor("_EmissionColor", EmissiveFactor);
+				cache.EnableKeyword("_EMISSION");
+			}
+			if (emissiveTexture != null && emissiveTexture.index >= 0) {
+				Texture2D tex = glTFObject.images[emissiveTexture.index].GetTexture();
+				cache.SetTexture("_EmissionMap", tex);
+				cache.EnableKeyword("_EMISSION");
+			}
+			// Name
+			if (string.IsNullOrEmpty(name)) cache.name = "material" + glTFObject.materials.IndexOf(this);
+			else cache.name = name;
+		}
 
 		[Serializable]
 		public class PbrMetalRoughness {
@@ -49,27 +83,7 @@ namespace Siccity.GLTFUtility {
 		}
 
 		public void Initialize(List<GLTFImage> images) {
-			if (pbrMetallicRoughness != null) cache = pbrMetallicRoughness.CreateMaterial(images);
-			else cache = new Material(Shader.Find("Standard"));
-			if (normalTexture != null && normalTexture.index >= 0) {
-				Texture2D tex = images[normalTexture.index].GetNormalMap();
-				cache.SetTexture("_BumpMap", tex);
-				cache.EnableKeyword("_NORMALMAP");
-			}
-			if (occlusionTexture != null && occlusionTexture.index >= 0) {
-				Texture2D tex = images[occlusionTexture.index].GetTexture();
-				cache.SetTexture("_OcclusionMap", tex);
-			}
-			if (emissiveFactor != null && emissiveFactor.Length == 3) {
-				cache.SetColor("_EmissionColor", EmissiveFactor);
-				cache.EnableKeyword("_EMISSION");
-			}
-			if (emissiveTexture != null && emissiveTexture.index >= 0) {
-				Texture2D tex = images[emissiveTexture.index].GetTexture();
-				cache.SetTexture("_EmissionMap", tex);
-				cache.EnableKeyword("_EMISSION");
-			}
-			cache.name = name;
+
 		}
 
 		public Material GetMaterial() {

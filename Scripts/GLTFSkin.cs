@@ -5,11 +5,15 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
     [Serializable]
-    public class GLTFSkin {
+    public class GLTFSkin : GLTFProperty {
         public int[] bindShapeMatrix = new int[] { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
         public int inverseBindMatrices;
         public int[] joints;
         public int skeleton = -1;
+
+        public override void Load() {
+
+        }
 
         public Matrix4x4 GetBindShapeMatrix() {
             return new Matrix4x4(

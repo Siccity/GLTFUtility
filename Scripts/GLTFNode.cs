@@ -5,46 +5,41 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
     [Serializable]
-    public class GLTFNode {
-        public string name;
+    public class GLTFNode : GLTFProperty {
+
+#region Serialized fields
+        [SerializeField] private string name;
         /// <summary> Indices of child nodes </summary>
         public List<int> children;
-
         /// <summary> Local TRS </summary>
         public float[] matrix;
-
         /// <summary> Local position </summary>
-        public float[] translation;
+        [SerializeField] private float[] translation;
         /// <summary> Local rotation </summary>
-        public float[] rotation;
+        [SerializeField] private float[] rotation;
         /// <summary> Local scale </summary>
-        public float[] scale;
-
-        public Vector3 Position { get { return new Vector3(translation[0], translation[1], translation[2]); } }
-        public Vector3 Scale { get { return new Vector3(scale[0], scale[1], scale[2]); } }
-        public Quaternion Rotation { get { return new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]); } }
-
+        [SerializeField] private float[] scale;
         public int mesh = -1;
         public int skin = -1;
         public int camera = -1;
+#endregion
 
-        public Transform transform { get; private set; }
+#region Non-serialized fields
+        public Vector3 LocalPosition { get; private set; }
+        public Quaternion LocalRotation { get; private set; }
+        public Vector3 LocalScale { get; private set; }
+        public string Name { get; private set; }
+        public Transform Transform { get; private set; }
+#endregion
 
-        /// <summary> Recursively set up this node's transform in the scene, followed by its children </summary>
-        public Transform CreateTransform(GLTFObject gLTFObject, Transform parent) {
-            if (transform == null) transform = new GameObject().transform;
-            transform.parent = parent;
-
+        public override void Load() {
+            // Name
             if (string.IsNullOrEmpty(name)) {
-                if (IsJoint(gLTFObject)) name = "joint" + gLTFObject.nodes.IndexOf(this);
-                else name = "node" + gLTFObject.nodes.IndexOf(this);
-            }
-            transform.gameObject.name = name;
-
+                if (IsJoint()) Name = "joint" + glTFObject.nodes.IndexOf(this);
+                else Name = "node" + glTFObject.nodes.IndexOf(this);
+            } else Name = name;
+            // Transform
             if (matrix != null) {
-                if (matrix.Length != 16) {
-                    Debug.LogWarning("Matrix length expected to be 16 but is " + matrix.Length);
-                }
                 Matrix4x4 trs = new Matrix4x4(
                     new Vector4(matrix[0], matrix[1], matrix[2], matrix[3]),
                     new Vector4(matrix[4], matrix[5], matrix[6], matrix[7]),
@@ -52,83 +47,96 @@ namespace Siccity.GLTFUtility {
                     new Vector4(matrix[12], matrix[13], matrix[14], matrix[15])
                 );
                 Vector3 pos = trs.GetColumn(3);
-                transform.localPosition = pos;
-                transform.localRotation = trs.rotation;
-                transform.localScale = trs.lossyScale;
+                LocalPosition = pos;
+                LocalRotation = trs.rotation;
+                LocalScale = trs.lossyScale;
             } else {
-                if (translation != null) transform.localPosition = Position;
-                if (rotation != null) transform.localRotation = Rotation;
-                if (scale != null) transform.localScale = Scale;
+                if (translation != null) LocalPosition = new Vector3(translation[0], translation[1], translation[2]);
+                else LocalPosition = Vector3.zero;
+                if (rotation != null) LocalRotation = new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]);
+                else LocalRotation = Quaternion.identity;
+                if (scale != null) LocalScale = new Vector3(scale[0], scale[1], scale[2]);
+                else LocalScale = Vector3.one;
             }
+        }
+
+        /// <summary> Recursively set up this node's transform in the scene, followed by its children </summary>
+        public Transform CreateTransform(Transform parent) {
+            if (Transform == null) Transform = new GameObject().transform;
+            Transform.parent = parent;
+            Transform.gameObject.name = Name;
+            Transform.localPosition = LocalPosition;
+            Transform.localRotation = LocalRotation;
+            Transform.localScale = LocalScale;
 
             for (int i = 0; i < children.Count; i++) {
-                gLTFObject.nodes[children[i]].CreateTransform(gLTFObject, transform);
+                glTFObject.nodes[children[i]].CreateTransform(Transform);
             }
 
-            return transform;
+            return Transform;
         }
 
         /// <summary> Set up various components defined in the node. Call after all transforms have been set up </summary>
-        public void SetupComponents(GLTFObject gLTFObject) {
-            if (transform == null) {
+        public void SetupComponents() {
+            if (Transform == null) {
                 Debug.LogWarning("Transform is null. Call CreateTransform before calling SetupComponents");
                 return;
             }
             if (this.mesh != -1) {
-                GLTFMesh gLTFMesh = gLTFObject.meshes[this.mesh];
-                Mesh mesh = gLTFMesh.GetMesh(gLTFObject);
+                GLTFMesh glTFMesh = glTFObject.meshes[this.mesh];
+                Mesh mesh = glTFMesh.GetMesh();
                 Renderer renderer;
                 if (skin != -1) {
-                    SkinnedMeshRenderer smr = transform.gameObject.AddComponent<SkinnedMeshRenderer>();
-                    GLTFSkin gLTFSkin = gLTFObject.skins[skin];
-                    Transform[] bones = new Transform[gLTFSkin.joints.Length];
+                    SkinnedMeshRenderer smr = Transform.gameObject.AddComponent<SkinnedMeshRenderer>();
+                    GLTFSkin glTFSkin = glTFObject.skins[skin];
+                    Transform[] bones = new Transform[glTFSkin.joints.Length];
                     for (int i = 0; i < bones.Length; i++) {
-                        int jointNodeIndex = gLTFSkin.joints[i];
-                        GLTFNode jointNode = gLTFObject.nodes[jointNodeIndex];
-                        bones[i] = jointNode.transform;
+                        int jointNodeIndex = glTFSkin.joints[i];
+                        GLTFNode jointNode = glTFObject.nodes[jointNodeIndex];
+                        bones[i] = jointNode.Transform;
                     }
                     smr.bones = bones;
                     smr.rootBone = bones[0];
                     renderer = smr;
 
                     // Bindposes
-                    if (gLTFSkin.inverseBindMatrices != -1) {
-                        Matrix4x4 m = gLTFObject.nodes[0].transform.localToWorldMatrix;
-                        Matrix4x4[] bindPoses = new Matrix4x4[gLTFSkin.joints.Length];
-                        for (int i = 0; i < gLTFSkin.joints.Length; i++) {
-                            bindPoses[i] = gLTFObject.nodes[gLTFSkin.joints[i]].transform.worldToLocalMatrix * m;
+                    if (glTFSkin.inverseBindMatrices != -1) {
+                        Matrix4x4 m = glTFObject.nodes[0].Transform.localToWorldMatrix;
+                        Matrix4x4[] bindPoses = new Matrix4x4[glTFSkin.joints.Length];
+                        for (int i = 0; i < glTFSkin.joints.Length; i++) {
+                            bindPoses[i] = glTFObject.nodes[glTFSkin.joints[i]].Transform.worldToLocalMatrix * m;
                         }
                         mesh.bindposes = bindPoses;
                     }
                     smr.sharedMesh = mesh;
                 } else {
-                    MeshRenderer mr = transform.gameObject.AddComponent<MeshRenderer>();
-                    MeshFilter mf = transform.gameObject.AddComponent<MeshFilter>();
+                    MeshRenderer mr = Transform.gameObject.AddComponent<MeshRenderer>();
+                    MeshFilter mf = Transform.gameObject.AddComponent<MeshFilter>();
                     renderer = mr;
                     mf.sharedMesh = mesh;
                 }
 
                 //Materials
-                if (gLTFMesh.primitives.Count == 1) {
+                if (glTFMesh.primitives.Count == 1) {
                     // Create material if id is positive or 0
-                    if (gLTFMesh.primitives[0].material != -1) renderer.material = gLTFObject.materials[gLTFMesh.primitives[0].material].GetMaterial();
+                    if (glTFMesh.primitives[0].material != -1) renderer.material = glTFObject.materials[glTFMesh.primitives[0].material].GetMaterial();
                 } else Debug.LogWarning("Only 1 primitive per mesh supported");
             }
         }
 
-        public GLTFNode GetParentNode(GLTFObject gLTFObject) {
-            int nodeIndex = gLTFObject.nodes.IndexOf(this);
-            for (int i = 0; i < gLTFObject.nodes.Count; i++) {
-                if (gLTFObject.nodes[i].children.Contains(nodeIndex)) return gLTFObject.nodes[i];
+        public GLTFNode GetParentNode() {
+            int nodeIndex = glTFObject.nodes.IndexOf(this);
+            for (int i = 0; i < glTFObject.nodes.Count; i++) {
+                if (glTFObject.nodes[i].children.Contains(nodeIndex)) return glTFObject.nodes[i];
             }
             return null;
         }
 
         /// <summary>  Returns true if this node is referenced directly in a scene </summary>
-        public bool IsRootNode(GLTFObject gLTFObject) {
-            int nodeIndex = gLTFObject.nodes.IndexOf(this);
-            for (int i = 0; i < gLTFObject.scenes.Count; i++) {
-                if (gLTFObject.scenes[i].nodes.Contains(nodeIndex)) return true;
+        public bool IsRootNode() {
+            int nodeIndex = glTFObject.nodes.IndexOf(this);
+            for (int i = 0; i < glTFObject.scenes.Count; i++) {
+                if (glTFObject.scenes[i].nodes.Contains(nodeIndex)) return true;
             }
             return false;
         }
@@ -137,20 +145,20 @@ namespace Siccity.GLTFUtility {
         /// Same as IsRootNode except returns false if the scene has more root nodes, 
         /// which means that it will create an extra transform object as root
         /// </summary>
-        public bool IsRootTransform(GLTFObject gLTFObject) {
-            int nodeIndex = gLTFObject.nodes.IndexOf(this);
-            for (int i = 0; i < gLTFObject.scenes.Count; i++) {
-                if (gLTFObject.scenes[i].nodes.Contains(nodeIndex) && gLTFObject.scenes[i].nodes.Count == 1) return true;
+        public bool IsRootTransform() {
+            int nodeIndex = glTFObject.nodes.IndexOf(this);
+            for (int i = 0; i < glTFObject.scenes.Count; i++) {
+                if (glTFObject.scenes[i].nodes.Contains(nodeIndex) && glTFObject.scenes[i].nodes.Count == 1) return true;
             }
             return false;
         }
 
-        public bool IsJoint(GLTFObject gLTFObject) {
-            if (gLTFObject.skins == null || gLTFObject.skins.Count == 0) return false;
-            int nodeIndex = gLTFObject.nodes.IndexOf(this);
-            for (int i = 0; i < gLTFObject.skins.Count; i++) {
-                for (int k = 0; k < gLTFObject.skins[i].joints.Length; k++) {
-                    if (gLTFObject.skins[i].joints[k] == nodeIndex) return true;
+        public bool IsJoint() {
+            if (glTFObject.skins == null || glTFObject.skins.Count == 0) return false;
+            int nodeIndex = glTFObject.nodes.IndexOf(this);
+            for (int i = 0; i < glTFObject.skins.Count; i++) {
+                for (int k = 0; k < glTFObject.skins[i].joints.Length; k++) {
+                    if (glTFObject.skins[i].joints[k] == nodeIndex) return true;
                 }
             }
             return false;
