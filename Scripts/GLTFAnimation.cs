@@ -82,7 +82,7 @@ namespace Siccity.GLTFUtility {
                         for (int k = 0; k < keyframeInput.Length; k++) {
                             posX.AddKey(keyframeInput[k], pos[k].x);
                             posY.AddKey(keyframeInput[k], pos[k].y);
-                            posZ.AddKey(keyframeInput[k], pos[k].z);
+                            posZ.AddKey(keyframeInput[k], -pos[k].z);
                         }
                         Clip.SetCurve(relativePath, typeof(Transform), "localPosition.x", posX);
                         Clip.SetCurve(relativePath, typeof(Transform), "localPosition.y", posY);
@@ -97,8 +97,8 @@ namespace Siccity.GLTFUtility {
                         for (int k = 0; k < keyframeInput.Length; k++) {
                             rotX.AddKey(keyframeInput[k], rot[k].x);
                             rotY.AddKey(keyframeInput[k], rot[k].y);
-                            rotZ.AddKey(keyframeInput[k], rot[k].z);
-                            rotW.AddKey(keyframeInput[k], rot[k].w);
+                            rotZ.AddKey(keyframeInput[k], -rot[k].z);
+                            rotW.AddKey(keyframeInput[k], -rot[k].w);
                         }
                         Clip.SetCurve(relativePath, typeof(Transform), "localRotation.x", rotX);
                         Clip.SetCurve(relativePath, typeof(Transform), "localRotation.y", rotY);
