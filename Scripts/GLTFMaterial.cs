@@ -34,19 +34,19 @@ namespace Siccity.GLTFUtility {
 			if (emissiveFactor != null && emissiveFactor.Length == 3) EmissiveFactor = new Color(emissiveFactor[0], emissiveFactor[1], emissiveFactor[2]);
 
 			if (normalTexture != null && normalTexture.index >= 0) {
-				if (glTFObject.images.Count <= normalTexture.index) {
-					Debug.LogWarning("Attempted to get normal texture from image index " + normalTexture.index + " when only " + glTFObject.images.Count + " exist");
+				if (glTFObject.textures.Count <= normalTexture.index) {
+					Debug.LogWarning("Attempted to get normal texture index " + normalTexture.index + " when only " + glTFObject.textures.Count + " exist");
 				} else {
-					Texture2D tex = glTFObject.images[normalTexture.index].GetNormalMap();
+					Texture2D tex = glTFObject.textures[normalTexture.index].Source.GetNormalMap();
 					cache.SetTexture("_BumpMap", tex);
 					cache.EnableKeyword("_NORMALMAP");
 				}
 			}
 			if (occlusionTexture != null && occlusionTexture.index >= 0) {
-				if (glTFObject.images.Count <= occlusionTexture.index) {
-					Debug.LogWarning("Attempted to get occlusion texture from image index " + occlusionTexture.index + " when only " + glTFObject.images.Count + " exist");
+				if (glTFObject.textures.Count <= occlusionTexture.index) {
+					Debug.LogWarning("Attempted to get occlusion texture index " + occlusionTexture.index + " when only " + glTFObject.textures.Count + " exist");
 				} else {
-					Texture2D tex = glTFObject.images[occlusionTexture.index].GetTexture();
+					Texture2D tex = glTFObject.textures[occlusionTexture.index].Source.GetTexture();
 					cache.SetTexture("_OcclusionMap", tex);
 				}
 			}
@@ -55,10 +55,10 @@ namespace Siccity.GLTFUtility {
 				cache.EnableKeyword("_EMISSION");
 			}
 			if (emissiveTexture != null && emissiveTexture.index >= 0) {
-				if (glTFObject.images.Count <= emissiveTexture.index) {
-					Debug.LogWarning("Attempted to get emissive texture from image index " + emissiveTexture.index + " when only " + glTFObject.images.Count + " exist");
+				if (glTFObject.textures.Count <= emissiveTexture.index) {
+					Debug.LogWarning("Attempted to get emissive texture index " + emissiveTexture.index + " when only " + glTFObject.textures.Count + " exist");
 				} else {
-					Texture2D tex = glTFObject.images[emissiveTexture.index].GetTexture();
+					Texture2D tex = glTFObject.textures[emissiveTexture.index].Source.GetTexture();
 					cache.SetTexture("_EmissionMap", tex);
 					cache.EnableKeyword("_EMISSION");
 				}
@@ -96,17 +96,17 @@ namespace Siccity.GLTFUtility {
 				Material.SetFloat("_Metallic", metallicFactor);
 				Material.SetFloat("_Glossiness", 1 - roughnessFactor);
 				if (baseColorTexture != null && baseColorTexture.index >= 0) {
-					if (glTFObject.images.Count <= baseColorTexture.index) {
-						Debug.LogWarning("Attempted to get basecolor texture from image index " + baseColorTexture.index + " when only " + glTFObject.images.Count + " exist");
+					if (glTFObject.textures.Count <= baseColorTexture.index) {
+						Debug.LogWarning("Attempted to get basecolor texture index " + baseColorTexture.index + " when only " + glTFObject.textures.Count + " exist");
 					} else {
-						Material.SetTexture("_MainTex", glTFObject.images[baseColorTexture.index].GetTexture());
+						Material.SetTexture("_MainTex", glTFObject.textures[baseColorTexture.index].Source.GetTexture());
 					}
 				}
 				if (metallicRoughnessTexture != null && metallicRoughnessTexture.index >= 0) {
-					if (glTFObject.images.Count <= metallicRoughnessTexture.index) {
-						Debug.LogWarning("Attempted to get metallicRoughness texture from image index " + metallicRoughnessTexture.index + " when only " + glTFObject.images.Count + " exist");
+					if (glTFObject.textures.Count <= metallicRoughnessTexture.index) {
+						Debug.LogWarning("Attempted to get metallicRoughness texture index " + metallicRoughnessTexture.index + " when only " + glTFObject.textures.Count + " exist");
 					} else {
-						Material.SetTexture("_MetallicGlossMap", glTFObject.images[metallicRoughnessTexture.index].GetFixedMetallicRoughness());
+						Material.SetTexture("_MetallicGlossMap", glTFObject.textures[metallicRoughnessTexture.index].Source.GetFixedMetallicRoughness());
 						Material.EnableKeyword("_METALLICGLOSSMAP");
 					}
 				}

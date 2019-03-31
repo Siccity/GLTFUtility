@@ -20,6 +20,7 @@ namespace Siccity.GLTFUtility {
         public List<GLTFBufferView> bufferViews;
         public List<GLTFAccessor> accessors;
         public List<GLTFSkin> skins;
+        public List<GLTFTexture> textures;
         public List<GLTFImage> images;
         public List<GLTFMaterial> materials;
 #endregion
@@ -76,6 +77,7 @@ namespace Siccity.GLTFUtility {
             Load(bufferViews);
             Load(accessors);
             Load(images);
+            Load(textures);
             Load(materials);
             Load(scenes);
             Load(nodes);
