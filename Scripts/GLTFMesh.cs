@@ -47,10 +47,13 @@ namespace Siccity.GLTFUtility {
                     GLTFPrimitive primitive = primitives[i];
 
                     int vertStartIndex = verts.Count;
+                    int addedVertices = 0;
 
                     // Verts - (Z points backwards in GLTF)
                     if (primitive.attributes.POSITION != -1) {
-                        verts.AddRange(glTFObject.accessors[primitive.attributes.POSITION].ReadVec3().Select(v => { v.z = -v.z; return v; }));
+                        IEnumerable<Vector3> newVerts = glTFObject.accessors[primitive.attributes.POSITION].ReadVec3().Select(v => { v.z = -v.z; return v; });
+                        verts.AddRange(newVerts);
+                        addedVertices = newVerts.Count();
                     }
 
                     // Tris - (Invert all triangles. Instead of flipping each triangle, just flip the entire array. Much easier)
@@ -95,14 +98,14 @@ namespace Siccity.GLTFUtility {
                     }
 
                     // UVs
-                    ReadUVs(ref uv1, primitive.attributes.TEXCOORD_0);
-                    ReadUVs(ref uv2, primitive.attributes.TEXCOORD_1);
-                    ReadUVs(ref uv3, primitive.attributes.TEXCOORD_2);
-                    ReadUVs(ref uv4, primitive.attributes.TEXCOORD_3);
-                    ReadUVs(ref uv5, primitive.attributes.TEXCOORD_4);
-                    ReadUVs(ref uv6, primitive.attributes.TEXCOORD_5);
-                    ReadUVs(ref uv7, primitive.attributes.TEXCOORD_6);
-                    ReadUVs(ref uv8, primitive.attributes.TEXCOORD_7);
+                    ReadUVs(ref uv1, primitive.attributes.TEXCOORD_0, addedVertices);
+                    ReadUVs(ref uv2, primitive.attributes.TEXCOORD_1, addedVertices);
+                    ReadUVs(ref uv3, primitive.attributes.TEXCOORD_2, addedVertices);
+                    ReadUVs(ref uv4, primitive.attributes.TEXCOORD_3, addedVertices);
+                    ReadUVs(ref uv5, primitive.attributes.TEXCOORD_4, addedVertices);
+                    ReadUVs(ref uv6, primitive.attributes.TEXCOORD_5, addedVertices);
+                    ReadUVs(ref uv7, primitive.attributes.TEXCOORD_6, addedVertices);
+                    ReadUVs(ref uv8, primitive.attributes.TEXCOORD_7, addedVertices);
                 }
                 mesh.vertices = verts.ToArray();
                 mesh.subMeshCount = submeshTris.Count;
@@ -112,22 +115,26 @@ namespace Siccity.GLTFUtility {
                 mesh.normals = normals.ToArray();
                 mesh.tangents = tangents.ToArray();
                 mesh.colors = colors.ToArray();
-                mesh.uv = uv1.ToArray();
-                mesh.uv2 = uv2.ToArray();
-                mesh.uv3 = uv3.ToArray();
-                mesh.uv4 = uv4.ToArray();
-                mesh.uv5 = uv5.ToArray();
-                mesh.uv6 = uv6.ToArray();
-                mesh.uv7 = uv7.ToArray();
-                mesh.uv8 = uv8.ToArray();
+                if (uv1.Count != 0) mesh.uv = uv1.ToArray();
+                if (uv2.Count != 0) mesh.uv2 = uv2.ToArray();
+                if (uv3.Count != 0) mesh.uv3 = uv3.ToArray();
+                if (uv4.Count != 0) mesh.uv4 = uv4.ToArray();
+                if (uv5.Count != 0) mesh.uv5 = uv5.ToArray();
+                if (uv6.Count != 0) mesh.uv6 = uv6.ToArray();
+                if (uv7.Count != 0) mesh.uv7 = uv7.ToArray();
+                if (uv8.Count != 0) mesh.uv8 = uv8.ToArray();
 
                 mesh.RecalculateBounds();
                 cache = mesh;
             }
         }
 
-        private void ReadUVs(ref List<Vector2> uvs, int texcoord) {
-            if (texcoord == -1) return;
+        private void ReadUVs(ref List<Vector2> uvs, int texcoord, int newVerts) {
+            if (texcoord == -1) {
+                // If there are no valid texcoords, add some empty filler uvs so it still matches the vertex array
+                uvs.AddRange(new Vector2[newVerts]);
+                return;
+            }
             Vector2[] _uvs = glTFObject.accessors[texcoord].ReadVec2();
             FlipY(ref _uvs);
             uvs.AddRange(_uvs);
