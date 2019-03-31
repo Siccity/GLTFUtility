@@ -43,18 +43,6 @@ namespace Siccity.GLTFUtility {
                 roots[i] = nodes[nodeIndex].CreateTransform(null).gameObject;
             }
 
-            // Flip the entire node tree on the global Z axis
-            var worldTransforms = nodes.Where(x => x.Transform != null).Select(x => new {
-                transform = x.Transform, worldPos = x.Transform.position, worldRot = x.Transform.rotation,
-            }).ToArray();
-            for (int i = 0; i < worldTransforms.Length; i++) {
-                var x = worldTransforms[i];
-
-                // Reverse Z
-                x.transform.position = new Vector3(x.worldPos.x, x.worldPos.y, -x.worldPos.z);
-                x.transform.rotation = new Quaternion(-x.worldRot.x, -x.worldRot.y, x.worldRot.z, x.worldRot.w);
-            }
-
             // Setup mesh renderers and such
             for (int i = 0; i < nodes.Count; i++) {
                 nodes[i].SetupComponents();

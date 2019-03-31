@@ -47,14 +47,17 @@ namespace Siccity.GLTFUtility {
                     new Vector4(matrix[12], matrix[13], matrix[14], matrix[15])
                 );
                 Vector3 pos = trs.GetColumn(3);
+                pos.z = -pos.z;
+                Quaternion rot = trs.rotation;
+                rot = new Quaternion(rot.x, rot.y, -rot.z, -rot.w);
                 LocalPosition = pos;
-                LocalRotation = trs.rotation;
+                LocalRotation = rot;
                 LocalScale = trs.lossyScale;
             } else {
-                if (translation != null) LocalPosition = new Vector3(translation[0], translation[1], translation[2]);
+                if (translation != null) LocalPosition = new Vector3(translation[0], translation[1], -translation[2]);
                 else LocalPosition = Vector3.zero;
-                if (rotation != null) LocalRotation = new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]);
-                else LocalRotation = Quaternion.identity;
+                if (rotation != null) LocalRotation = new Quaternion(rotation[0], rotation[1], -rotation[2], -rotation[3]);
+                else LocalRotation = new Quaternion(0, 0, 0, 1);
                 if (scale != null) LocalScale = new Vector3(scale[0], scale[1], scale[2]);
                 else LocalScale = Vector3.one;
             }
