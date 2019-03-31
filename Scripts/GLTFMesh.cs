@@ -34,26 +34,24 @@ namespace Siccity.GLTFUtility {
                 List<Vector4> tangents = new List<Vector4>();
                 List<Color> colors = new List<Color>();
                 List<BoneWeight> weights = new List<BoneWeight>();
-                List<Vector2> uv1 = new List<Vector2>();
-                List<Vector2> uv2 = new List<Vector2>();
-                List<Vector2> uv3 = new List<Vector2>();
-                List<Vector2> uv4 = new List<Vector2>();
-                List<Vector2> uv5 = new List<Vector2>();
-                List<Vector2> uv6 = new List<Vector2>();
-                List<Vector2> uv7 = new List<Vector2>();
-                List<Vector2> uv8 = new List<Vector2>();
+                List<Vector2> uv1 = null;
+                List<Vector2> uv2 = null;
+                List<Vector2> uv3 = null;
+                List<Vector2> uv4 = null;
+                List<Vector2> uv5 = null;
+                List<Vector2> uv6 = null;
+                List<Vector2> uv7 = null;
+                List<Vector2> uv8 = null;
 
                 for (int i = 0; i < primitives.Count; i++) {
                     GLTFPrimitive primitive = primitives[i];
 
                     int vertStartIndex = verts.Count;
-                    int addedVertices = 0;
 
                     // Verts - (Z points backwards in GLTF)
                     if (primitive.attributes.POSITION != -1) {
                         IEnumerable<Vector3> newVerts = glTFObject.accessors[primitive.attributes.POSITION].ReadVec3().Select(v => { v.z = -v.z; return v; });
                         verts.AddRange(newVerts);
-                        addedVertices = newVerts.Count();
                     }
 
                     // Tris - (Invert all triangles. Instead of flipping each triangle, just flip the entire array. Much easier)
@@ -98,14 +96,15 @@ namespace Siccity.GLTFUtility {
                     }
 
                     // UVs
-                    ReadUVs(ref uv1, primitive.attributes.TEXCOORD_0, addedVertices);
-                    ReadUVs(ref uv2, primitive.attributes.TEXCOORD_1, addedVertices);
-                    ReadUVs(ref uv3, primitive.attributes.TEXCOORD_2, addedVertices);
-                    ReadUVs(ref uv4, primitive.attributes.TEXCOORD_3, addedVertices);
-                    ReadUVs(ref uv5, primitive.attributes.TEXCOORD_4, addedVertices);
-                    ReadUVs(ref uv6, primitive.attributes.TEXCOORD_5, addedVertices);
-                    ReadUVs(ref uv7, primitive.attributes.TEXCOORD_6, addedVertices);
-                    ReadUVs(ref uv8, primitive.attributes.TEXCOORD_7, addedVertices);
+                    int vertCount = verts.Count;
+                    ReadUVs(ref uv1, primitive.attributes.TEXCOORD_0, vertCount);
+                    ReadUVs(ref uv2, primitive.attributes.TEXCOORD_1, vertCount);
+                    ReadUVs(ref uv3, primitive.attributes.TEXCOORD_2, vertCount);
+                    ReadUVs(ref uv4, primitive.attributes.TEXCOORD_3, vertCount);
+                    ReadUVs(ref uv5, primitive.attributes.TEXCOORD_4, vertCount);
+                    ReadUVs(ref uv6, primitive.attributes.TEXCOORD_5, vertCount);
+                    ReadUVs(ref uv7, primitive.attributes.TEXCOORD_6, vertCount);
+                    ReadUVs(ref uv8, primitive.attributes.TEXCOORD_7, vertCount);
                 }
                 mesh.vertices = verts.ToArray();
                 mesh.subMeshCount = submeshTris.Count;
@@ -115,29 +114,31 @@ namespace Siccity.GLTFUtility {
                 mesh.normals = normals.ToArray();
                 mesh.tangents = tangents.ToArray();
                 mesh.colors = colors.ToArray();
-                if (uv1.Count != 0) mesh.uv = uv1.ToArray();
-                if (uv2.Count != 0) mesh.uv2 = uv2.ToArray();
-                if (uv3.Count != 0) mesh.uv3 = uv3.ToArray();
-                if (uv4.Count != 0) mesh.uv4 = uv4.ToArray();
-                if (uv5.Count != 0) mesh.uv5 = uv5.ToArray();
-                if (uv6.Count != 0) mesh.uv6 = uv6.ToArray();
-                if (uv7.Count != 0) mesh.uv7 = uv7.ToArray();
-                if (uv8.Count != 0) mesh.uv8 = uv8.ToArray();
+                if (uv1 != null) mesh.uv = uv1.ToArray();
+                if (uv2 != null) mesh.uv2 = uv2.ToArray();
+                if (uv3 != null) mesh.uv3 = uv3.ToArray();
+                if (uv4 != null) mesh.uv4 = uv4.ToArray();
+                if (uv5 != null) mesh.uv5 = uv5.ToArray();
+                if (uv6 != null) mesh.uv6 = uv6.ToArray();
+                if (uv7 != null) mesh.uv7 = uv7.ToArray();
+                if (uv8 != null) mesh.uv8 = uv8.ToArray();
 
                 mesh.RecalculateBounds();
                 cache = mesh;
             }
         }
 
-        private void ReadUVs(ref List<Vector2> uvs, int texcoord, int newVerts) {
+        private void ReadUVs(ref List<Vector2> uvs, int texcoord, int vertCount) {
+            // If there are no valid texcoords
             if (texcoord == -1) {
-                // If there are no valid texcoords, add some empty filler uvs so it still matches the vertex array
-                uvs.AddRange(new Vector2[newVerts]);
+                // If there are already uvs, add some empty filler uvs so it still matches the vertex array
+                if (uvs != null) uvs.AddRange(new Vector2[vertCount - uvs.Count]);
                 return;
             }
             Vector2[] _uvs = glTFObject.accessors[texcoord].ReadVec2();
             FlipY(ref _uvs);
-            uvs.AddRange(_uvs);
+            if (uvs == null) uvs = new List<Vector2>(_uvs);
+            else uvs.AddRange(_uvs);
         }
 
         public Mesh GetMesh() {
