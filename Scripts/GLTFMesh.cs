@@ -33,7 +33,7 @@ namespace Siccity.GLTFUtility {
                 List<Vector3> verts = new List<Vector3>();
                 List<Vector4> tangents = new List<Vector4>();
                 List<Color> colors = new List<Color>();
-                List<BoneWeight> weights = new List<BoneWeight>();
+                List<BoneWeight> weights = null;
                 List<Vector2> uv1 = null;
                 List<Vector2> uv2 = null;
                 List<Vector2> uv3 = null;
@@ -53,6 +53,8 @@ namespace Siccity.GLTFUtility {
                         IEnumerable<Vector3> newVerts = glTFObject.accessors[primitive.attributes.POSITION].ReadVec3().Select(v => { v.z = -v.z; return v; });
                         verts.AddRange(newVerts);
                     }
+
+                    int vertCount = verts.Count;
 
                     // Tris - (Invert all triangles. Instead of flipping each triangle, just flip the entire array. Much easier)
                     if (primitive.indices != -1) {
@@ -91,12 +93,14 @@ namespace Siccity.GLTFUtility {
                                 boneWeights[k].boneIndex2 = Mathf.RoundToInt(joints0[k].z);
                                 boneWeights[k].boneIndex3 = Mathf.RoundToInt(joints0[k].w);
                             }
+                            if (weights == null) weights = new List<BoneWeight>(new BoneWeight[vertCount - boneWeights.Length]);
                             weights.AddRange(boneWeights);
                         } else Debug.LogWarning("WEIGHTS_0 and JOINTS_0 not same length. Skipped");
+                    } else {
+                        if (weights != null) weights.AddRange(new BoneWeight[vertCount - weights.Count]);
                     }
 
                     // UVs
-                    int vertCount = verts.Count;
                     ReadUVs(ref uv1, primitive.attributes.TEXCOORD_0, vertCount);
                     ReadUVs(ref uv2, primitive.attributes.TEXCOORD_1, vertCount);
                     ReadUVs(ref uv3, primitive.attributes.TEXCOORD_2, vertCount);
@@ -122,6 +126,7 @@ namespace Siccity.GLTFUtility {
                 if (uv6 != null) mesh.uv6 = uv6.ToArray();
                 if (uv7 != null) mesh.uv7 = uv7.ToArray();
                 if (uv8 != null) mesh.uv8 = uv8.ToArray();
+                mesh.boneWeights = weights.ToArray();
 
                 mesh.RecalculateBounds();
                 cache = mesh;
