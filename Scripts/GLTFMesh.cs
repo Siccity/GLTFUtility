@@ -126,7 +126,7 @@ namespace Siccity.GLTFUtility {
                 if (uv6 != null) mesh.uv6 = uv6.ToArray();
                 if (uv7 != null) mesh.uv7 = uv7.ToArray();
                 if (uv8 != null) mesh.uv8 = uv8.ToArray();
-                mesh.boneWeights = weights.ToArray();
+                if (weights != null) mesh.boneWeights = weights.ToArray();
 
                 mesh.RecalculateBounds();
                 cache = mesh;
