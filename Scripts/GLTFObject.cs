@@ -32,10 +32,6 @@ namespace Siccity.GLTFUtility {
 #endregion
 
         public GameObject[] Create() {
-            // Load materials
-            for (int i = 0; i < materials.Count; i++) {
-                materials[i].Initialize(images);
-            }
 
             // Get root node indices from scenes
             int[] rootNodes = scenes.SelectMany(x => x.nodes).ToArray();

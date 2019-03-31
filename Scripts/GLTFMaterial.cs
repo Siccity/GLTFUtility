@@ -15,6 +15,7 @@ namespace Siccity.GLTFUtility {
 		public PbrMetalRoughness pbrMetallicRoughness = null;
 		public TextureReference emissiveTexture = null;
 		public float[] emissiveFactor = null;
+		public MaterialExtensions extensions = null;
 #endregion
 
 #region Non-serialized fields
@@ -23,11 +24,19 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 		public override void Load() {
-			if (pbrMetallicRoughness != null) {
+			// Load metallic-roughness materials
+			if (pbrMetallicRoughness != null && pbrMetallicRoughness.IsValid()) {
 				pbrMetallicRoughness.glTFObject = glTFObject;
 				pbrMetallicRoughness.Load();
 				cache = pbrMetallicRoughness.Material;
 			}
+			// Load specular-glossiness materials
+			else if (extensions != null && extensions.KHR_materials_pbrSpecularGlossiness != null && extensions.KHR_materials_pbrSpecularGlossiness.IsValid()) {
+				extensions.KHR_materials_pbrSpecularGlossiness.glTFObject = glTFObject;
+				extensions.KHR_materials_pbrSpecularGlossiness.Load();
+				cache = extensions.KHR_materials_pbrSpecularGlossiness.Material;
+			}
+			// Load fallback material
 			else cache = new Material(Shader.Find("Standard"));
 
 			// EmissiveFactor
@@ -69,10 +78,15 @@ namespace Siccity.GLTFUtility {
 		}
 
 		[Serializable]
+		public class MaterialExtensions {
+			public PbrSpecularGlossiness KHR_materials_pbrSpecularGlossiness = null;
+		}
+
+		[Serializable]
 		public class PbrMetalRoughness : GLTFProperty {
 
 #region Serialized fields
-			[SerializeField] private float[] baseColorFactor;
+			public float[] baseColorFactor;
 			public float metallicFactor;
 			public float roughnessFactor = 1f;
 			public TextureReference baseColorTexture;
@@ -80,19 +94,19 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 #region Non-serialized fields
-			public Color BaseColor { get; private set; }
 			public Material Material { get; private set; }
 #endregion
 
 			public override void Load() {
 				// Base Color
-				if (baseColorFactor != null && baseColorFactor.Length == 3) BaseColor = new Color(baseColorFactor[0], baseColorFactor[1], baseColorFactor[2]);
-				if (baseColorFactor != null && baseColorFactor.Length == 4) BaseColor = new Color(baseColorFactor[0], baseColorFactor[1], baseColorFactor[2], baseColorFactor[3]);
-				else BaseColor = Color.white;
+				Color baseColor;
+				if (baseColorFactor != null && baseColorFactor.Length == 3) baseColor = new Color(baseColorFactor[0], baseColorFactor[1], baseColorFactor[2]);
+				if (baseColorFactor != null && baseColorFactor.Length == 4) baseColor = new Color(baseColorFactor[0], baseColorFactor[1], baseColorFactor[2], baseColorFactor[3]);
+				else baseColor = Color.white;
 
 				// Material
 				Material = new Material(Shader.Find("Standard"));
-				Material.color = BaseColor;
+				Material.color = baseColor;
 				Material.SetFloat("_Metallic", metallicFactor);
 				Material.SetFloat("_Glossiness", 1 - roughnessFactor);
 				if (baseColorTexture != null && baseColorTexture.index >= 0) {
@@ -111,15 +125,89 @@ namespace Siccity.GLTFUtility {
 					}
 				}
 			}
+
+			/// <summary> JSONUtility sometimes sets nulls to new empty classes instead of null. Check if any values are set </summary>
+			public bool IsValid() {
+				if (baseColorFactor != null && baseColorFactor.Length != 0) return true;
+				else if (metallicFactor != 0f) return true;
+				else if (roughnessFactor != 1f) return true;
+				else if (baseColorTexture != null) return true;
+				else if (metallicRoughnessTexture != null) return true;
+				else return false;
+			}
+		}
+
+		[Serializable]
+		public class PbrSpecularGlossiness : GLTFProperty {
+
+#region Serialized fields
+			/// <summary> The reflected diffuse factor of the material </summary>
+			public float[] diffuseFactor;
+			/// <summary> The diffuse texture </summary>
+			public TextureReference diffuseTexture;
+			/// <summary> The reflected diffuse factor of the material </summary>
+			public float[] specularFactor;
+			/// <summary> The glossiness or smoothness of the material </summary>
+			public float glossinessFactor = 1f;
+			/// <summary> The specular-glossiness texture </summary>
+			public TextureReference specularGlossinessTexture;
+#endregion
+
+#region Non-serialized fields
+			public Material Material { get; private set; }
+#endregion
+
+			public override void Load() {
+				// Base color
+				Color baseColor;
+				if (diffuseFactor != null && diffuseFactor.Length == 3) baseColor = new Color(diffuseFactor[0], diffuseFactor[1], diffuseFactor[2]);
+				if (diffuseFactor != null && diffuseFactor.Length == 4) baseColor = new Color(diffuseFactor[0], diffuseFactor[1], diffuseFactor[2], diffuseFactor[3]);
+				else baseColor = Color.white;
+
+				// Specular color
+				Color specularColor;
+				if (specularFactor != null && specularFactor.Length == 3) specularColor = new Color(specularFactor[0], specularFactor[1], specularFactor[2]);
+				else specularColor = Color.white;
+
+				// Material base values
+				Material = new Material(Shader.Find("Standard (Specular setup)"));
+				Material.color = baseColor;
+				Material.SetColor("_SpecColor", specularColor);
+				Material.SetFloat("_Glossiness", glossinessFactor);
+
+				// Diffuse texture
+				if (diffuseTexture != null && diffuseTexture.index >= 0) {
+					if (glTFObject.textures.Count <= diffuseTexture.index) {
+						Debug.LogWarning("Attempted to get diffuseTexture texture index " + diffuseTexture.index + " when only " + glTFObject.textures.Count + " exist");
+					} else {
+						Material.SetTexture("_MainTex", glTFObject.textures[diffuseTexture.index].Source.GetTexture());
+					}
+				}
+				// Specular texture
+				if (specularGlossinessTexture != null && specularGlossinessTexture.index >= 0) {
+					if (glTFObject.textures.Count <= specularGlossinessTexture.index) {
+						Debug.LogWarning("Attempted to get specularGlossinessTexture texture index " + specularGlossinessTexture.index + " when only " + glTFObject.textures.Count + " exist");
+					} else {
+						Material.SetTexture("_SpecGlossMap", glTFObject.textures[specularGlossinessTexture.index].Source.GetFixedMetallicRoughness());
+						Material.EnableKeyword("_SPECGLOSSMAP");
+					}
+				}
+			}
+
+			/// <summary> JSONUtility sometimes sets nulls to new empty classes instead of null. Check if any values are set </summary>
+			public bool IsValid() {
+				if (diffuseFactor != null && diffuseFactor.Length != 0) return true;
+				else if (diffuseTexture != null) return true;
+				else if (specularFactor != null && specularFactor.Length != 0) return true;
+				else if (glossinessFactor != 1f) return true;
+				else if (specularGlossinessTexture != null) return true;
+				else return false;
+			}
 		}
 
 		[Serializable]
 		public class TextureReference {
 			public int index = -1;
-		}
-
-		public void Initialize(List<GLTFImage> images) {
-
 		}
 
 		public Material GetMaterial() {
