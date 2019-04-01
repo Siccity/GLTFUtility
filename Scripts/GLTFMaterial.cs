@@ -87,7 +87,7 @@ namespace Siccity.GLTFUtility {
 
 #region Serialized fields
 			public float[] baseColorFactor;
-			public float metallicFactor;
+			public float metallicFactor = 1f;
 			public float roughnessFactor = 1f;
 			public TextureReference baseColorTexture;
 			public TextureReference metallicRoughnessTexture;
@@ -105,7 +105,7 @@ namespace Siccity.GLTFUtility {
 				else baseColor = Color.white;
 
 				// Material
-				Material = new Material(Shader.Find("Standard"));
+				Material = new Material(Shader.Find("GLTFUtility/Standard (Metallic)"));
 				Material.color = baseColor;
 				Material.SetFloat("_Metallic", metallicFactor);
 				Material.SetFloat("_Glossiness", 1 - roughnessFactor);
@@ -129,7 +129,7 @@ namespace Siccity.GLTFUtility {
 			/// <summary> JSONUtility sometimes sets nulls to new empty classes instead of null. Check if any values are set </summary>
 			public bool IsValid() {
 				if (baseColorFactor != null && baseColorFactor.Length != 0) return true;
-				else if (metallicFactor != 0f) return true;
+				else if (metallicFactor != 1f) return true;
 				else if (roughnessFactor != 1f) return true;
 				else if (baseColorTexture != null) return true;
 				else if (metallicRoughnessTexture != null) return true;
@@ -170,7 +170,7 @@ namespace Siccity.GLTFUtility {
 				else specularColor = Color.white;
 
 				// Material base values
-				Material = new Material(Shader.Find("Standard (Specular setup)"));
+				Material = new Material(Shader.Find("GLTFUtility/Standard (Specular)"));
 				Material.color = baseColor;
 				Material.SetColor("_SpecColor", specularColor);
 				Material.SetFloat("_Glossiness", glossinessFactor);

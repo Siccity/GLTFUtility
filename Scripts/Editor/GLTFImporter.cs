@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
-using UnityEditor;
 
 namespace Siccity.GLTFUtility {
     [ScriptedImporter(1, "gltf")]
