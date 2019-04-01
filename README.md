@@ -14,6 +14,7 @@ Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-for
 ### Installation
 Choose *one* of the following:
 * Download [.zip](https://github.com/Siccity/GLTFUtility/archive/master.zip) and extract to your project assets
+* Download latest [.unitypackage](https://github.com/Siccity/GLTFUtility/releases) and unpack to your projects assets
 * (git) Clone into your assets folder `git clone git@github.com:Siccity/GLTFUtility.git`
 * (git) Add repo as submodule `git submodule add git@github.com:Siccity/GLTFUtility.git Assets/Submodules/GLTFUtility`
 
