@@ -39,6 +39,7 @@ namespace Siccity.GLTFUtility {
 			} else if (bufferView != -1 && !string.IsNullOrEmpty(mimeType)) {
 				byte[] bytes = glTFObject.bufferViews[bufferView].GetBytes();
 				cache = new Texture2D(2, 2);
+				// If this fails, you may need to find "Image Conversion" package and enable it
 				if (cache.LoadImage(bytes)) {
 					return;
 				} else {
