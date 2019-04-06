@@ -30,6 +30,7 @@ namespace Siccity.GLTFUtility {
         public Vector3 LocalScale { get; private set; }
         public string Name { get; private set; }
         public Transform Transform { get; private set; }
+        public GLTFSkin Skin { get; private set; }
 #endregion
 
         public override void Load() {
@@ -38,6 +39,8 @@ namespace Siccity.GLTFUtility {
                 if (IsJoint()) Name = "joint" + glTFObject.nodes.IndexOf(this);
                 else Name = "node" + glTFObject.nodes.IndexOf(this);
             } else Name = name;
+            // References
+            if (skin != -1) Skin = glTFObject.skins[skin];
             // Transform
             if (matrix != null) {
                 Matrix4x4 trs = new Matrix4x4(
@@ -89,29 +92,8 @@ namespace Siccity.GLTFUtility {
                 GLTFMesh glTFMesh = glTFObject.meshes[this.mesh];
                 Mesh mesh = glTFMesh.GetMesh();
                 Renderer renderer;
-                if (skin != -1) {
-                    SkinnedMeshRenderer smr = Transform.gameObject.AddComponent<SkinnedMeshRenderer>();
-                    GLTFSkin glTFSkin = glTFObject.skins[skin];
-                    Transform[] bones = new Transform[glTFSkin.joints.Length];
-                    for (int i = 0; i < bones.Length; i++) {
-                        int jointNodeIndex = glTFSkin.joints[i];
-                        GLTFNode jointNode = glTFObject.nodes[jointNodeIndex];
-                        bones[i] = jointNode.Transform;
-                    }
-                    smr.bones = bones;
-                    smr.rootBone = bones[0];
-                    renderer = smr;
-
-                    // Bindposes
-                    if (glTFSkin.inverseBindMatrices != -1) {
-                        Matrix4x4 m = glTFObject.nodes[0].Transform.localToWorldMatrix;
-                        Matrix4x4[] bindPoses = new Matrix4x4[glTFSkin.joints.Length];
-                        for (int i = 0; i < glTFSkin.joints.Length; i++) {
-                            bindPoses[i] = glTFObject.nodes[glTFSkin.joints[i]].Transform.worldToLocalMatrix * m;
-                        }
-                        mesh.bindposes = bindPoses;
-                    }
-                    smr.sharedMesh = mesh;
+                if (Skin != null) {
+                    renderer = Skin.SetupSkinnedRenderer(Transform.gameObject, mesh);
                 } else {
                     MeshRenderer mr = Transform.gameObject.AddComponent<MeshRenderer>();
                     MeshFilter mf = Transform.gameObject.AddComponent<MeshFilter>();
