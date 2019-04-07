@@ -2,11 +2,12 @@
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
 		_MainTex ("Albedo (RGB)", 2D) = "white" {}
-		_MetallicGlossMap ("Metallic Map", 2D) = "white" {}
+		[NoScaleOffset] _MetallicGlossMap ("Metallic Map", 2D) = "white" {}
 		_Glossiness ("Roughness", Range(0,1)) = 0.5
 		_Metallic ("Metallic", Range(0,1)) = 0.0
-		_BumpMap ("Normal", 2D) = "bump" {}
-		_EmissionMap ("Emission", 2D) = "black" {}
+		[Normal][NoScaleOffset] _BumpMap ("Normal", 2D) = "bump" {}
+		[NoScaleOffset] _OcclusionMap ("Occlusion", 2D) = "white" {}
+		[NoScaleOffset] _EmissionMap ("Emission", 2D) = "black" {}
 		_EmissionColor ("Emission Color", Color) = (0,0,0,0)
 	}
 	SubShader {
@@ -21,13 +22,13 @@
 		#pragma target 3.0
 
 		sampler2D _MainTex;
-		sampler2D _BumpMap;
 		sampler2D _MetallicGlossMap;
+		sampler2D _BumpMap;
+		sampler2D _OcclusionMap;
 		sampler2D _EmissionMap;
 
 		struct Input {
 			float2 uv_MainTex;
-			float2 uv_BumpMap;
 			float4 color : COLOR;
 		};
 
@@ -53,10 +54,10 @@
 			o.Metallic = m.b * _Metallic;
 			// Smoothness comes from blue channel tinted by slider variables
 			o.Smoothness = 1 - (m.g * _Glossiness);
-			// Ambient Occlusion comes from red channel
-			//o.Occlusion = m.r;
 			// Normal comes from a bump map
-			o.Normal = UnpackNormal (tex2D (_BumpMap, IN.uv_BumpMap));
+			o.Normal = UnpackNormal (tex2D (_BumpMap, IN.uv_MainTex));
+			// Ambient Occlusion comes from red channel
+			o.Occlusion = tex2D (_OcclusionMap, IN.uv_MainTex).r;
 			// Emission comes from a texture tinted by color
 			o.Emission = tex2D (_EmissionMap, IN.uv_MainTex) * _EmissionColor;
 		}
