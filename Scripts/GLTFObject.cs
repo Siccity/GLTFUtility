@@ -57,27 +57,18 @@ namespace Siccity.GLTFUtility {
             }
             this.directoryRoot = directoryRoot;
             this.mainFile = mainFile;
-            Load(buffers);
-            Load(bufferViews);
-            Load(accessors);
-            Load(images);
-            Load(textures);
-            Load(materials);
-            Load(scenes);
-            Load(nodes);
-            Load(meshes);
-            Load(animations);
-            Load(skins);
+            GLTFProperty.Load(this, buffers);
+            GLTFProperty.Load(this, bufferViews);
+            GLTFProperty.Load(this, accessors);
+            GLTFProperty.Load(this, images);
+            GLTFProperty.Load(this, textures);
+            GLTFProperty.Load(this, materials);
+            GLTFProperty.Load(this, scenes);
+            GLTFProperty.Load(this, nodes);
+            GLTFProperty.Load(this, meshes);
+            GLTFProperty.Load(this, animations);
+            GLTFProperty.Load(this, skins);
             loaded = true;
-        }
-
-        private void Load<T>(List<T> properties) where T : GLTFProperty {
-            for (int i = 0; i < properties.Count; i++) {
-                properties[i].glTFObject = this;
-            }
-            for (int i = 0; i < properties.Count; i++) {
-                properties[i].Load();
-            }
         }
     }
 }

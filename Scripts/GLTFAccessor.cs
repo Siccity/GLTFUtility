@@ -20,8 +20,8 @@ namespace Siccity.GLTFUtility {
         public Indices indices;
 #endregion
 
-        public override void Load() {
-
+        protected override bool OnLoad() {
+            return true;
         }
 
         public Matrix4x4[] ReadMatrix4x4() {

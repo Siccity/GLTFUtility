@@ -24,31 +24,31 @@ namespace Siccity.GLTFUtility {
 		public bool initialized { get { return cache != null; } }
 #endregion
 
-		public override void Load() {
+		protected override bool OnLoad() {
 			imageIsAsset = false;
 			if (!string.IsNullOrEmpty(uri) && File.Exists(glTFObject.directoryRoot + uri)) {
 #if UNITY_EDITOR
 				cache = UnityEditor.AssetDatabase.LoadAssetAtPath(glTFObject.directoryRoot + uri, typeof(Texture2D)) as Texture2D;
 				if (cache != null) {
 					imageIsAsset = true;
-					return;
+					return true;
 				}
 #endif
 				Debug.Log("Couldn't load texture at " + glTFObject.directoryRoot + uri);
-				return;
+				return false;
 			} else if (bufferView != -1 && !string.IsNullOrEmpty(mimeType)) {
 				byte[] bytes = glTFObject.bufferViews[bufferView].GetBytes();
 				cache = new Texture2D(2, 2);
 				// If this fails, you may need to find "Image Conversion" package and enable it
 				if (cache.LoadImage(bytes)) {
-					return;
+					return true;
 				} else {
 					Debug.Log("mimeType not supported: " + mimeType);
-					return;
+					return false;
 				}
 			} else {
 				Debug.Log("Couldn't find texture at " + glTFObject.directoryRoot + uri);
-				return;
+				return false;
 			}
 		}
 

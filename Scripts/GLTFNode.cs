@@ -33,7 +33,7 @@ namespace Siccity.GLTFUtility {
         public GLTFSkin Skin { get; private set; }
 #endregion
 
-        public override void Load() {
+        protected override bool OnLoad() {
             // Name
             if (string.IsNullOrEmpty(name)) {
                 if (IsJoint()) Name = "joint" + glTFObject.nodes.IndexOf(this);
@@ -64,6 +64,7 @@ namespace Siccity.GLTFUtility {
                 if (scale != null) LocalScale = new Vector3(scale[0], scale[1], scale[2]);
                 else LocalScale = Vector3.one;
             }
+            return true;
         }
 
         /// <summary> Recursively set up this node's transform in the scene, followed by its children </summary>

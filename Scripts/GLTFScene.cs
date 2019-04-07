@@ -12,8 +12,8 @@ namespace Siccity.GLTFUtility {
         public List<int> nodes;
 #endregion
 
-        public override void Load() {
-            
+        protected override bool OnLoad() {
+            return true;
         }
     }
 }

@@ -19,7 +19,7 @@ namespace Siccity.GLTFUtility {
         private Mesh cache;
 #endregion
 
-        public override void Load() {
+        protected override bool OnLoad() {
             if (primitives.Count == 0) {
                 Debug.LogWarning("0 primitives in mesh");
             } else {
@@ -131,6 +131,7 @@ namespace Siccity.GLTFUtility {
                 mesh.RecalculateBounds();
                 cache = mesh;
             }
+            return true;
         }
 
         private void ReadUVs(ref List<Vector2> uvs, int texcoord, int vertCount) {

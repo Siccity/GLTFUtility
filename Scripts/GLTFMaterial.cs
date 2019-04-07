@@ -23,17 +23,13 @@ namespace Siccity.GLTFUtility {
 		public Color EmissiveFactor { get; private set; }
 #endregion
 
-		public override void Load() {
+		protected override bool OnLoad() {
 			// Load metallic-roughness materials
-			if (pbrMetallicRoughness != null && pbrMetallicRoughness.IsValid()) {
-				pbrMetallicRoughness.glTFObject = glTFObject;
-				pbrMetallicRoughness.Load();
+			if (pbrMetallicRoughness != null && pbrMetallicRoughness.Load(glTFObject)) {
 				cache = pbrMetallicRoughness.Material;
 			}
 			// Load specular-glossiness materials
-			else if (extensions != null && extensions.KHR_materials_pbrSpecularGlossiness != null && extensions.KHR_materials_pbrSpecularGlossiness.IsValid()) {
-				extensions.KHR_materials_pbrSpecularGlossiness.glTFObject = glTFObject;
-				extensions.KHR_materials_pbrSpecularGlossiness.Load();
+			else if (extensions != null && extensions.KHR_materials_pbrSpecularGlossiness != null && extensions.KHR_materials_pbrSpecularGlossiness.Load(glTFObject)) {
 				cache = extensions.KHR_materials_pbrSpecularGlossiness.Material;
 			}
 			// Load fallback material
@@ -75,6 +71,7 @@ namespace Siccity.GLTFUtility {
 			// Name
 			if (string.IsNullOrEmpty(name)) cache.name = "material" + glTFObject.materials.IndexOf(this);
 			else cache.name = name;
+			return true;
 		}
 
 		[Serializable]
@@ -97,7 +94,11 @@ namespace Siccity.GLTFUtility {
 			public Material Material { get; private set; }
 #endregion
 
-			public override void Load() {
+			protected override bool OnLoad() {
+				if (!IsValid()) return false;
+
+				GLTFProperty.Load(glTFObject, baseColorTexture, metallicRoughnessTexture);
+
 				// Base Color
 				Color baseColor;
 				if (baseColorFactor != null && baseColorFactor.Length == 3) baseColor = new Color(baseColorFactor[0], baseColorFactor[1], baseColorFactor[2]);
@@ -124,6 +125,7 @@ namespace Siccity.GLTFUtility {
 						Material.EnableKeyword("_METALLICGLOSSMAP");
 					}
 				}
+				return true;
 			}
 
 			/// <summary> JSONUtility sometimes sets nulls to new empty classes instead of null. Check if any values are set </summary>
@@ -157,7 +159,11 @@ namespace Siccity.GLTFUtility {
 			public Material Material { get; private set; }
 #endregion
 
-			public override void Load() {
+			protected override bool OnLoad() {
+				if (!IsValid()) return false;
+
+				GLTFProperty.Load(glTFObject, diffuseTexture, specularGlossinessTexture);
+
 				// Base color
 				Color baseColor;
 				if (diffuseFactor != null && diffuseFactor.Length == 3) baseColor = new Color(diffuseFactor[0], diffuseFactor[1], diffuseFactor[2]);
@@ -192,6 +198,7 @@ namespace Siccity.GLTFUtility {
 						Material.EnableKeyword("_SPECGLOSSMAP");
 					}
 				}
+				return true;
 			}
 
 			/// <summary> JSONUtility sometimes sets nulls to new empty classes instead of null. Check if any values are set </summary>
@@ -206,8 +213,27 @@ namespace Siccity.GLTFUtility {
 		}
 
 		[Serializable]
-		public class TextureReference {
+		public class TextureReference : GLTFProperty {
+
+#region Serialized fields
 			public int index = -1;
+#endregion
+
+#region Non-serialized fields
+			public GLTFTexture Reference { get; private set; }
+#endregion
+
+			protected override bool OnLoad() {
+				if (index >= 0) {
+					if (glTFObject.textures.Count <= index) {
+						Debug.LogWarning("Attempted to get texture index " + index + " when only " + glTFObject.textures.Count + " exist");
+						return false;
+					} else {
+						Reference = glTFObject.textures[index];
+					}
+				}
+				return true;
+			}
 		}
 
 		public Material GetMaterial() {

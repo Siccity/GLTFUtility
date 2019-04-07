@@ -49,7 +49,7 @@ namespace Siccity.GLTFUtility {
         }
 #endregion
 
-        public override void Load() {
+        protected override bool OnLoad() {
             Clip = new AnimationClip();
 
             // Name
@@ -124,6 +124,7 @@ namespace Siccity.GLTFUtility {
                         break;
                 }
             }
+            return true;
         }
     }
 }

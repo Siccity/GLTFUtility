@@ -20,7 +20,7 @@ namespace Siccity.GLTFUtility {
         public bool isEmbedded { get { return CheckEmbedded(); } }
 #endregion
 
-        public override void Load() {
+        protected override bool OnLoad() {
             if (string.IsNullOrEmpty(uri)) {
                 cache = File.ReadAllBytes(glTFObject.directoryRoot + glTFObject.mainFile);
             } else if (!isEmbedded) {
@@ -34,6 +34,7 @@ namespace Siccity.GLTFUtility {
             // In case you're trying to load a gltf with more than one buffers this might cause issues, but it'll work for now.
             int startIndex = cache.Length - byteLength;
             if (startIndex != 0) cache = cache.SubArray(startIndex, byteLength);
+            return true;
         }
 
         public byte[] GetBytes() {

@@ -14,8 +14,9 @@ namespace Siccity.GLTFUtility {
 		[SerializeField] public GLTFImage Source;
 
 #endregion
-		public override void Load() {
+		protected override bool OnLoad() {
 			Source = glTFObject.images[source];
+			return true;
 		}
 	}
 }

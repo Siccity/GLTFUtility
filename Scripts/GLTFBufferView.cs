@@ -22,8 +22,9 @@ namespace Siccity.GLTFUtility {
         private byte[] cache;
 #endregion
 
-        public override void Load() {
+        protected override bool OnLoad() {
             cache = glTFObject.buffers[buffer].GetBytes().SubArray(this.byteOffset, byteLength);
+            return true;
         }
 
         public byte[] GetBytes(int byteOffset = 0) {

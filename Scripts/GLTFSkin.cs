@@ -19,7 +19,7 @@ namespace Siccity.GLTFUtility {
 
 #endregion
 
-        public override void Load() {
+        protected override bool OnLoad() {
             // Inverse bind matrices
             if (inverseBindMatrices != -1) {
                 InverseBindMatrices = glTFObject.accessors[inverseBindMatrices].ReadMatrix4x4();
@@ -42,6 +42,7 @@ namespace Siccity.GLTFUtility {
                     InverseBindMatrices[i] = m;
                 }
             }
+            return true;
         }
 
         public SkinnedMeshRenderer SetupSkinnedRenderer(GameObject go, Mesh mesh) {
