@@ -62,7 +62,7 @@ namespace Siccity.GLTFUtility {
                 Matrix4x4 m = glTFObject.nodes[0].Transform.localToWorldMatrix;
                 Matrix4x4[] bindPoses = new Matrix4x4[joints.Length];
                 for (int i = 0; i < joints.Length; i++) {
-                    bindPoses[i] = InverseBindMatrices[i] * m;
+                    bindPoses[i] = InverseBindMatrices[i];
                 }
                 mesh.bindposes = bindPoses;
             } else {
