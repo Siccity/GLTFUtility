@@ -97,6 +97,7 @@ namespace Siccity.GLTFUtility {
                 if (gltfObject.images[i].imageIsAsset) continue;
 
                 Texture2D tex = gltfObject.images[i].GetTexture();
+                if (tex == null) continue;
                 if (string.IsNullOrEmpty(tex.name)) tex.name = "texture" + i.ToString();
 #if UNITY_2018_2_OR_NEWER
                 ctx.AddObjectToAsset(i.ToString(), tex);
