@@ -17,6 +17,8 @@ Choose *one* of the following:
 * Download latest [.unitypackage](https://github.com/Siccity/GLTFUtility/releases) and unpack to your projects assets
 * (git) Clone into your assets folder `git clone git@github.com:Siccity/GLTFUtility.git`
 * (git) Add repo as submodule `git submodule add git@github.com:Siccity/GLTFUtility.git Assets/Submodules/GLTFUtility`
+* (package) If using Unity 2018.3 or later, you can add a new entry to the manifest.json file in your Packages folder
+  `"com.siccity.gltfutility": "https://github.com/siccity/gltfutility.git"`
 
 **NOTICE** This is a work in progress. Expect bugs. Current features can be tracked below:
 
