@@ -1,7 +1,7 @@
 {
     "name": "com.siccity.gltfutility",
     "displayName": "GLTFUtility",
-    "version": "1.0",
+    "version": "1.0.0",
     "unity": "2018.2.18f1",
     "keywords": ["glTF", "import"],
     "description": "Lightweight glTF loader."
