@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
@@ -31,6 +34,15 @@ namespace Siccity.GLTFUtility {
         public string mainFile { get; private set; }
 #endregion
 
+        /// <summary> Constructor </summary>
+        public GLTFObject() { }
+
+        /// <summary> Constructor </summary>
+        /// <param name="filepath">Full path to a .gltf or .glb file</param>
+        public GLTFObject(string filepath) {
+            Load(filepath);
+        }
+
         public GameObject[] Create() {
 
             // Get root node indices from scenes
@@ -50,13 +62,56 @@ namespace Siccity.GLTFUtility {
             return roots;
         }
 
-        public void Load(string directoryRoot, string mainFile) {
-            if (loaded) {
-                Debug.LogWarning("GLTFObject already loaded");
+        public void Load(string filepath) {
+            string extension = Path.GetExtension(filepath).ToLower();
+            if (extension == ".glb") LoadGLB(filepath);
+            else if (extension == ".gltf") LoadGLTF(filepath);
+            else {
+                Debug.Log("Extension '" + extension + "' not recognized in " + filepath);
+                loaded = false;
                 return;
             }
-            this.directoryRoot = directoryRoot;
-            this.mainFile = mainFile;
+            loaded = true;
+        }
+
+        public void LoadGLB(string filepath) {
+            byte[] bytes = File.ReadAllBytes(filepath);
+
+            // 12 byte header
+            // 0-4  - magic = "glTF"
+            // 4-8  - version = 2
+            // 8-12 - length = total length of glb, including Header and all Chunks, in bytes.
+            string magic = Encoding.ASCII.GetString(bytes.SubArray(0, 4));
+            if (magic != "glTF") return;
+            uint version = System.BitConverter.ToUInt32(bytes, 4);
+            if (version != 2) {
+                Debug.LogWarning("Importer does not support gltf version " + version);
+                return;
+            }
+            uint length = System.BitConverter.ToUInt32(bytes, 8);
+
+            // Chunk 0 (json)
+            uint chunkLength = System.BitConverter.ToUInt32(bytes, 12);
+            string chunkType = Encoding.ASCII.GetString(bytes.SubArray(16, 4));
+            string json = Encoding.ASCII.GetString(bytes.SubArray(20, (int) chunkLength));
+
+            // Load file and get directory
+            JsonUtility.FromJsonOverwrite(json, this);
+
+            LoadInternal(filepath);
+        }
+
+        public void LoadGLTF(string filepath) {
+            string json = File.ReadAllText(filepath);
+
+            JsonUtility.FromJsonOverwrite(json, this);
+
+            LoadInternal(filepath);
+        }
+
+        private void LoadInternal(string filepath) {
+            this.directoryRoot = Directory.GetParent(filepath).ToString() + "/";
+            this.mainFile = Path.GetFileName(filepath);
             GLTFProperty.Load(this, buffers);
             GLTFProperty.Load(this, bufferViews);
             GLTFProperty.Load(this, accessors);
@@ -68,7 +123,6 @@ namespace Siccity.GLTFUtility {
             GLTFProperty.Load(this, meshes);
             GLTFProperty.Load(this, animations);
             GLTFProperty.Load(this, skins);
-            loaded = true;
         }
     }
 }

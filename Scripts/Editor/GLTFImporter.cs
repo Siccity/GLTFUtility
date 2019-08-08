@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using UnityEditor;
-using UnityEditor.Experimental.AssetImporters;
+﻿using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
@@ -10,11 +6,8 @@ namespace Siccity.GLTFUtility {
     public class GLTFImporter : GLTFImporterBase {
 
         public override void OnImportAsset(AssetImportContext ctx) {
-            // Load file and get directory
-            GLTFObject gltfObject = JsonUtility.FromJson<GLTFObject>(File.ReadAllText(ctx.assetPath));
-            string directoryRoot = Directory.GetParent(ctx.assetPath).ToString() + "/";
-            string mainFile = Path.GetFileName(ctx.assetPath);
-            gltfObject.Load(directoryRoot, mainFile);
+            // Load asset
+            GLTFObject gltfObject = new GLTFObject(ctx.assetPath);
 
             // Create gameobject structure
             GameObject[] roots = gltfObject.Create();
