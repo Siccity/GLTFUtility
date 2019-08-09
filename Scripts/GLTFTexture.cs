@@ -11,7 +11,7 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 #region Non-serialized fields
-		[SerializeField] public GLTFImage Source;
+		[NonSerialized] public GLTFImage Source;
 
 #endregion
 		protected override bool OnLoad() {

@@ -75,8 +75,10 @@ namespace Siccity.GLTFUtility {
             Transform.localRotation = LocalRotation;
             Transform.localScale = LocalScale;
 
-            for (int i = 0; i < children.Count; i++) {
-                glTFObject.nodes[children[i]].CreateTransform(Transform);
+            if (children != null) {
+                for (int i = 0; i < children.Count; i++) {
+                    glTFObject.nodes[children[i]].CreateTransform(Transform);
+                }
             }
 
             return Transform;

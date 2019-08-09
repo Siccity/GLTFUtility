@@ -65,42 +65,48 @@ namespace Siccity.GLTFUtility {
         }
 
         public void AddMaterials(AssetImportContext ctx, GLTFObject gltfObject) {
-            for (int i = 0; i < gltfObject.materials.Count; i++) {
-                Material mat = gltfObject.materials[i].GetMaterial();
-                if (string.IsNullOrEmpty(mat.name)) mat.name = "material" + i.ToString();
+            if (gltfObject.materials != null) {
+                for (int i = 0; i < gltfObject.materials.Count; i++) {
+                    Material mat = gltfObject.materials[i].GetMaterial();
+                    if (string.IsNullOrEmpty(mat.name)) mat.name = "material" + i.ToString();
 
 #if UNITY_2018_2_OR_NEWER
-                ctx.AddObjectToAsset(mat.name, mat);
+                    ctx.AddObjectToAsset(mat.name, mat);
 #else
-                ctx.AddSubAsset(mat.name, mat);
+                    ctx.AddSubAsset(mat.name, mat);
 #endif
+                }
             }
         }
 
         public void AddAnimations(AssetImportContext ctx, GLTFObject gltfObject) {
-            for (int i = 0; i < gltfObject.animations.Count; i++) {
-                AnimationClip clip = gltfObject.animations[i].Clip;
+            if (gltfObject.animations != null) {
+                for (int i = 0; i < gltfObject.animations.Count; i++) {
+                    AnimationClip clip = gltfObject.animations[i].Clip;
 #if UNITY_2018_2_OR_NEWER
-                ctx.AddObjectToAsset(clip.name, clip);
+                    ctx.AddObjectToAsset(clip.name, clip);
 #else
-                ctx.AddSubAsset(clip.name, clip);
+                    ctx.AddSubAsset(clip.name, clip);
 #endif
+                }
             }
         }
 
         public void AddTextures(AssetImportContext ctx, GLTFObject gltfObject) {
-            for (int i = 0; i < gltfObject.images.Count; i++) {
-                // Dont add asset textures
-                if (gltfObject.images[i].imageIsAsset) continue;
+            if (gltfObject.textures != null) {
+                for (int i = 0; i < gltfObject.images.Count; i++) {
+                    // Dont add asset textures
+                    if (gltfObject.images[i].imageIsAsset) continue;
 
-                Texture2D tex = gltfObject.images[i].GetTexture();
-                if (tex == null) continue;
-                if (string.IsNullOrEmpty(tex.name)) tex.name = "texture" + i.ToString();
+                    Texture2D tex = gltfObject.images[i].GetTexture();
+                    if (tex == null) continue;
+                    if (string.IsNullOrEmpty(tex.name)) tex.name = "texture" + i.ToString();
 #if UNITY_2018_2_OR_NEWER
-                ctx.AddObjectToAsset(i.ToString(), tex);
+                    ctx.AddObjectToAsset(i.ToString(), tex);
 #else
-                ctx.AddSubAsset(i.ToString(), glbObject.images[i].GetTexture());
+                    ctx.AddSubAsset(i.ToString(), glbObject.images[i].GetTexture());
 #endif
+                }
             }
         }
     }

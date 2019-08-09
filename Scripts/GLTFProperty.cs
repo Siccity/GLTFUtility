@@ -15,6 +15,7 @@ namespace Siccity.GLTFUtility {
 
 		/// <summary> Convenience method. Load multiple GLTFProperties with null check </summary>
 		public static void Load(GLTFObject glTFObject, params GLTFProperty[] properties) {
+			if (properties == null) return;
 			for (int i = 0; i < properties.Length; i++) {
 				if (properties[i] != null) {
 					properties[i].Load(glTFObject);
@@ -24,6 +25,7 @@ namespace Siccity.GLTFUtility {
 
 		/// <summary> Convenience method. Load multiple GLTFProperties with null check </summary>
 		public static void Load<T>(GLTFObject glTFObject, IList<T> properties) where T : GLTFProperty {
+			if (properties == null) return;
 			for (int i = 0; i < properties.Count; i++) {
 				if (properties[i] != null) {
 					properties[i].Load(glTFObject);

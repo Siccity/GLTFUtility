@@ -7,7 +7,7 @@ namespace Siccity.GLTFUtility {
 
         public override void OnImportAsset(AssetImportContext ctx) {
             // Load asset
-            GLTFObject gltfObject = new GLTFObject(ctx.assetPath);
+            GLTFObject gltfObject = GLTFObject.LoadGLTF(ctx.assetPath);
 
             // Create gameobject structure
             GameObject[] roots = gltfObject.Create();
