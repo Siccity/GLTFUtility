@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Siccity.GLTFUtility {
 	[Serializable]
@@ -103,7 +104,14 @@ namespace Siccity.GLTFUtility {
 				else baseColor = Color.white;
 
 				// Material
-				Material = new Material(Shader.Find("GLTFUtility/Standard (Metallic)"));
+				Shader sh = null;
+#if UNITY_2019_1_OR_NEWER
+				// LWRP support
+				if (GraphicsSettings.renderPipelineAsset) sh = GraphicsSettings.renderPipelineAsset.defaultShader;
+#endif
+				if (sh == null) sh = Shader.Find("GLTFUtility/Standard (Metallic)");
+
+				Material = new Material(sh);
 				Material.color = baseColor;
 				Material.SetFloat("_Metallic", metallicFactor);
 				Material.SetFloat("_Glossiness", 1 - roughnessFactor);
@@ -122,6 +130,10 @@ namespace Siccity.GLTFUtility {
 						Material.EnableKeyword("_METALLICGLOSSMAP");
 					}
 				}
+
+				// After the texture and color is extracted from the glTFObject
+				if (Material.HasProperty("_BaseMap")) Material.SetTexture("_BaseMap", Material.mainTexture);
+				if (Material.HasProperty("_BaseColor")) Material.SetColor("_BaseColor", baseColor);
 				return true;
 			}
 
