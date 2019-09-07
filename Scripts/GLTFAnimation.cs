@@ -1,24 +1,23 @@
 ﻿using System;
 using System.Linq;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
-    [Serializable]
     public class GLTFAnimation : GLTFProperty {
 
 #region Serialized fields
-        [SerializeField] private string name;
+        private string name;
         public Sampler[] samplers = null;
         /// <summary> Connects the output values of the key frame animation to a specific node in the hierarchy </summary>
         public Channel[] channels = null;
 #endregion
 
 #region Non-serialized fields
-        public AnimationClip Clip { get; private set; }
+        [JsonIgnore] public AnimationClip Clip { get; private set; }
 #endregion
 
 #region Classes
-        [Serializable]
         public class Sampler {
             /// <summary> The index of an accessor containing keyframe input values, e.g., time. </summary>
             public int input;
@@ -29,7 +28,6 @@ namespace Siccity.GLTFUtility {
         }
 
         /// <summary> Connects the output values of the key frame animation to a specific node in the hierarchy </summary>
-        [Serializable]
         public class Channel {
             /// <summary> Target sampler index </summary>
             public int sampler;
@@ -38,7 +36,6 @@ namespace Siccity.GLTFUtility {
         }
 
         /// <summary> Identifies which node and property to animate </summary>
-        [Serializable]
         public class Target {
             /// <summary> Target node index. Ignore if -1 </summary>
             public int node = -1;

@@ -1,8 +1,8 @@
 ﻿using System;
+using Newtonsoft.Json;
 
 namespace Siccity.GLTFUtility {
     /// <summary> Defines sections within the Buffer </summary>
-    [Serializable]
     public class GLTFBufferView : GLTFProperty {
 
 #region Serialized fields
@@ -15,7 +15,7 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 #region Non-serialized fields
-        private byte[] cache;
+        [JsonIgnore] private byte[] cache;
 #endregion
 
         protected override bool OnLoad() {

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Siccity.GLTFUtility {
-    [Serializable]
     public class GLTFPrimitive {
         public enum RenderingMode { Points = 1, Lines = 2, Triangles = 3 }
         /// <summary> Rendering mode</summary>
@@ -13,7 +13,6 @@ namespace Siccity.GLTFUtility {
         /// <summary> Morph targets </summary>
         public List<GLTFAttributes> targets;
 
-        [Serializable]
         public class GLTFAttributes {
             public int POSITION = -1;
             public int NORMAL = -1;

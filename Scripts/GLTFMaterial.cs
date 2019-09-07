@@ -5,7 +5,6 @@ using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace Siccity.GLTFUtility {
-	[Serializable]
 	public class GLTFMaterial : GLTFProperty {
 
 #region Serialized fields
@@ -19,7 +18,7 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 #region Non-serialized fields
-		private Material cache = null;
+		[JsonIgnore] private Material cache = null;
 #endregion
 
 		public Material CreateMaterial() {

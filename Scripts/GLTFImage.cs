@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
-	[Serializable]
 	public class GLTFImage : GLTFProperty {
 
 #region Serialized fields
@@ -13,12 +13,12 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 #region Non-serialized fields
-		private Texture2D cache;
+		[JsonIgnore] private Texture2D cache;
 		/// <summary> True if image was loaded from a Texture2D asset. False if it was loaded from binary or from another source </summary>
-		public bool imageIsAsset { get; private set; }
-		public bool isNormalMap { get; private set; }
-		public bool isMetallicRoughnessFixed { get; private set; }
-		public bool initialized { get { return cache != null; } }
+		[JsonIgnore] public bool imageIsAsset { get; private set; }
+		[JsonIgnore] public bool isNormalMap { get; private set; }
+		[JsonIgnore] public bool isMetallicRoughnessFixed { get; private set; }
+		[JsonIgnore] public bool initialized { get { return cache != null; } }
 #endregion
 
 		protected override bool OnLoad() {

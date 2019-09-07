@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
-	[Serializable]
 	public class GLTFTexture : GLTFProperty {
 
 #region Serialized fields

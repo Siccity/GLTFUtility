@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
-    [Serializable]
     public class GLTFMesh : GLTFProperty {
 
 #region Serialized fields
@@ -15,7 +15,7 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 #region Non-serialized fields
-        private Mesh cache;
+        [JsonIgnore] private Mesh cache;
 #endregion
 
         protected override bool OnLoad() {

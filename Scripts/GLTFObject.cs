@@ -9,7 +9,6 @@ using UnityEngine;
 namespace Siccity.GLTFUtility {
     public enum GLType { UNSET = -1, BYTE = 5120, UNSIGNED_BYTE = 5121, SHORT = 5122, UNSIGNED_SHORT = 5123, UNSIGNED_INT = 5125, FLOAT = 5126 }
 
-    [Serializable]
     public class GLTFObject {
 
 #region Serialized fields
@@ -28,9 +27,9 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 #region Non-serialized fields
-        public bool loaded { get; private set; }
-        public string directoryRoot { get; private set; }
-        public string mainFile { get; private set; }
+        [JsonIgnore] public bool loaded { get; private set; }
+        [JsonIgnore] public string directoryRoot { get; private set; }
+        [JsonIgnore] public string mainFile { get; private set; }
 #endregion
 
         public static GLTFObject LoadFromFile(string filepath) {

@@ -5,7 +5,6 @@ using Siccity.GLTFUtility.Converters;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
-    [Serializable]
     public class GLTFNode : GLTFProperty {
 
 #region Serialized fields

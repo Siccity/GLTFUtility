@@ -1,8 +1,8 @@
 ﻿using System;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
-    [Serializable]
     public class GLTFSkin : GLTFProperty {
 
 #region Serialized fields
@@ -13,8 +13,7 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 #region Non-serialized fields
-        public Matrix4x4[] InverseBindMatrices { get; private set; }
-
+        [JsonIgnore] public Matrix4x4[] InverseBindMatrices { get; private set; }
 #endregion
 
         protected override bool OnLoad() {

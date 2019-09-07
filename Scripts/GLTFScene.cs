@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Siccity.GLTFUtility {
-    [Serializable]
     public class GLTFScene : GLTFProperty {
 
 #region Serialized fields

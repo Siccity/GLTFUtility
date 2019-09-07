@@ -1,9 +1,9 @@
 ﻿using System;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
     /// <summary> Reads data from BufferViews </summary>
-    [Serializable]
     public class GLTFAccessor : GLTFProperty {
 
 #region Serialized fields

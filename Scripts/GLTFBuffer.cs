@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
+using Newtonsoft.Json;
 
 namespace Siccity.GLTFUtility {
     /// <summary> Contains raw binary data </summary>
-    [Serializable]
     public class GLTFBuffer : GLTFProperty {
 
 #region Serialized fields
@@ -12,9 +12,9 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 #region Non-serialized fields
-        private const string embeddedPrefix = "data:application/octet-stream;base64,";
-        private byte[] cache;
-        public bool isEmbedded { get { return CheckEmbedded(); } }
+        [JsonIgnore] private const string embeddedPrefix = "data:application/octet-stream;base64,";
+        [JsonIgnore] private byte[] cache;
+        [JsonIgnore] public bool isEmbedded { get { return CheckEmbedded(); } }
 #endregion
 
         protected override bool OnLoad() {
