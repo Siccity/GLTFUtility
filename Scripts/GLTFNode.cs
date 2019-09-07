@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
+using Siccity.GLTFUtility.Converters;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
@@ -11,22 +13,19 @@ namespace Siccity.GLTFUtility {
         /// <summary> Indices of child nodes </summary>
         public List<int> children;
         /// <summary> Local TRS </summary>
-        public float[] matrix;
+        [JsonConverter(typeof(Matrix4x4))] private Matrix4x4 matrix { set { LoadTRS(value); } }
         /// <summary> Local position </summary>
-        [SerializeField] private float[] translation;
+        [JsonConverter(typeof(Vector3Converter))] public Vector3 translation;
         /// <summary> Local rotation </summary>
-        [SerializeField] private float[] rotation;
+        [JsonConverter(typeof(QuaternionConverter))] public Quaternion rotation;
         /// <summary> Local scale </summary>
-        [SerializeField] private float[] scale;
+        [JsonConverter(typeof(Vector3Converter))] public Vector3 scale;
         public int mesh = -1;
         public int skin = -1;
         public int camera = -1;
 #endregion
 
 #region Non-serialized fields
-        public Vector3 LocalPosition { get; private set; }
-        public Quaternion LocalRotation { get; private set; }
-        public Vector3 LocalScale { get; private set; }
         public string Name { get; private set; }
         public Transform Transform { get; private set; }
         public GLTFSkin Skin { get; private set; }
@@ -40,30 +39,17 @@ namespace Siccity.GLTFUtility {
             } else Name = name;
             // References
             if (skin != -1) Skin = glTFObject.skins[skin];
-            // Transform
-            if (matrix != null) {
-                Matrix4x4 trs = new Matrix4x4(
-                    new Vector4(matrix[0], matrix[1], matrix[2], matrix[3]),
-                    new Vector4(matrix[4], matrix[5], matrix[6], matrix[7]),
-                    new Vector4(matrix[8], matrix[9], matrix[10], matrix[11]),
-                    new Vector4(matrix[12], matrix[13], matrix[14], matrix[15])
-                );
-                Vector3 pos = trs.GetColumn(3);
-                pos.z = -pos.z;
-                Quaternion rot = trs.rotation;
-                rot = new Quaternion(rot.x, rot.y, -rot.z, -rot.w);
-                LocalPosition = pos;
-                LocalRotation = rot;
-                LocalScale = trs.lossyScale;
-            } else {
-                if (translation != null) LocalPosition = new Vector3(translation[0], translation[1], -translation[2]);
-                else LocalPosition = Vector3.zero;
-                if (rotation != null) LocalRotation = new Quaternion(rotation[0], rotation[1], -rotation[2], -rotation[3]);
-                else LocalRotation = new Quaternion(0, 0, 0, 1);
-                if (scale != null) LocalScale = new Vector3(scale[0], scale[1], scale[2]);
-                else LocalScale = Vector3.one;
-            }
             return true;
+        }
+
+        private void LoadTRS(Matrix4x4 trs) {
+            Vector3 pos = trs.GetColumn(3);
+            pos.z = -pos.z;
+            Quaternion rot = trs.rotation;
+            rot = new Quaternion(rot.x, rot.y, -rot.z, -rot.w);
+            translation = pos;
+            rotation = rot;
+            scale = trs.lossyScale;
         }
 
         /// <summary> Recursively set up this node's transform in the scene, followed by its children </summary>
@@ -71,9 +57,9 @@ namespace Siccity.GLTFUtility {
             if (Transform == null) Transform = new GameObject().transform;
             Transform.parent = parent;
             Transform.gameObject.name = Name;
-            Transform.localPosition = LocalPosition;
-            Transform.localRotation = LocalRotation;
-            Transform.localScale = LocalScale;
+            Transform.localPosition = translation;
+            Transform.localRotation = rotation;
+            Transform.localScale = scale;
 
             if (children != null) {
                 for (int i = 0; i < children.Count; i++) {
