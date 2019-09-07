@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility.Converters {
+	/// <summary> Converts from float array to Color during deserialization, and back </summary>
 	public class ColorRGBConverter : JsonConverter {
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
 			Color c = (Color) value;
