@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Siccity.GLTFUtility.Converters;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Siccity.GLTFUtility {
 	[Serializable]
@@ -97,7 +98,14 @@ namespace Siccity.GLTFUtility {
 
 				Material mat;
 				// Material
-				mat = new Material(Shader.Find("GLTFUtility/Standard (Metallic)"));
+				Shader sh = null;
+#if UNITY_2019_1_OR_NEWER
+				// LWRP support
+				if (GraphicsSettings.renderPipelineAsset) sh = GraphicsSettings.renderPipelineAsset.defaultShader;
+#endif
+				if (sh == null) sh = Shader.Find("GLTFUtility/Standard (Metallic)");
+
+				mat = new Material(sh);
 				mat.color = baseColorFactor;
 				mat.SetFloat("_Metallic", metallicFactor);
 				mat.SetFloat("_Glossiness", 1 - roughnessFactor);
@@ -116,6 +124,10 @@ namespace Siccity.GLTFUtility {
 						mat.EnableKeyword("_METALLICGLOSSMAP");
 					}
 				}
+
+				// After the texture and color is extracted from the glTFObject
+				if (mat.HasProperty("_BaseMap")) mat.SetTexture("_BaseMap", mat.mainTexture);
+				if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", baseColorFactor);
 				return mat;
 			}
 		}
