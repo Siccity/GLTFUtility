@@ -15,11 +15,11 @@ namespace Siccity.GLTFUtility {
         /// <summary> Local TRS </summary>
         [JsonConverter(typeof(Matrix4x4))] private Matrix4x4 matrix { set { LoadTRS(value); } }
         /// <summary> Local position </summary>
-        [JsonConverter(typeof(Vector3Converter))] public Vector3 translation;
+        [JsonConverter(typeof(Vector3Converter))] public Vector3 translation = Vector3.zero;
         /// <summary> Local rotation </summary>
-        [JsonConverter(typeof(QuaternionConverter))] public Quaternion rotation;
+        [JsonConverter(typeof(QuaternionConverter))] public Quaternion rotation = Quaternion.identity;
         /// <summary> Local scale </summary>
-        [JsonConverter(typeof(Vector3Converter))] public Vector3 scale;
+        [JsonConverter(typeof(Vector3Converter))] public Vector3 scale = Vector3.one;
         public int mesh = -1;
         public int skin = -1;
         public int camera = -1;
