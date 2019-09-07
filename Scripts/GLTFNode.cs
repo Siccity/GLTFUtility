@@ -9,54 +9,36 @@ namespace Siccity.GLTFUtility {
     public class GLTFNode : GLTFProperty {
 
 #region Serialized fields
-        [SerializeField] private string name;
+        public string name;
         /// <summary> Indices of child nodes </summary>
         public List<int> children;
         /// <summary> Local TRS </summary>
-        [JsonConverter(typeof(Matrix4x4))] private Matrix4x4 matrix { set { LoadTRS(value); } }
+        [JsonConverter(typeof(Matrix4x4))] private Matrix4x4 matrix { set { value.UnpackTRS(ref translation, ref rotation, ref scale); } }
         /// <summary> Local position </summary>
         [JsonConverter(typeof(Vector3Converter))] public Vector3 translation = Vector3.zero;
         /// <summary> Local rotation </summary>
         [JsonConverter(typeof(QuaternionConverter))] public Quaternion rotation = Quaternion.identity;
         /// <summary> Local scale </summary>
         [JsonConverter(typeof(Vector3Converter))] public Vector3 scale = Vector3.one;
-        public int mesh = -1;
-        public int skin = -1;
-        public int camera = -1;
+        public int? mesh;
+        public int? skin;
+        public int? camera;
 #endregion
 
 #region Non-serialized fields
-        public string Name { get; private set; }
-        public Transform Transform { get; private set; }
-        public GLTFSkin Skin { get; private set; }
+        [JsonIgnore] public Transform Transform { get; private set; }
+        [JsonIgnore] public GLTFSkin Skin { get; private set; }
 #endregion
 
         protected override bool OnLoad() {
-            // Name
-            if (string.IsNullOrEmpty(name)) {
-                if (IsJoint()) Name = "joint" + glTFObject.nodes.IndexOf(this);
-                else Name = "node" + glTFObject.nodes.IndexOf(this);
-            } else Name = name;
-            // References
-            if (skin != -1) Skin = glTFObject.skins[skin];
             return true;
-        }
-
-        private void LoadTRS(Matrix4x4 trs) {
-            Vector3 pos = trs.GetColumn(3);
-            pos.z = -pos.z;
-            Quaternion rot = trs.rotation;
-            rot = new Quaternion(rot.x, rot.y, -rot.z, -rot.w);
-            translation = pos;
-            rotation = rot;
-            scale = trs.lossyScale;
         }
 
         /// <summary> Recursively set up this node's transform in the scene, followed by its children </summary>
         public Transform CreateTransform(Transform parent) {
             if (Transform == null) Transform = new GameObject().transform;
             Transform.parent = parent;
-            Transform.gameObject.name = Name;
+            Transform.gameObject.name = GetName();
             Transform.localPosition = translation;
             Transform.localRotation = rotation;
             Transform.localScale = scale;
@@ -70,14 +52,22 @@ namespace Siccity.GLTFUtility {
             return Transform;
         }
 
+        /// <summary> Returns an automatic name if no name is set </summary>
+        public string GetName() {
+            if (name == null) {
+                if (IsJoint()) return "joint" + glTFObject.nodes.IndexOf(this);
+                else return "node" + glTFObject.nodes.IndexOf(this);
+            } else return name;
+        }
+
         /// <summary> Set up various components defined in the node. Call after all transforms have been set up </summary>
         public void SetupComponents() {
             if (Transform == null) {
                 Debug.LogWarning("Transform is null. Call CreateTransform before calling SetupComponents");
                 return;
             }
-            if (this.mesh != -1) {
-                GLTFMesh glTFMesh = glTFObject.meshes[this.mesh];
+            if (this.mesh.HasValue) {
+                GLTFMesh glTFMesh = glTFObject.meshes[this.mesh.Value];
                 Mesh mesh = glTFMesh.GetMesh();
                 Renderer renderer;
                 if (Skin != null) {

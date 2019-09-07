@@ -65,8 +65,8 @@ namespace Siccity.GLTFUtility {
                 string relativePath = "";
                 GLTFNode node = glTFObject.nodes[channel.target.node];
                 while (node != null && !node.IsRootTransform()) {
-                    if (string.IsNullOrEmpty(relativePath)) relativePath = node.Name;
-                    else relativePath = node.Name + "/" + relativePath;
+                    if (string.IsNullOrEmpty(relativePath)) relativePath = node.GetName();
+                    else relativePath = node.GetName() + "/" + relativePath;
                     node = node.GetParentNode();
                 }
 
