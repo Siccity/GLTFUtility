@@ -1,4 +1,5 @@
 ﻿using System;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
@@ -6,14 +7,14 @@ namespace Siccity.GLTFUtility {
 	public class GLTFTexture : GLTFProperty {
 
 #region Serialized fields
-		public int sampler;
-		[SerializeField] private int source;
+		[JsonProperty(Required = Required.Always)] public int sampler;
+		[JsonProperty(Required = Required.Always)] public int source;
 #endregion
 
 #region Non-serialized fields
-		[NonSerialized] public GLTFImage Source;
-
+		[JsonIgnore] public GLTFImage Source;
 #endregion
+
 		protected override bool OnLoad() {
 			Source = glTFObject.images[source];
 			return true;
