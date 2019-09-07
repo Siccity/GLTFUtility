@@ -1,4 +1,6 @@
 ﻿using System;
+using Newtonsoft.Json;
+using Siccity.GLTFUtility.Converters;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
@@ -6,18 +8,17 @@ namespace Siccity.GLTFUtility {
 	public class GLTFMaterial : GLTFProperty {
 
 #region Serialized fields
-		[SerializeField] private string name;
+		public string name;
 		public TextureReference occlusionTexture = null;
 		public TextureReference normalTexture = null;
 		public PbrMetalRoughness pbrMetallicRoughness = null;
 		public TextureReference emissiveTexture = null;
-		public float[] emissiveFactor = null;
+		[JsonConverter(typeof(ColorRGBConverter))] public Color? emissiveFactor;
 		public MaterialExtensions extensions = null;
 #endregion
 
 #region Non-serialized fields
 		private Material cache = null;
-		public Color EmissiveFactor { get; private set; }
 #endregion
 
 		protected override bool OnLoad() {
@@ -31,9 +32,6 @@ namespace Siccity.GLTFUtility {
 			}
 			// Load fallback material
 			else cache = new Material(Shader.Find("Standard"));
-
-			// EmissiveFactor
-			if (emissiveFactor != null && emissiveFactor.Length == 3) EmissiveFactor = new Color(emissiveFactor[0], emissiveFactor[1], emissiveFactor[2]);
 
 			if (normalTexture != null && normalTexture.index >= 0) {
 				if (glTFObject.textures.Count <= normalTexture.index) {
@@ -52,8 +50,8 @@ namespace Siccity.GLTFUtility {
 					cache.SetTexture("_OcclusionMap", tex);
 				}
 			}
-			if (emissiveFactor != null && emissiveFactor.Length == 3) {
-				cache.SetColor("_EmissionColor", EmissiveFactor);
+			if (emissiveFactor.HasValue) {
+				cache.SetColor("_EmissionColor", emissiveFactor.Value);
 				cache.EnableKeyword("_EMISSION");
 			}
 			if (emissiveTexture != null && emissiveTexture.index >= 0) {
