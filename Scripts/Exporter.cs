@@ -7,7 +7,7 @@ namespace Siccity.GLTFUtility {
 	/// <summary> API used for exporting .gltf and .glb files </summary>
 	public static class Exporter {
 #if UNITY_EDITOR
-		[UnityEditor.MenuItem("Edit/Export Selection/.glb")]
+		[UnityEditor.MenuItem("File/Export Selection/.glb")]
 		public static void ExportSelected() {
 			ExportGLB(UnityEditor.Selection.activeGameObject);
 		}

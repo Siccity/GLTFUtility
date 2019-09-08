@@ -1,5 +1,6 @@
 ﻿using System;
 using Newtonsoft.Json;
+using Siccity.GLTFUtility.Converters;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
@@ -10,7 +11,7 @@ namespace Siccity.GLTFUtility {
 #region Serialized fields
         public int? bufferView;
         public int byteOffset = 0;
-        [JsonProperty(Required = Required.Always)] public string type;
+        [JsonProperty(Required = Required.Always), JsonConverter(typeof(EnumConverter))] public AccessorType type;
         [JsonProperty(Required = Required.Always)] public GLType componentType;
         [JsonProperty(Required = Required.Always)] public int count;
         public float[] min;
@@ -18,18 +19,32 @@ namespace Siccity.GLTFUtility {
         public Sparse sparse;
 #endregion
 
+        public class Cache {
+            public byte[] bytes;
+            public GLTFAccessor accessor;
+
+            public Cache(byte[] bufferView) {
+                bytes = bufferView;
+                bytes = bufferView.SubArray(accessor.byteOffset, bufferView.Length - accessor.byteOffset);
+            }
+        }
+
+        public Cache LoadCache(byte[][] bufferViews) {
+            return new Cache(bufferViews[bufferView.Value]);
+        }
+
         protected override bool OnLoad() {
             return true;
         }
 
-        public Matrix4x4[] ReadMatrix4x4() {
-            if (type != "MAT4") {
+        public Matrix4x4[] ReadMatrix4x4(byte[] bytes = null) {
+            if (type != AccessorType.MAT4) {
                 Debug.LogError("Type mismatch! Expected MAT4 got " + type);
                 return new Matrix4x4[count];
             }
 
             Matrix4x4[] m = new Matrix4x4[count];
-            byte[] bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
+            if (bytes == null) bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
             int componentSize = GetComponentSize();
             Func<byte[], int, float> converter = GetFloatConverter();
             for (int i = 0; i < count; i++) {
@@ -69,14 +84,14 @@ namespace Siccity.GLTFUtility {
             return m;
         }
 
-        public Vector4[] ReadVec4() {
-            if (type != "VEC4") {
+        public Vector4[] ReadVec4(byte[] bytes = null) {
+            if (type != AccessorType.VEC4) {
                 Debug.LogError("Type mismatch! Expected VEC4 got " + type);
                 return new Vector4[count];
             }
 
             Vector4[] verts = new Vector4[count];
-            byte[] bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
+            if (bytes == null) bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
             int componentSize = GetComponentSize();
             Func<byte[], int, float> converter = GetFloatConverter();
             for (int i = 0; i < count; i++) {
@@ -92,14 +107,14 @@ namespace Siccity.GLTFUtility {
             return verts;
         }
 
-        public Color[] ReadColor() {
-            if (type != "VEC4" && type != "VEC3") {
+        public Color[] ReadColor(byte[] bytes = null) {
+            if (type != AccessorType.VEC4 && type != AccessorType.VEC3) {
                 Debug.LogError("Type mismatch! Expected VEC4 or VEC3 got " + type);
                 return new Color[count];
             }
 
             Color[] colors = new Color[count];
-            byte[] bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
+            if (bytes == null) bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
             int componentSize = GetComponentSize();
             if (componentType == GLType.BYTE || componentType == GLType.UNSIGNED_BYTE) {
                 Color32 color = Color.black;
@@ -110,7 +125,7 @@ namespace Siccity.GLTFUtility {
                     color.g = bytes[startIndex];
                     startIndex += GetComponentTypeSize(componentType);
                     color.b = bytes[startIndex];
-                    if (type == "VEC4") {
+                    if (type == AccessorType.VEC4) {
                         startIndex += GetComponentTypeSize(componentType);
                         color.a = bytes[startIndex];
                     } else {
@@ -127,7 +142,7 @@ namespace Siccity.GLTFUtility {
                     colors[i].g = converter(bytes, startIndex);
                     startIndex += GetComponentTypeSize(componentType);
                     colors[i].b = converter(bytes, startIndex);
-                    if (type == "VEC4") {
+                    if (type == AccessorType.VEC4) {
                         startIndex += GetComponentTypeSize(componentType);
                         colors[i].a = converter(bytes, startIndex);
                     } else {
@@ -141,8 +156,8 @@ namespace Siccity.GLTFUtility {
             return colors;
         }
 
-        public Vector3[] ReadVec3() {
-            if (type != "VEC3") {
+        public Vector3[] ReadVec3(byte[] bytes = null) {
+            if (type != AccessorType.VEC3) {
                 Debug.LogError("Type mismatch! Expected VEC3 got " + type);
                 return new Vector3[count];
             }
@@ -152,7 +167,7 @@ namespace Siccity.GLTFUtility {
             }
 
             Vector3[] verts = new Vector3[count];
-            byte[] bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
+            if (bytes == null) bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
             int componentSize = GetComponentSize();
             Func<byte[], int, float> converter = GetFloatConverter();
             for (int i = 0; i < count; i++) {
@@ -166,8 +181,8 @@ namespace Siccity.GLTFUtility {
             return verts;
         }
 
-        public Vector2[] ReadVec2() {
-            if (type != "VEC2") {
+        public Vector2[] ReadVec2(byte[] bytes = null) {
+            if (type != AccessorType.VEC2) {
                 Debug.LogError("Type mismatch! Expected VEC2 got " + type);
                 return new Vector2[count];
             }
@@ -177,7 +192,7 @@ namespace Siccity.GLTFUtility {
             }
 
             Vector2[] verts = new Vector2[count];
-            byte[] bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
+            if (bytes == null) bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
             int componentSize = GetComponentSize();
             Func<byte[], int, float> converter = GetFloatConverter();
             for (int i = 0; i < count; i++) {
@@ -190,14 +205,14 @@ namespace Siccity.GLTFUtility {
             return verts;
         }
 
-        public float[] ReadFloat() {
-            if (type != "SCALAR") {
+        public float[] ReadFloat(byte[] bytes = null) {
+            if (type != AccessorType.SCALAR) {
                 Debug.LogError("Type mismatch! Expected SCALAR got " + type);
                 return new float[count];
             }
 
             float[] floats = new float[count];
-            byte[] bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
+            if (bytes == null) bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
             int componentSize = GetComponentSize();
             Func<byte[], int, float> converter = GetFloatConverter();
             for (int i = 0; i < count; i++) {
@@ -207,14 +222,14 @@ namespace Siccity.GLTFUtility {
             return floats;
         }
 
-        public int[] ReadInt() {
-            if (type != "SCALAR") {
+        public int[] ReadInt(byte[] bytes = null) {
+            if (type != AccessorType.SCALAR) {
                 Debug.LogError("Type mismatch! Expected SCALAR got " + type);
                 return new int[count];
             }
 
             int[] ints = new int[count];
-            byte[] bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
+            if (bytes == null) bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
             int componentSize = GetComponentSize();
             Func<byte[], int, int> converter = GetIntConverter();
             for (int i = 0; i < count; i++) {
@@ -289,21 +304,21 @@ namespace Siccity.GLTFUtility {
             }
         }
 
-        public static int GetComponentNumber(string type) {
+        public static int GetComponentNumber(AccessorType type) {
             switch (type) {
-                case "SCALAR":
+                case AccessorType.SCALAR:
                     return 1;
-                case "VEC2":
+                case AccessorType.VEC2:
                     return 2;
-                case "VEC3":
+                case AccessorType.VEC3:
                     return 3;
-                case "VEC4":
+                case AccessorType.VEC4:
                     return 4;
-                case "MAT2":
+                case AccessorType.MAT2:
                     return 4;
-                case "MAT3":
+                case AccessorType.MAT3:
                     return 9;
-                case "MAT4":
+                case AccessorType.MAT4:
                     return 16;
                 default:
                     Debug.LogError("type " + type + " not supported!");
@@ -321,7 +336,7 @@ namespace Siccity.GLTFUtility {
             public class Values {
                 [JsonProperty(Required = Required.Always)] public int bufferView;
                 public int byteOffset = 0;
-                
+
             }
 
             // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#indices

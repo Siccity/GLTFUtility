@@ -20,6 +20,10 @@ namespace Siccity.GLTFUtility {
         [JsonIgnore] private byte[] cache;
 #endregion
 
+        public byte[] LoadBytes(byte[][] buffers) {
+            return buffers[buffer].SubArray(this.byteOffset, byteLength);
+        }
+
         protected override bool OnLoad() {
             cache = glTFObject.buffers[buffer].GetBytes().SubArray(this.byteOffset, byteLength);
             return true;
