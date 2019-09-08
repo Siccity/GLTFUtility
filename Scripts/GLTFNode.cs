@@ -15,7 +15,7 @@ namespace Siccity.GLTFUtility {
         /// <summary> Local TRS </summary>
         [JsonConverter(typeof(Matrix4x4Converter))] private Matrix4x4 matrix { set { value.UnpackTRS(ref translation, ref rotation, ref scale); } }
         /// <summary> Local position </summary>
-        [JsonConverter(typeof(Vector3Converter))] public Vector3 translation = Vector3.zero;
+        [JsonConverter(typeof(TranslationConverter))] public Vector3 translation = Vector3.zero;
         /// <summary> Local rotation </summary>
         [JsonConverter(typeof(QuaternionConverter))] public Quaternion rotation = Quaternion.identity;
         /// <summary> Local scale </summary>
