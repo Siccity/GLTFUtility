@@ -3,11 +3,13 @@ using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
+	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#texture
 	public class GLTFTexture : GLTFProperty {
 
 #region Serialized fields
-		[JsonProperty(Required = Required.Always)] public int sampler;
-		[JsonProperty(Required = Required.Always)] public int source;
+		public int? sampler;
+		public int? source;
+		public string name;
 #endregion
 
 #region Non-serialized fields
@@ -15,8 +17,11 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 		protected override bool OnLoad() {
-			Source = glTFObject.images[source];
-			return true;
+			if (source.HasValue) {
+				Source = glTFObject.images[source.Value];
+				return true;
+			}
+			return false;
 		}
 	}
 }

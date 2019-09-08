@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Siccity.GLTFUtility {
+    // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#primitive
     public class GLTFPrimitive {
-        public enum RenderingMode { Points = 1, Lines = 2, Triangles = 3 }
+        [JsonProperty(Required = Required.Always)] public GLTFAttributes attributes;
         /// <summary> Rendering mode</summary>
-        public RenderingMode mode;
-        public int indices = -1;
-        public GLTFAttributes attributes;
-        public int material = -1;
+        public RenderingMode mode = RenderingMode.TRIANGLES;
+        public int? indices;
+        public int? material;
         /// <summary> Morph targets </summary>
         public List<GLTFAttributes> targets;
 

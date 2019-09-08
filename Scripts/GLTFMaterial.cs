@@ -5,16 +5,20 @@ using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace Siccity.GLTFUtility {
+	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#material
 	public class GLTFMaterial : GLTFProperty {
 
 #region Serialized fields
 		public string name;
-		public TextureReference occlusionTexture = null;
-		public TextureReference normalTexture = null;
-		public PbrMetalRoughness pbrMetallicRoughness = null;
-		public TextureReference emissiveTexture = null;
-		[JsonConverter(typeof(ColorRGBConverter))] public Color? emissiveFactor;
-		public MaterialExtensions extensions = null;
+		public PbrMetalRoughness pbrMetallicRoughness;
+		public TextureInfo normalTexture;
+		public TextureInfo occlusionTexture;
+		public TextureInfo emissiveTexture;
+		[JsonConverter(typeof(ColorRGBConverter))] public Color emissiveFactor = Color.black;
+		[JsonConverter(typeof(EnumConverter))] public AlphaMode alphaMode = AlphaMode.OPAQUE;
+		public float alphaCutoff = 0.5f;
+		public bool doubleSided = false;
+		public MaterialExtensions extensions;
 #endregion
 
 #region Non-serialized fields
@@ -51,8 +55,8 @@ namespace Siccity.GLTFUtility {
 					mat.SetTexture("_OcclusionMap", tex);
 				}
 			}
-			if (emissiveFactor.HasValue) {
-				mat.SetColor("_EmissionColor", emissiveFactor.Value);
+			if (emissiveFactor != Color.black) {
+				mat.SetColor("_EmissionColor", emissiveFactor);
 				mat.EnableKeyword("_EMISSION");
 			}
 			if (emissiveTexture != null && emissiveTexture.index >= 0) {
@@ -76,20 +80,19 @@ namespace Siccity.GLTFUtility {
 			return true;
 		}
 
-		[Serializable]
 		public class MaterialExtensions {
 			public PbrSpecularGlossiness KHR_materials_pbrSpecularGlossiness = null;
 		}
 
-		[Serializable]
+		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#pbrmetallicroughness
 		public class PbrMetalRoughness {
 
 #region Serialized fields
 			[JsonConverter(typeof(ColorRGBAConverter))] public Color baseColorFactor = Color.white;
+			public TextureInfo baseColorTexture;
 			public float metallicFactor = 1f;
 			public float roughnessFactor = 1f;
-			public TextureReference baseColorTexture;
-			public TextureReference metallicRoughnessTexture;
+			public TextureInfo metallicRoughnessTexture;
 #endregion
 
 			public Material CreateMaterial(GLTFObject glTFObject) {
@@ -138,13 +141,13 @@ namespace Siccity.GLTFUtility {
 			/// <summary> The reflected diffuse factor of the material </summary>
 			[JsonConverter(typeof(ColorRGBAConverter))] public Color diffuseFactor = Color.white;
 			/// <summary> The diffuse texture </summary>
-			public TextureReference diffuseTexture;
+			public TextureInfo diffuseTexture;
 			/// <summary> The reflected diffuse factor of the material </summary>
 			[JsonConverter(typeof(ColorRGBConverter))] public Color specularFactor = Color.white;
 			/// <summary> The glossiness or smoothness of the material </summary>
 			public float glossinessFactor = 1f;
 			/// <summary> The specular-glossiness texture </summary>
-			public TextureReference specularGlossinessTexture;
+			public TextureInfo specularGlossinessTexture;
 #endregion
 
 			public Material CreateMaterial(GLTFObject glTFObject) {
@@ -178,11 +181,13 @@ namespace Siccity.GLTFUtility {
 			}
 		}
 
-		[Serializable]
-		public class TextureReference : GLTFProperty {
+		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#normaltextureinfo
+		public class TextureInfo : GLTFProperty {
 
 #region Serialized fields
 			[JsonProperty(Required = Required.Always)] public int index;
+			public int texCoord = 0;
+			public float scale = 1;
 #endregion
 
 #region Non-serialized fields

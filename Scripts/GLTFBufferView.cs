@@ -2,16 +2,18 @@
 using Newtonsoft.Json;
 
 namespace Siccity.GLTFUtility {
+    // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#bufferview
     /// <summary> Defines sections within the Buffer </summary>
     public class GLTFBufferView : GLTFProperty {
 
 #region Serialized fields
-        public int buffer = -1;
+        [JsonProperty(Required = Required.Always)] public int buffer;
+        [JsonProperty(Required = Required.Always)] public int byteLength;
         public int byteOffset = 0;
-        public int byteLength = -1;
-        public int byteStride = -1;
+        public int? byteStride;
         /// <summary> OpenGL buffer target </summary>
-        public int target = -1;
+        public int? target;
+        public string name;
 #endregion
 
 #region Non-serialized fields

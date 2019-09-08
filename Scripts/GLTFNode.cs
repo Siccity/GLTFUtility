@@ -5,6 +5,7 @@ using Siccity.GLTFUtility.Converters;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
+    // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#node
     public class GLTFNode : GLTFProperty {
 
 #region Serialized fields
@@ -22,6 +23,7 @@ namespace Siccity.GLTFUtility {
         public int? mesh;
         public int? skin;
         public int? camera;
+        public int? weights;
 #endregion
 
 #region Non-serialized fields
@@ -83,7 +85,7 @@ namespace Siccity.GLTFUtility {
                 for (int i = 0; i < glTFMesh.primitives.Count; i++) {
                     GLTFPrimitive primitive = glTFMesh.primitives[i];
                     // Create material if id is positive or 0
-                    if (primitive.material != -1) materials[i] = glTFObject.materials[primitive.material].GetMaterial();
+                    if (primitive.material.HasValue) materials[i] = glTFObject.materials[primitive.material.Value].GetMaterial();
                 }
                 renderer.materials = materials;
             }

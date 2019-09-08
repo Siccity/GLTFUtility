@@ -5,13 +5,14 @@ using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
+    // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#mesh
     public class GLTFMesh : GLTFProperty {
 
 #region Serialized fields
-        public string name;
-        public List<GLTFPrimitive> primitives;
+        [JsonProperty(Required = Required.Always)] public List<GLTFPrimitive> primitives;
         /// <summary> Morph target weights </summary>
         public List<float> weights;
+        public string name;
 #endregion
 
 #region Non-serialized fields
@@ -57,7 +58,7 @@ namespace Siccity.GLTFUtility {
 
                     // Tris - (Invert all triangles. Instead of flipping each triangle, just flip the entire array. Much easier)
                     if (primitive.indices != -1) {
-                        submeshTris.Add(new List<int>(glTFObject.accessors[primitive.indices].ReadInt().Reverse().Select(x => x + vertStartIndex)));
+                        submeshTris.Add(new List<int>(glTFObject.accessors[primitive.indices.Value].ReadInt().Reverse().Select(x => x + vertStartIndex)));
                     }
 
                     /// Normals - (Z points backwards in GLTF)

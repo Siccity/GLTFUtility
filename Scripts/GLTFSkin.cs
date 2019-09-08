@@ -3,13 +3,15 @@ using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
+    // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#skin
     public class GLTFSkin : GLTFProperty {
 
 #region Serialized fields
         /// <summary> Index of accessor containing inverse bind shape matrices </summary>
-        public int inverseBindMatrices = -1;
+        public int? inverseBindMatrices;
         public int[] joints;
-        public int skeleton = -1;
+        public int? skeleton;
+        public string name;
 #endregion
 
 #region Non-serialized fields
@@ -18,8 +20,8 @@ namespace Siccity.GLTFUtility {
 
         protected override bool OnLoad() {
             // Inverse bind matrices
-            if (inverseBindMatrices != -1) {
-                InverseBindMatrices = glTFObject.accessors[inverseBindMatrices].ReadMatrix4x4();
+            if (inverseBindMatrices.HasValue) {
+                InverseBindMatrices = glTFObject.accessors[inverseBindMatrices.Value].ReadMatrix4x4();
                 for (int i = 0; i < InverseBindMatrices.Length; i++) {
                     // Flip the matrix from GLTF to Unity format. This was done through trial and error, i can't explain it.
                     Matrix4x4 m = InverseBindMatrices[i];

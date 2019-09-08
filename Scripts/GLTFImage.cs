@@ -4,12 +4,14 @@ using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
+	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#image
 	public class GLTFImage : GLTFProperty {
 
 #region Serialized fields
 		public string uri;
 		public string mimeType;
-		public int bufferView = -1;
+		public int? bufferView;
+		public string name;
 #endregion
 
 #region Non-serialized fields
@@ -34,7 +36,7 @@ namespace Siccity.GLTFUtility {
 				Debug.Log("Couldn't load texture at " + glTFObject.directoryRoot + uri);
 				return false;
 			} else if (bufferView != -1 && !string.IsNullOrEmpty(mimeType)) {
-				byte[] bytes = glTFObject.bufferViews[bufferView].GetBytes();
+				byte[] bytes = glTFObject.bufferViews[bufferView.Value].GetBytes();
 				cache = new Texture2D(2, 2);
 				// If this fails, you may need to find "Image Conversion" package and enable it
 				if (cache.LoadImage(bytes)) {

@@ -3,12 +3,14 @@ using System.IO;
 using Newtonsoft.Json;
 
 namespace Siccity.GLTFUtility {
+    // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#buffer
     /// <summary> Contains raw binary data </summary>
     public class GLTFBuffer : GLTFProperty {
 
 #region Serialized fields
-        public int byteLength = -1;
-        public string uri = null;
+        [JsonProperty(Required = Required.Always)] public int byteLength;
+        public string uri;
+        public string name;
 #endregion
 
 #region Non-serialized fields

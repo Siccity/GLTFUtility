@@ -3,19 +3,19 @@ using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
+    // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#accessor
     /// <summary> Reads data from BufferViews </summary>
     public class GLTFAccessor : GLTFProperty {
 
 #region Serialized fields
-        public int bufferView = -1;
+        public int? bufferView;
         public int byteOffset = 0;
-        public string type;
-        public GLType componentType = GLType.UNSET;
-        public int count = -1;
+        [JsonProperty(Required = Required.Always)] public string type;
+        [JsonProperty(Required = Required.Always)] public GLType componentType;
+        [JsonProperty(Required = Required.Always)] public int count;
         public float[] min;
         public float[] max;
         public Sparse sparse;
-        public Indices indices;
 #endregion
 
         protected override bool OnLoad() {
@@ -29,7 +29,7 @@ namespace Siccity.GLTFUtility {
             }
 
             Matrix4x4[] m = new Matrix4x4[count];
-            byte[] bytes = glTFObject.bufferViews[bufferView].GetBytes(byteOffset);
+            byte[] bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
             int componentSize = GetComponentSize();
             Func<byte[], int, float> converter = GetFloatConverter();
             for (int i = 0; i < count; i++) {
@@ -76,7 +76,7 @@ namespace Siccity.GLTFUtility {
             }
 
             Vector4[] verts = new Vector4[count];
-            byte[] bytes = glTFObject.bufferViews[bufferView].GetBytes(byteOffset);
+            byte[] bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
             int componentSize = GetComponentSize();
             Func<byte[], int, float> converter = GetFloatConverter();
             for (int i = 0; i < count; i++) {
@@ -99,7 +99,7 @@ namespace Siccity.GLTFUtility {
             }
 
             Color[] colors = new Color[count];
-            byte[] bytes = glTFObject.bufferViews[bufferView].GetBytes(byteOffset);
+            byte[] bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
             int componentSize = GetComponentSize();
             if (componentType == GLType.BYTE || componentType == GLType.UNSIGNED_BYTE) {
                 Color32 color = Color.black;
@@ -152,7 +152,7 @@ namespace Siccity.GLTFUtility {
             }
 
             Vector3[] verts = new Vector3[count];
-            byte[] bytes = glTFObject.bufferViews[bufferView].GetBytes(byteOffset);
+            byte[] bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
             int componentSize = GetComponentSize();
             Func<byte[], int, float> converter = GetFloatConverter();
             for (int i = 0; i < count; i++) {
@@ -177,7 +177,7 @@ namespace Siccity.GLTFUtility {
             }
 
             Vector2[] verts = new Vector2[count];
-            byte[] bytes = glTFObject.bufferViews[bufferView].GetBytes(byteOffset);
+            byte[] bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
             int componentSize = GetComponentSize();
             Func<byte[], int, float> converter = GetFloatConverter();
             for (int i = 0; i < count; i++) {
@@ -197,7 +197,7 @@ namespace Siccity.GLTFUtility {
             }
 
             float[] floats = new float[count];
-            byte[] bytes = glTFObject.bufferViews[bufferView].GetBytes(byteOffset);
+            byte[] bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
             int componentSize = GetComponentSize();
             Func<byte[], int, float> converter = GetFloatConverter();
             for (int i = 0; i < count; i++) {
@@ -214,7 +214,7 @@ namespace Siccity.GLTFUtility {
             }
 
             int[] ints = new int[count];
-            byte[] bytes = glTFObject.bufferViews[bufferView].GetBytes(byteOffset);
+            byte[] bytes = glTFObject.bufferViews[bufferView.Value].GetBytes(byteOffset);
             int componentSize = GetComponentSize();
             Func<byte[], int, int> converter = GetIntConverter();
             for (int i = 0; i < count; i++) {
@@ -311,21 +311,25 @@ namespace Siccity.GLTFUtility {
             }
         }
 
-        [Serializable]
+        // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#sparse
         public class Sparse {
-            public int count = -1;
-            public Values values;
+            [JsonProperty(Required = Required.Always)] public int count;
+            [JsonProperty(Required = Required.Always)] public Indices indices;
+            [JsonProperty(Required = Required.Always)] public Values values;
 
-            [Serializable]
+            // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#values
             public class Values {
-                public int bufferView = -1;
+                [JsonProperty(Required = Required.Always)] public int bufferView;
+                public int byteOffset = 0;
+                
             }
-        }
 
-        [Serializable]
-        public class Indices {
-            public int bufferView = -1;
-            public int componentType = -1;
+            // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#indices
+            public class Indices {
+                [JsonProperty(Required = Required.Always)] public int bufferView;
+                [JsonProperty(Required = Required.Always)] public int componentType;
+                public int byteOffset = 0;
+            }
         }
     }
 }

@@ -4,13 +4,15 @@ using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
+    // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#animation
+    /// <summary> Contains info for a single animation clip </summary>
     public class GLTFAnimation : GLTFProperty {
 
 #region Serialized fields
-        private string name;
-        public Sampler[] samplers = null;
         /// <summary> Connects the output values of the key frame animation to a specific node in the hierarchy </summary>
-        public Channel[] channels = null;
+        [JsonProperty(Required = Required.Always)] public Channel[] channels;
+        [JsonProperty(Required = Required.Always)] public Sampler[] samplers;
+        public string name;
 #endregion
 
 #region Non-serialized fields
@@ -18,29 +20,32 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 #region Classes
+        // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#animation-sampler
         public class Sampler {
             /// <summary> The index of an accessor containing keyframe input values, e.g., time. </summary>
-            public int input;
-            /// <summary> Valid names include: "LINEAR", "STEP", "CUBICSPLINE" </summary>
-            public string interpolation;
+            [JsonProperty(Required = Required.Always)] public int input;
             /// <summary> The index of an accessor containing keyframe output values. </summary>
-            public int output;
+            [JsonProperty(Required = Required.Always)] public int output;
+            /// <summary> Valid names include: "LINEAR", "STEP", "CUBICSPLINE" </summary>
+            public string interpolation = "LINEAR";
         }
 
+        // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#channel
         /// <summary> Connects the output values of the key frame animation to a specific node in the hierarchy </summary>
         public class Channel {
             /// <summary> Target sampler index </summary>
-            public int sampler;
+            [JsonProperty(Required = Required.Always)] public int sampler;
             /// <summary> Target sampler index </summary>
-            public Target target;
+            [JsonProperty(Required = Required.Always)] public Target target;
         }
 
+        // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#target
         /// <summary> Identifies which node and property to animate </summary>
         public class Target {
-            /// <summary> Target node index. Ignore if -1 </summary>
-            public int node = -1;
+            /// <summary> Target node index.</summary>
+            public int? node;
             /// <summary> Which property to animate. Valid names are: "translation", "rotation", "scale", "weights" </summary>
-            public string path;
+            [JsonProperty(Required = Required.Always)] public string path;
         }
 #endregion
 
@@ -60,7 +65,7 @@ namespace Siccity.GLTFUtility {
                 Sampler sampler = samplers[channel.sampler];
 
                 string relativePath = "";
-                GLTFNode node = glTFObject.nodes[channel.target.node];
+                GLTFNode node = glTFObject.nodes[channel.target.node.Value];
                 while (node != null && !node.IsRootTransform()) {
                     if (string.IsNullOrEmpty(relativePath)) relativePath = node.GetName();
                     else relativePath = node.GetName() + "/" + relativePath;
