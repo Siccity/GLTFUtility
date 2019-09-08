@@ -13,6 +13,7 @@ namespace Siccity.GLTFUtility {
 
 #region Serialized fields
         public int scene = -1;
+        [JsonProperty(Required = Required.Always)] public GLTFAsset asset;
         public List<GLTFScene> scenes;
         public List<GLTFNode> nodes;
         public List<GLTFMesh> meshes;
