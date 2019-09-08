@@ -13,7 +13,7 @@ namespace Siccity.GLTFUtility {
         /// <summary> Indices of child nodes </summary>
         public List<int> children;
         /// <summary> Local TRS </summary>
-        [JsonConverter(typeof(Matrix4x4))] private Matrix4x4 matrix { set { value.UnpackTRS(ref translation, ref rotation, ref scale); } }
+        [JsonConverter(typeof(Matrix4x4Converter))] private Matrix4x4 matrix { set { value.UnpackTRS(ref translation, ref rotation, ref scale); } }
         /// <summary> Local position </summary>
         [JsonConverter(typeof(Vector3Converter))] public Vector3 translation = Vector3.zero;
         /// <summary> Local rotation </summary>
