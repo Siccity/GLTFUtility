@@ -31,6 +31,12 @@ namespace Siccity.GLTFUtility {
         [JsonIgnore] public GLTFSkin Skin { get; private set; }
 #endregion
 
+        public bool ShouldSerializetranslation() { return translation != Vector3.zero; }
+        public bool ShouldSerializerotation() { return rotation != Quaternion.identity; }
+        public bool ShouldSerializescale() { return scale != Vector3.one; }
+
+        public GLTFNode() { }
+
         protected override bool OnLoad() {
             return true;
         }
