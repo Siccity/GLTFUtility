@@ -3,8 +3,8 @@ using Newtonsoft.Json;
 
 namespace Siccity.GLTFUtility {
 	public abstract class GLTFProperty {
-		public GLTFObject glTFObject { get; private set; }
-		public bool isLoaded { get; private set; }
+		[JsonIgnore] public GLTFObject glTFObject { get; private set; }
+		[JsonIgnore] public bool isLoaded { get; private set; }
 
 		protected abstract bool OnLoad();
 

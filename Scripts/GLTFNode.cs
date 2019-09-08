@@ -130,5 +130,32 @@ namespace Siccity.GLTFUtility {
             }
             return false;
         }
+
+#region Export
+        public GLTFNode(Transform transform) {
+            name = transform.name;
+            translation = transform.localPosition;
+            rotation = transform.localRotation;
+            scale = transform.localScale;
+        }
+
+        public static List<GLTFNode> CreateNodeList(Transform root) {
+            List<GLTFNode> nodes = new List<GLTFNode>();
+            CreateNodeListRecursive(root, nodes);
+            return nodes;
+        }
+
+        private static void CreateNodeListRecursive(Transform transform, List<GLTFNode> nodes) {
+            GLTFNode node = new GLTFNode(transform);
+            nodes.Add(node);
+            if (transform.childCount > 0) {
+                node.children = new List<int>();
+                foreach (Transform child in transform) {
+                    node.children.Add(nodes.Count);
+                    CreateNodeListRecursive(child, nodes);
+                }
+            }
+        }
+#endregion
     }
 }
