@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
     // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#node
-    public class GLTFNode : GLTFProperty {
+    public class GLTFNode {
 
 #region Serialized fields
         public string name;

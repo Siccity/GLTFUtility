@@ -61,11 +61,12 @@ namespace Siccity.GLTFUtility {
 		private static void LoadInternal(this GLTFObject gltfObject, string filepath) {
 			gltfObject.directoryRoot = Directory.GetParent(filepath).ToString() + "/";
 			gltfObject.mainFile = Path.GetFileName(filepath);
-			GLTFProperty.Load(gltfObject, gltfObject.buffers);
-			GLTFProperty.Load(gltfObject, gltfObject.bufferViews);
-			GLTFProperty.Load(gltfObject, gltfObject.accessors);
-			GLTFProperty.Load(gltfObject, gltfObject.images);
-			GLTFProperty.Load(gltfObject, gltfObject.textures);
+
+			GLTFBuffer.ImportResult[] buffers = gltfObject.buffers.Select(x => x.Import(filepath)).ToArray();
+			GLTFBufferView.ImportResult[] bufferViews = gltfObject.bufferViews.Select(x => x.Import(buffers)).ToArray();
+			GLTFAccessor.ImportResult[] accessors = gltfObject.accessors.Select(x => x.LoadCache(bufferViews)).ToArray();
+			GLTFImage.ImportResult[] images = gltfObject.images.Select(x => x.GetImage(gltfObject.directoryRoot, bufferViews)).ToArray();
+			GLTFTexture.ImportResult[] textures = gltfObject.textures.Select(x => x.Import(images)).ToArray();
 			GLTFProperty.Load(gltfObject, gltfObject.materials);
 			GLTFProperty.Load(gltfObject, gltfObject.scenes);
 			GLTFProperty.Load(gltfObject, gltfObject.nodes);
@@ -76,21 +77,7 @@ namespace Siccity.GLTFUtility {
 		}
 
 		private static void NewLoader(this GLTFObject gltfObject, string filepath) {
-			gltfObject.directoryRoot = Directory.GetParent(filepath).ToString() + "/";
-			gltfObject.mainFile = Path.GetFileName(filepath);
-
-			byte[][] buffers = gltfObject.buffers.Select(x => x.LoadBytes(filepath)).ToArray();
-			byte[][] bufferViews = gltfObject.bufferViews.Select(x => x.LoadBytes(buffers)).ToArray();
-			GLTFAccessor.Cache[] accessors = gltfObject.accessors.Select(x => x.LoadCache(bufferViews)).ToArray();
-			GLTFImage.ImportResult[] images = gltfObject.images.Select(x => x.GetImage(gltfObject.directoryRoot, bufferViews)).ToArray();
-			GLTFTexture.ImportResult[] textures = gltfObject.textures.Select(x => x.Import(images)).ToArray();
-			GLTFProperty.Load(gltfObject, gltfObject.materials);
-			GLTFProperty.Load(gltfObject, gltfObject.scenes);
-			GLTFProperty.Load(gltfObject, gltfObject.nodes);
-			GLTFProperty.Load(gltfObject, gltfObject.meshes);
-			GLTFProperty.Load(gltfObject, gltfObject.animations);
-			GLTFProperty.Load(gltfObject, gltfObject.skins);
-			gltfObject.loaded = true;
+			
 		}
 
 	}

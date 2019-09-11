@@ -6,7 +6,7 @@ using UnityEngine.Rendering;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#material
-	public class GLTFMaterial : GLTFProperty {
+	public class GLTFMaterial {
 
 #region Serialized fields
 		public string name;
@@ -42,7 +42,7 @@ namespace Siccity.GLTFUtility {
 				if (glTFObject.textures.Count <= normalTexture.index) {
 					Debug.LogWarning("Attempted to get normal texture index " + normalTexture.index + " when only " + glTFObject.textures.Count + " exist");
 				} else {
-					Texture2D tex = glTFObject.textures[normalTexture.index].Source.GetNormalMap();
+					Texture2D tex = glTFObject.textures[normalTexture.index].Source.cache.GetNormalMap();
 					mat.SetTexture("_BumpMap", tex);
 					mat.EnableKeyword("_NORMALMAP");
 				}
@@ -51,7 +51,7 @@ namespace Siccity.GLTFUtility {
 				if (glTFObject.textures.Count <= occlusionTexture.index) {
 					Debug.LogWarning("Attempted to get occlusion texture index " + occlusionTexture.index + " when only " + glTFObject.textures.Count + " exist");
 				} else {
-					Texture2D tex = glTFObject.textures[occlusionTexture.index].Source.GetTexture();
+					Texture2D tex = glTFObject.textures[occlusionTexture.index].Source.cache.texture;
 					mat.SetTexture("_OcclusionMap", tex);
 				}
 			}
@@ -63,7 +63,7 @@ namespace Siccity.GLTFUtility {
 				if (glTFObject.textures.Count <= emissiveTexture.index) {
 					Debug.LogWarning("Attempted to get emissive texture index " + emissiveTexture.index + " when only " + glTFObject.textures.Count + " exist");
 				} else {
-					Texture2D tex = glTFObject.textures[emissiveTexture.index].Source.GetTexture();
+					Texture2D tex = glTFObject.textures[emissiveTexture.index].Source.cache.texture;
 					mat.SetTexture("_EmissionMap", tex);
 					mat.EnableKeyword("_EMISSION");
 				}
@@ -150,7 +150,7 @@ namespace Siccity.GLTFUtility {
 			public TextureInfo specularGlossinessTexture;
 #endregion
 
-			public Material CreateMaterial(GLTFObject glTFObject) {
+			public Material CreateMaterial(GLTFTexture.ImportResult[] textures) {
 				GLTFProperty.Load(glTFObject, diffuseTexture, specularGlossinessTexture);
 
 				Material mat;
@@ -162,18 +162,18 @@ namespace Siccity.GLTFUtility {
 
 				// Diffuse texture
 				if (diffuseTexture != null && diffuseTexture.index >= 0) {
-					if (glTFObject.textures.Count <= diffuseTexture.index) {
-						Debug.LogWarning("Attempted to get diffuseTexture texture index " + diffuseTexture.index + " when only " + glTFObject.textures.Count + " exist");
+					if (textures.Length <= diffuseTexture.index) {
+						Debug.LogWarning("Attempted to get diffuseTexture texture index " + diffuseTexture.index + " when only " + textures.Count + " exist");
 					} else {
-						mat.SetTexture("_MainTex", glTFObject.textures[diffuseTexture.index].Source.GetTexture());
+						mat.SetTexture("_MainTex", textures[diffuseTexture.index].texture);
 					}
 				}
 				// Specular texture
 				if (specularGlossinessTexture != null && specularGlossinessTexture.index >= 0) {
-					if (glTFObject.textures.Count <= specularGlossinessTexture.index) {
+					if (textures.Length <= specularGlossinessTexture.index) {
 						Debug.LogWarning("Attempted to get specularGlossinessTexture texture index " + specularGlossinessTexture.index + " when only " + glTFObject.textures.Count + " exist");
 					} else {
-						mat.SetTexture("_SpecGlossMap", glTFObject.textures[specularGlossinessTexture.index].Source.GetFixedMetallicRoughness());
+						mat.SetTexture("_SpecGlossMap", textures[specularGlossinessTexture.index].texture.GetFixedMetallicRoughness());
 						mat.EnableKeyword("_SPECGLOSSMAP");
 					}
 				}
@@ -182,7 +182,7 @@ namespace Siccity.GLTFUtility {
 		}
 
 		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#normaltextureinfo
-		public class TextureInfo : GLTFProperty {
+		public class TextureInfo {
 
 #region Serialized fields
 			[JsonProperty(Required = Required.Always)] public int index;
@@ -193,6 +193,17 @@ namespace Siccity.GLTFUtility {
 #region Non-serialized fields
 			[JsonIgnore] public GLTFTexture Reference { get; private set; }
 #endregion
+			public GLTFTexture.ImportResult GetTexture(GLTFTexture.ImportResult[] textures) {
+				if (index >= 0) {
+					if (textures.Count <= index) {
+						Debug.LogWarning("Attempted to get texture index " + index + " when only " + glTFObject.textures.Count + " exist");
+						return false;
+					} else {
+						Reference = textures[index];
+					}
+				}
+				return true;
+			}
 
 			protected override bool OnLoad() {
 				if (index >= 0) {

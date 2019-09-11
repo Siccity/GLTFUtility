@@ -4,9 +4,8 @@ using Newtonsoft.Json;
 namespace Siccity.GLTFUtility {
     // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#bufferview
     /// <summary> Defines sections within the Buffer </summary>
-    public class GLTFBufferView : GLTFProperty {
+    public class GLTFBufferView {
 
-#region Serialized fields
         [JsonProperty(Required = Required.Always)] public int buffer;
         [JsonProperty(Required = Required.Always)] public int byteLength;
         public int byteOffset = 0;
@@ -14,24 +13,20 @@ namespace Siccity.GLTFUtility {
         /// <summary> OpenGL buffer target </summary>
         public int? target;
         public string name;
-#endregion
 
-#region Non-serialized fields
-        [JsonIgnore] private byte[] cache;
-#endregion
+        public class ImportResult {
+            public byte[] bytes;
 
-        public byte[] LoadBytes(byte[][] buffers) {
-            return buffers[buffer].SubArray(this.byteOffset, byteLength);
+            public byte[] GetBytes(int byteOffset = 0) {
+                if (byteOffset != 0) return bytes.SubArray(byteOffset, bytes.Length - byteOffset);
+                else return bytes;
+            }
         }
 
-        protected override bool OnLoad() {
-            cache = glTFObject.buffers[buffer].GetBytes().SubArray(this.byteOffset, byteLength);
-            return true;
-        }
-
-        public byte[] GetBytes(int byteOffset = 0) {
-            if (byteOffset != 0) return cache.SubArray(byteOffset, byteLength - byteOffset);
-            else return cache;
+        public ImportResult Import(GLTFBuffer.ImportResult[] buffers) {
+            ImportResult result = new ImportResult();
+            result.bytes = buffers[buffer].bytes.SubArray(this.byteOffset, byteLength);
+            return result;
         }
     }
 }

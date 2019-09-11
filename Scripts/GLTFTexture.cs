@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#texture
-	public class GLTFTexture : GLTFProperty {
+	public class GLTFTexture {
 
 #region Serialized fields
 		public int? sampler;
@@ -17,13 +17,13 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 		public class ImportResult {
-			public Texture2D texture;
+			public GLTFImage.ImportResult image;
 		}
 
 		public ImportResult Import(GLTFImage.ImportResult[] images) {
 			if (source.HasValue) {
 				ImportResult result = new ImportResult();
-				result.texture = images[source.Value].texture;
+				result.image = images[source.Value];
 				return result;
 			}
 			return null;

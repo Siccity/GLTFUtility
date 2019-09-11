@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#image
-	public class GLTFImage : GLTFProperty {
+	public class GLTFImage {
 
 #region Serialized fields
 		public string uri;
@@ -26,6 +26,38 @@ namespace Siccity.GLTFUtility {
 			public bool isAsset;
 			public bool isNormalMap;
 			public bool isMetallicRoughnessFixed;
+
+			public Texture2D GetNormalMap() {
+				if (isNormalMap || isAsset) return texture;
+				Color32[] pixels = texture.GetPixels32();
+				for (int i = 0; i < pixels.Length; i++) {
+					Color32 c = pixels[i];
+					c.a = pixels[i].r;
+					c.r = c.b = c.g;
+					pixels[i] = c;
+				}
+				texture.SetPixels32(pixels);
+				texture.Apply();
+				isNormalMap = true;
+				return texture;
+			}
+
+			// glTF stores Metallic in blue channel and roughness in green channel. Unity stores Metallic in red and roughness in alpha. This method returns a unity-fixed texture
+			public Texture2D GetFixedMetallicRoughness() {
+				if (!isMetallicRoughnessFixed && !isAsset) {
+					Color32[] pixels = texture.GetPixels32();
+					for (int i = 0; i < pixels.Length; i++) {
+						Color32 c = pixels[i];
+						c.r = pixels[i].b;
+						c.a = pixels[i].g;
+						pixels[i] = c;
+					}
+					texture.SetPixels32(pixels);
+					texture.Apply();
+					isMetallicRoughnessFixed = true;
+				}
+				return texture;
+			}
 		}
 
 		public ImportResult GetImage(string directoryRoot, byte[][] bufferViews) {
@@ -62,51 +94,6 @@ namespace Siccity.GLTFUtility {
 			byte[][] bufferViews = glTFObject.bufferViews.Select(x => x.GetBytes(0)).ToArray();
 			cache = GetImage(glTFObject.directoryRoot, bufferViews);
 			return cache != null;
-		}
-
-		public Texture2D GetNormalMap() {
-			if (cache.isNormalMap || cache.isAsset) return cache.texture;
-			Color32[] pixels = cache.texture.GetPixels32();
-			for (int i = 0; i < pixels.Length; i++) {
-				Color32 c = pixels[i];
-				c.a = pixels[i].r;
-				c.r = c.b = c.g;
-				pixels[i] = c;
-			}
-			cache.texture.SetPixels32(pixels);
-			cache.texture.Apply();
-			cache.isNormalMap = true;
-			return cache.texture;
-		}
-
-		public Texture2D GetTexture() {
-			if (initialized) return cache.texture;
-			else {
-				Debug.Log("GLTFImage not initialized");
-				return null;
-			}
-		}
-
-		// glTF stores Metallic in blue channel and roughness in green channel. Unity stores Metallic in red and roughness in alpha. This method returns a unity-fixed texture
-		public Texture2D GetFixedMetallicRoughness() {
-			if (initialized) {
-				if (!cache.isMetallicRoughnessFixed && !cache.isAsset) {
-					Color32[] pixels = cache.texture.GetPixels32();
-					for (int i = 0; i < pixels.Length; i++) {
-						Color32 c = pixels[i];
-						c.r = pixels[i].b;
-						c.a = pixels[i].g;
-						pixels[i] = c;
-					}
-					cache.texture.SetPixels32(pixels);
-					cache.texture.Apply();
-					cache.isMetallicRoughnessFixed = true;
-				}
-				return cache.texture;
-			} else {
-				Debug.Log("GLTFImage not initialized");
-				return null;
-			}
 		}
 	}
 }

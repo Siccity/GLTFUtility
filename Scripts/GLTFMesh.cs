@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
     // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#mesh
-    public class GLTFMesh : GLTFProperty {
+    public class GLTFMesh {
 
 #region Serialized fields
         [JsonProperty(Required = Required.Always)] public List<GLTFPrimitive> primitives;

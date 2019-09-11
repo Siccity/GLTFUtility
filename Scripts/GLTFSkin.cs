@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
     // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#skin
-    public class GLTFSkin : GLTFProperty {
+    public class GLTFSkin {
 
 #region Serialized fields
         /// <summary> Index of accessor containing inverse bind shape matrices </summary>
