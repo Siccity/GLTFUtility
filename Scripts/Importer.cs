@@ -82,8 +82,7 @@ namespace Siccity.GLTFUtility {
 			byte[][] buffers = gltfObject.buffers.Select(x => x.LoadBytes(filepath)).ToArray();
 			byte[][] bufferViews = gltfObject.bufferViews.Select(x => x.LoadBytes(buffers)).ToArray();
 			GLTFAccessor.Cache[] accessors = gltfObject.accessors.Select(x => x.LoadCache(bufferViews)).ToArray();
-			GLTFProperty.Load(gltfObject, gltfObject.accessors);
-			GLTFProperty.Load(gltfObject, gltfObject.images);
+			GLTFImage.ImportResult[] images = gltfObject.images.Select(x => x.GetImage(gltfObject.directoryRoot, bufferViews)).ToArray();
 			GLTFProperty.Load(gltfObject, gltfObject.textures);
 			GLTFProperty.Load(gltfObject, gltfObject.materials);
 			GLTFProperty.Load(gltfObject, gltfObject.scenes);

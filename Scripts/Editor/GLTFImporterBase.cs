@@ -96,7 +96,7 @@ namespace Siccity.GLTFUtility {
             if (gltfObject.textures != null) {
                 for (int i = 0; i < gltfObject.images.Count; i++) {
                     // Dont add asset textures
-                    if (gltfObject.images[i].imageIsAsset) continue;
+                    if (gltfObject.images[i].cache.isAsset) continue;
 
                     Texture2D tex = gltfObject.images[i].GetTexture();
                     if (tex == null) continue;
