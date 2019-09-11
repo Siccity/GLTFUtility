@@ -16,6 +16,19 @@ namespace Siccity.GLTFUtility {
 		[JsonIgnore] public GLTFImage Source;
 #endregion
 
+		public class ImportResult {
+			public Texture2D texture;
+		}
+
+		public ImportResult Import(GLTFImage.ImportResult[] images) {
+			if (source.HasValue) {
+				ImportResult result = new ImportResult();
+				result.texture = images[source.Value].texture;
+				return result;
+			}
+			return null;
+		}
+
 		protected override bool OnLoad() {
 			if (source.HasValue) {
 				Source = glTFObject.images[source.Value];
