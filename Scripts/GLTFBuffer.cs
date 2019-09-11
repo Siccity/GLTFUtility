@@ -32,7 +32,7 @@ namespace Siccity.GLTFUtility {
             // Sometimes the buffer is part of a larger file. Since we dont have a byteOffset we have to assume it's at the end of the file.
             // In case you're trying to load a gltf with more than one buffers this might cause issues, but it'll work for now.
             int startIndex = bytes.Length - byteLength;
-            if (startIndex != 0) cache = bytes.SubArray(startIndex, byteLength);
+            if (startIndex != 0) bytes = bytes.SubArray(startIndex, byteLength);
             return bytes;
         }
 
