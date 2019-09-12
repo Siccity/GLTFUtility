@@ -23,7 +23,7 @@ namespace Siccity.GLTFUtility {
             MeshFilter[] filters = root.GetComponentsInChildren<MeshFilter>(true);
             ApplyDefaultMaterial(renderers);
             AddMeshes(filters, skinnedRenderers, ctx);
-            AddMaterials(renderers, ctx);
+            AddMaterials(renderers, skinnedRenderers, ctx);
         }
 
         private static void ApplyDefaultMaterial(MeshRenderer[] renderers) {
@@ -52,11 +52,30 @@ namespace Siccity.GLTFUtility {
             }
         }
 
-        public static void AddMaterials(MeshRenderer[] renderers, AssetImportContext ctx) {
+        public static void AddMaterials(MeshRenderer[] renderers, SkinnedMeshRenderer[] skinnedRenderers, AssetImportContext ctx) {
             HashSet<Material> visitedMaterials = new HashSet<Material>();
             HashSet<Texture2D> visitedTextures = new HashSet<Texture2D>();
             for (int i = 0; i < renderers.Length; i++) {
                 foreach (Material mat in renderers[i].sharedMaterials) {
+                    if (visitedMaterials.Contains(mat)) continue;
+                    if (string.IsNullOrEmpty(mat.name)) mat.name = "material" + visitedMaterials.Count;
+                    ctx.AddAsset(mat.name, mat);
+                    visitedMaterials.Add(mat);
+
+                    // Add textures
+                    foreach (Texture2D tex in mat.AllTextures()) {
+                        // Dont add asset textures
+                        //if (images[i].isAsset) continue;
+                        if (visitedTextures.Contains(tex)) continue;
+                        if (AssetDatabase.Contains(tex)) continue;
+                        if (string.IsNullOrEmpty(tex.name)) tex.name = "texture" + visitedTextures.Count;
+                        ctx.AddAsset(tex.name, tex);
+                        visitedTextures.Add(tex);
+                    }
+                }
+            }
+            for (int i = 0; i < skinnedRenderers.Length; i++) {
+                foreach (Material mat in skinnedRenderers[i].sharedMaterials) {
                     if (visitedMaterials.Contains(mat)) continue;
                     if (string.IsNullOrEmpty(mat.name)) mat.name = "material" + visitedMaterials.Count;
                     ctx.AddAsset(mat.name, mat);
