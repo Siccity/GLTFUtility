@@ -130,7 +130,6 @@ namespace Siccity.GLTFUtility {
         /// <summary> Returns the root if there is one, otherwise creates a new empty root </summary>
         public static GameObject GetRoot(this GLTFNode.ImportResult[] nodes) {
             GLTFNode.ImportResult[] roots = nodes.Where(x => x.IsRoot).ToArray();
-            Debug.Log(roots.Length + " roots");
 
             if (roots.Length == 1) return roots[0].transform.gameObject;
             else {
