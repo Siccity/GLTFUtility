@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -8,17 +7,10 @@ namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#image
 	public class GLTFImage {
 
-#region Serialized fields
 		public string uri;
 		public string mimeType;
 		public int? bufferView;
 		public string name;
-#endregion
-
-#region Non-serialized fields
-		[JsonIgnore] public ImportResult cache;
-		[JsonIgnore] public bool initialized { get { return cache != null; } }
-#endregion
 
 		public class ImportResult {
 			public Texture2D texture;
@@ -88,12 +80,6 @@ namespace Siccity.GLTFUtility {
 				Debug.Log("Couldn't find texture at " + directoryRoot + uri);
 				return null;
 			}
-		}
-
-		protected override bool OnLoad() {
-			byte[][] bufferViews = glTFObject.bufferViews.Select(x => x.GetBytes(0)).ToArray();
-			cache = GetImage(glTFObject.directoryRoot, bufferViews);
-			return cache != null;
 		}
 	}
 }

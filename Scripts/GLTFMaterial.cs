@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Siccity.GLTFUtility.Converters;
 using UnityEngine;
@@ -8,7 +9,6 @@ namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#material
 	public class GLTFMaterial {
 
-#region Serialized fields
 		public string name;
 		public PbrMetalRoughness pbrMetallicRoughness;
 		public TextureInfo normalTexture;
@@ -19,64 +19,65 @@ namespace Siccity.GLTFUtility {
 		public float alphaCutoff = 0.5f;
 		public bool doubleSided = false;
 		public MaterialExtensions extensions;
-#endregion
 
-#region Non-serialized fields
-		[JsonIgnore] private Material cache = null;
-#endregion
+		public class ImportResult {
+			public Material[] materials;
+		}
 
-		public Material CreateMaterial() {
+		public static ImportResult Import(this GLTFMaterial[] materials, GLTFTexture.ImportResult[] textures) {
+			ImportResult result = new ImportResult();
+			result.materials = new Material[materials.Length];
+			for (int i = 0; i < materials.Length; i++) {
+				result.materials[i] = materials[i].CreateMaterial(textures, i);
+				if (materials[i].name == null) materials[i].name = "material" + i;
+			}
+			return result;
+		}
+
+		private Material CreateMaterial(GLTFTexture.ImportResult[] textures, int index) {
 			Material mat;
 			// Load metallic-roughness materials
 			if (pbrMetallicRoughness != null) {
-				mat = pbrMetallicRoughness.CreateMaterial(glTFObject);
+				mat = pbrMetallicRoughness.CreateMaterial(textures);
 			}
 			// Load specular-glossiness materials
 			else if (extensions != null && extensions.KHR_materials_pbrSpecularGlossiness != null) {
-				mat = extensions.KHR_materials_pbrSpecularGlossiness.CreateMaterial(glTFObject);
+				mat = extensions.KHR_materials_pbrSpecularGlossiness.CreateMaterial(textures);
 			}
 			// Load fallback material
 			else mat = new Material(Shader.Find("Standard"));
 
-			if (normalTexture != null) {
-				if (glTFObject.textures.Count <= normalTexture.index) {
-					Debug.LogWarning("Attempted to get normal texture index " + normalTexture.index + " when only " + glTFObject.textures.Count + " exist");
-				} else {
-					Texture2D tex = glTFObject.textures[normalTexture.index].Source.cache.GetNormalMap();
-					mat.SetTexture("_BumpMap", tex);
-					mat.EnableKeyword("_NORMALMAP");
-				}
+			Texture2D tex;
+			if (TryGetTexture(textures, normalTexture, out tex, x => x.GetNormalMap())) {
+				mat.SetTexture("_BumpMap", tex);
+				mat.EnableKeyword("_NORMALMAP");
 			}
-			if (occlusionTexture != null) {
-				if (glTFObject.textures.Count <= occlusionTexture.index) {
-					Debug.LogWarning("Attempted to get occlusion texture index " + occlusionTexture.index + " when only " + glTFObject.textures.Count + " exist");
-				} else {
-					Texture2D tex = glTFObject.textures[occlusionTexture.index].Source.cache.texture;
-					mat.SetTexture("_OcclusionMap", tex);
-				}
+			if (TryGetTexture(textures, occlusionTexture, out tex)) {
+				mat.SetTexture("_OcclusionMap", tex);
 			}
 			if (emissiveFactor != Color.black) {
 				mat.SetColor("_EmissionColor", emissiveFactor);
 				mat.EnableKeyword("_EMISSION");
 			}
-			if (emissiveTexture != null && emissiveTexture.index >= 0) {
-				if (glTFObject.textures.Count <= emissiveTexture.index) {
-					Debug.LogWarning("Attempted to get emissive texture index " + emissiveTexture.index + " when only " + glTFObject.textures.Count + " exist");
-				} else {
-					Texture2D tex = glTFObject.textures[emissiveTexture.index].Source.cache.texture;
-					mat.SetTexture("_EmissionMap", tex);
-					mat.EnableKeyword("_EMISSION");
-				}
+			if (TryGetTexture(textures, emissiveTexture, out tex)) {
+				mat.SetTexture("_EmissionMap", tex);
+				mat.EnableKeyword("_EMISSION");
 			}
-			// Name
-			if (string.IsNullOrEmpty(name)) mat.name = "material" + glTFObject.materials.IndexOf(this);
 			mat.name = name;
-
 			return mat;
 		}
 
-		protected override bool OnLoad() {
-			cache = CreateMaterial();
+		public static bool TryGetTexture(GLTFTexture.ImportResult[] textures, TextureInfo texture, out Texture2D tex, Func<GLTFImage.ImportResult, Texture2D> getter = null) {
+			tex = null;
+			if (texture == null || texture.index < 0) {
+				return false;
+			}
+			if (textures.Length <= texture.index) {
+				Debug.LogWarning("Attempted to get texture index " + texture.index + " when only " + textures.Length + " exist");
+				return false;
+			}
+			if (getter == null) tex = textures[texture.index].image.texture;
+			else tex = getter(textures[texture.index].image);
 			return true;
 		}
 
@@ -87,17 +88,13 @@ namespace Siccity.GLTFUtility {
 		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#pbrmetallicroughness
 		public class PbrMetalRoughness {
 
-#region Serialized fields
 			[JsonConverter(typeof(ColorRGBAConverter))] public Color baseColorFactor = Color.white;
 			public TextureInfo baseColorTexture;
 			public float metallicFactor = 1f;
 			public float roughnessFactor = 1f;
 			public TextureInfo metallicRoughnessTexture;
-#endregion
 
-			public Material CreateMaterial(GLTFObject glTFObject) {
-				GLTFProperty.Load(glTFObject, baseColorTexture, metallicRoughnessTexture);
-
+			public Material CreateMaterial(GLTFTexture.ImportResult[] textures) {
 				Material mat;
 				// Material
 				Shader sh = null;
@@ -112,17 +109,17 @@ namespace Siccity.GLTFUtility {
 				mat.SetFloat("_Metallic", metallicFactor);
 				mat.SetFloat("_Glossiness", 1 - roughnessFactor);
 				if (baseColorTexture != null && baseColorTexture.index >= 0) {
-					if (glTFObject.textures.Count <= baseColorTexture.index) {
-						Debug.LogWarning("Attempted to get basecolor texture index " + baseColorTexture.index + " when only " + glTFObject.textures.Count + " exist");
+					if (textures.Length <= baseColorTexture.index) {
+						Debug.LogWarning("Attempted to get basecolor texture index " + baseColorTexture.index + " when only " + textures.Length + " exist");
 					} else {
-						mat.SetTexture("_MainTex", glTFObject.textures[baseColorTexture.index].Source.GetTexture());
+						mat.SetTexture("_MainTex", textures[baseColorTexture.index].image.texture);
 					}
 				}
 				if (metallicRoughnessTexture != null && metallicRoughnessTexture.index >= 0) {
-					if (glTFObject.textures.Count <= metallicRoughnessTexture.index) {
-						Debug.LogWarning("Attempted to get metallicRoughness texture index " + metallicRoughnessTexture.index + " when only " + glTFObject.textures.Count + " exist");
+					if (textures.Length <= metallicRoughnessTexture.index) {
+						Debug.LogWarning("Attempted to get metallicRoughness texture index " + metallicRoughnessTexture.index + " when only " + textures.Length + " exist");
 					} else {
-						mat.SetTexture("_MetallicGlossMap", glTFObject.textures[metallicRoughnessTexture.index].Source.GetFixedMetallicRoughness());
+						mat.SetTexture("_MetallicGlossMap", textures[metallicRoughnessTexture.index].image.GetFixedMetallicRoughness());
 						mat.EnableKeyword("_METALLICGLOSSMAP");
 					}
 				}
@@ -137,7 +134,6 @@ namespace Siccity.GLTFUtility {
 		[Serializable]
 		public class PbrSpecularGlossiness {
 
-#region Serialized fields
 			/// <summary> The reflected diffuse factor of the material </summary>
 			[JsonConverter(typeof(ColorRGBAConverter))] public Color diffuseFactor = Color.white;
 			/// <summary> The diffuse texture </summary>
@@ -148,11 +144,8 @@ namespace Siccity.GLTFUtility {
 			public float glossinessFactor = 1f;
 			/// <summary> The specular-glossiness texture </summary>
 			public TextureInfo specularGlossinessTexture;
-#endregion
 
 			public Material CreateMaterial(GLTFTexture.ImportResult[] textures) {
-				GLTFProperty.Load(glTFObject, diffuseTexture, specularGlossinessTexture);
-
 				Material mat;
 				// Material base values
 				mat = new Material(Shader.Find("GLTFUtility/Standard (Specular)"));
@@ -161,19 +154,19 @@ namespace Siccity.GLTFUtility {
 				mat.SetFloat("_Glossiness", glossinessFactor);
 
 				// Diffuse texture
-				if (diffuseTexture != null && diffuseTexture.index >= 0) {
+				if (diffuseTexture != null) {
 					if (textures.Length <= diffuseTexture.index) {
-						Debug.LogWarning("Attempted to get diffuseTexture texture index " + diffuseTexture.index + " when only " + textures.Count + " exist");
+						Debug.LogWarning("Attempted to get diffuseTexture texture index " + diffuseTexture.index + " when only " + textures.Length + " exist");
 					} else {
-						mat.SetTexture("_MainTex", textures[diffuseTexture.index].texture);
+						mat.SetTexture("_MainTex", textures[diffuseTexture.index].image.texture);
 					}
 				}
 				// Specular texture
-				if (specularGlossinessTexture != null && specularGlossinessTexture.index >= 0) {
+				if (specularGlossinessTexture != null) {
 					if (textures.Length <= specularGlossinessTexture.index) {
-						Debug.LogWarning("Attempted to get specularGlossinessTexture texture index " + specularGlossinessTexture.index + " when only " + glTFObject.textures.Count + " exist");
+						Debug.LogWarning("Attempted to get specularGlossinessTexture texture index " + specularGlossinessTexture.index + " when only " + textures.Length + " exist");
 					} else {
-						mat.SetTexture("_SpecGlossMap", textures[specularGlossinessTexture.index].texture.GetFixedMetallicRoughness());
+						mat.SetTexture("_SpecGlossMap", textures[specularGlossinessTexture.index].image.GetFixedMetallicRoughness());
 						mat.EnableKeyword("_SPECGLOSSMAP");
 					}
 				}
@@ -183,47 +176,9 @@ namespace Siccity.GLTFUtility {
 
 		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#normaltextureinfo
 		public class TextureInfo {
-
-#region Serialized fields
 			[JsonProperty(Required = Required.Always)] public int index;
 			public int texCoord = 0;
 			public float scale = 1;
-#endregion
-
-#region Non-serialized fields
-			[JsonIgnore] public GLTFTexture Reference { get; private set; }
-#endregion
-			public GLTFTexture.ImportResult GetTexture(GLTFTexture.ImportResult[] textures) {
-				if (index >= 0) {
-					if (textures.Count <= index) {
-						Debug.LogWarning("Attempted to get texture index " + index + " when only " + glTFObject.textures.Count + " exist");
-						return false;
-					} else {
-						Reference = textures[index];
-					}
-				}
-				return true;
-			}
-
-			protected override bool OnLoad() {
-				if (index >= 0) {
-					if (glTFObject.textures.Count <= index) {
-						Debug.LogWarning("Attempted to get texture index " + index + " when only " + glTFObject.textures.Count + " exist");
-						return false;
-					} else {
-						Reference = glTFObject.textures[index];
-					}
-				}
-				return true;
-			}
-		}
-
-		public Material GetMaterial() {
-			if (cache != null) return cache;
-			else {
-				Debug.LogWarning("No material cached. Please initialize first");
-				return null;
-			}
 		}
 	}
 }

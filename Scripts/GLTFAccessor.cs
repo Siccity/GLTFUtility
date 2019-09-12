@@ -69,7 +69,7 @@ namespace Siccity.GLTFUtility {
                 return m;
             }
 
-            public Vector4[] ReadVec4(byte[] bytes) {
+            public Vector4[] ReadVec4() {
                 if (!ValidateAccessorType(type, AccessorType.VEC4)) return new Vector4[count];
 
                 Vector4[] verts = new Vector4[count];
@@ -89,7 +89,7 @@ namespace Siccity.GLTFUtility {
                 return verts;
             }
 
-            public Color[] ReadColor(byte[] bytes) {
+            public Color[] ReadColor() {
                 if (!ValidateAccessorType(type, AccessorType.VEC4)) return new Color[count];
 
                 Color[] colors = new Color[count];
@@ -135,7 +135,7 @@ namespace Siccity.GLTFUtility {
                 return colors;
             }
 
-            public Vector3[] ReadVec3(byte[] bytes) {
+            public Vector3[] ReadVec3() {
                 if (!ValidateAccessorType(type, AccessorType.VEC3)) return new Vector3[count];
 
                 Vector3[] verts = new Vector3[count];
@@ -153,7 +153,7 @@ namespace Siccity.GLTFUtility {
                 return verts;
             }
 
-            public Vector2[] ReadVec2(byte[] bytes) {
+            public Vector2[] ReadVec2() {
                 if (!ValidateAccessorType(type, AccessorType.VEC2)) return new Vector2[count];
                 if (componentType != GLType.FLOAT) {
                     Debug.LogError("Non-float componentType not supported. Got " + (int) componentType);
@@ -174,7 +174,7 @@ namespace Siccity.GLTFUtility {
                 return verts;
             }
 
-            public float[] ReadFloat(byte[] bytes) {
+            public float[] ReadFloat() {
                 if (!ValidateAccessorType(type, AccessorType.SCALAR)) return new float[count];
 
                 float[] floats = new float[count];
@@ -187,7 +187,7 @@ namespace Siccity.GLTFUtility {
                 return floats;
             }
 
-            public int[] ReadInt(byte[] bytes) {
+            public int[] ReadInt() {
                 if (!ValidateAccessorType(type, AccessorType.SCALAR)) return new int[count];
 
                 int[] ints = new int[count];
