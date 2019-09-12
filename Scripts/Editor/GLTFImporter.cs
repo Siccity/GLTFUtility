@@ -3,21 +3,13 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
     [ScriptedImporter(1, "gltf")]
-    public class GLTFImporter : GLTFImporterBase {
+    public class GLTFImporter : ScriptedImporter {
 
         public override void OnImportAsset(AssetImportContext ctx) {
             // Load asset
-            GLTFObject gltfObject = Importer.ImportGLTF(ctx.assetPath);
-
-            // Create gameobject structure
-            GameObject[] roots = gltfObject.Create();
-
-            ApplyDefaultMaterial(roots);
-            SaveToAsset(ctx, roots);
-            AddMeshes(ctx, gltfObject);
-            AddMaterials(ctx, gltfObject);
-            AddTextures(ctx, gltfObject);
-            AddAnimations(ctx, gltfObject);
+            GameObject root = Importer.ImportGLTF(ctx.assetPath);
+            // Save asset
+            GLTFAssetUtility.SaveToAsset(root, ctx);
         }
     }
 }

@@ -157,11 +157,6 @@ namespace Siccity.GLTFUtility {
                 uv[i].y = 1 - uv[i].y;
             }
         }
-
-        public Mesh GetCachedMesh() {
-            if (!cache) Debug.LogWarning("No mesh cached for " + name);
-            return cache;
-        }
     }
 
     public static class GLTFMeshExtensions {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Siccity.GLTFUtility.Converters;
 using UnityEngine;
@@ -8,7 +9,6 @@ namespace Siccity.GLTFUtility {
     // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#node
     public class GLTFNode {
 
-#region Serialized fields
         public string name;
         /// <summary> Indices of child nodes </summary>
         public List<int> children;
@@ -24,51 +24,55 @@ namespace Siccity.GLTFUtility {
         public int? skin;
         public int? camera;
         public int? weights;
-#endregion
-
-#region Non-serialized fields
-        [JsonIgnore] public Transform Transform { get; private set; }
-        [JsonIgnore] public GLTFSkin Skin { get; private set; }
-#endregion
 
         public bool ShouldSerializetranslation() { return translation != Vector3.zero; }
         public bool ShouldSerializerotation() { return rotation != Quaternion.identity; }
         public bool ShouldSerializescale() { return scale != Vector3.one; }
 
-        public GLTFNode() { }
+        public class ImportResult {
+            public int? parent;
+            public int[] children;
+            public Transform transform;
 
-        protected override bool OnLoad() {
-            return true;
+            public bool IsRoot { get { return !parent.HasValue; } }
         }
 
-        /// <summary> Recursively set up this node's transform in the scene, followed by its children </summary>
-        public Transform CreateTransform(Transform parent) {
-            if (Transform == null) Transform = new GameObject().transform;
-            Transform.parent = parent;
-            Transform.gameObject.name = GetName();
-            Transform.localPosition = translation;
-            Transform.localRotation = rotation;
-            Transform.localScale = scale;
+        /// <summary> Set local position, rotation and scale </summary>
+        public void ApplyTRS(Transform transform) {
+            transform.localPosition = translation;
+            transform.localRotation = rotation;
+            transform.localScale = scale;
+        }
 
-            if (children != null) {
-                for (int i = 0; i < children.Count; i++) {
-                    glTFObject.nodes[children[i]].CreateTransform(Transform);
+        public GLTFNode(Transform transform) {
+            name = transform.name;
+            translation = transform.localPosition;
+            rotation = transform.localRotation;
+            scale = transform.localScale;
+        }
+
+#region Export
+        public static List<GLTFNode> CreateNodeList(Transform root) {
+            List<GLTFNode> nodes = new List<GLTFNode>();
+            CreateNodeListRecursive(root, nodes);
+            return nodes;
+        }
+
+        private static void CreateNodeListRecursive(Transform transform, List<GLTFNode> nodes) {
+            GLTFNode node = new GLTFNode(transform);
+            nodes.Add(node);
+            if (transform.childCount > 0) {
+                node.children = new List<int>();
+                foreach (Transform child in transform) {
+                    node.children.Add(nodes.Count);
+                    CreateNodeListRecursive(child, nodes);
                 }
             }
-
-            return Transform;
         }
-
-        /// <summary> Returns an automatic name if no name is set </summary>
-        public string GetName() {
-            if (name == null) {
-                if (IsJoint()) return "joint" + glTFObject.nodes.IndexOf(this);
-                else return "node" + glTFObject.nodes.IndexOf(this);
-            } else return name;
-        }
+#endregion
 
         /// <summary> Set up various components defined in the node. Call after all transforms have been set up </summary>
-        public void SetupComponents() {
+        /* public void SetupComponents() {
             if (Transform == null) {
                 Debug.LogWarning("Transform is null. Call CreateTransform before calling SetupComponents");
                 return;
@@ -95,71 +99,43 @@ namespace Siccity.GLTFUtility {
                 }
                 renderer.materials = materials;
             }
-        }
+        } */
+    }
 
-        public GLTFNode GetParentNode() {
-            int nodeIndex = glTFObject.nodes.IndexOf(this);
-            for (int i = 0; i < glTFObject.nodes.Count; i++) {
-                if (glTFObject.nodes[i].children.Contains(nodeIndex)) return glTFObject.nodes[i];
+    public static class GLTFNodeExtensions {
+#region Import
+        public static GLTFNode.ImportResult[] Import(this List<GLTFNode> nodes) {
+            GLTFNode.ImportResult[] results = new GLTFNode.ImportResult[nodes.Count];
+            // Initialize transforms
+            for (int i = 0; i < results.Length; i++) {
+                results[i].transform = new GameObject().transform;
+                results[i].transform.name = nodes[i].name;
             }
-            return null;
-        }
-
-        /// <summary>  Returns true if this node is referenced directly in a scene </summary>
-        public bool IsRootNode() {
-            int nodeIndex = glTFObject.nodes.IndexOf(this);
-            for (int i = 0; i < glTFObject.scenes.Count; i++) {
-                if (glTFObject.scenes[i].nodes.Contains(nodeIndex)) return true;
-            }
-            return false;
-        }
-
-        /// <summary> 
-        /// Same as IsRootNode except returns false if the scene has more root nodes, 
-        /// which means that it will create an extra transform object as root
-        /// </summary>
-        public bool IsRootTransform() {
-            int nodeIndex = glTFObject.nodes.IndexOf(this);
-            for (int i = 0; i < glTFObject.scenes.Count; i++) {
-                if (glTFObject.scenes[i].nodes.Contains(nodeIndex) && glTFObject.scenes[i].nodes.Count == 1) return true;
-            }
-            return false;
-        }
-
-        public bool IsJoint() {
-            if (glTFObject.skins == null || glTFObject.skins.Count == 0) return false;
-            int nodeIndex = glTFObject.nodes.IndexOf(this);
-            for (int i = 0; i < glTFObject.skins.Count; i++) {
-                for (int k = 0; k < glTFObject.skins[i].joints.Length; k++) {
-                    if (glTFObject.skins[i].joints[k] == nodeIndex) return true;
+            // Set up hierarchy
+            for (int i = 0; i < results.Length; i++) {
+                results[i].children = nodes[i].children.ToArray();
+                for (int k = 0; k < nodes[i].children.Count; k++) {
+                    results[k].parent = i;
+                    results[k].transform.parent = results[i].transform;
                 }
             }
-            return false;
+            // Apply TRS
+            for (int i = 0; i < results.Length; i++) {
+                nodes[i].ApplyTRS(results[i].transform);
+            }
+            return results;
         }
 
-#region Export
-        public GLTFNode(Transform transform) {
-            name = transform.name;
-            translation = transform.localPosition;
-            rotation = transform.localRotation;
-            scale = transform.localScale;
-        }
-
-        public static List<GLTFNode> CreateNodeList(Transform root) {
-            List<GLTFNode> nodes = new List<GLTFNode>();
-            CreateNodeListRecursive(root, nodes);
-            return nodes;
-        }
-
-        private static void CreateNodeListRecursive(Transform transform, List<GLTFNode> nodes) {
-            GLTFNode node = new GLTFNode(transform);
-            nodes.Add(node);
-            if (transform.childCount > 0) {
-                node.children = new List<int>();
-                foreach (Transform child in transform) {
-                    node.children.Add(nodes.Count);
-                    CreateNodeListRecursive(child, nodes);
+        /// <summary> Returns the root if there is one, otherwise creates a new empty root </summary>
+        public static GameObject GetRoot(this GLTFNode.ImportResult[] nodes) {
+            GLTFNode.ImportResult[] roots = nodes.Where(x => x.IsRoot).ToArray();
+            if (roots.Length == 1) return roots[0].transform.gameObject;
+            else {
+                GameObject root = new GameObject("Root");
+                for (int i = 0; i < roots.Length; i++) {
+                    roots[i].transform.parent = root.transform;
                 }
+                return root;
             }
         }
 #endregion

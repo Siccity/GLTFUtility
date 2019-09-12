@@ -1,4 +1,4 @@
-﻿using System;
+﻿/* using System;
 using System.Linq;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -127,4 +127,4 @@ namespace Siccity.GLTFUtility {
             return result;
         }
     }
-}
+} */

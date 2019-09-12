@@ -10,29 +10,22 @@ namespace Siccity.GLTFUtility {
 
     public class GLTFObject {
 
-#region Serialized fields
         public int? scene;
         [JsonProperty(Required = Required.Always)] public GLTFAsset asset;
         public List<GLTFScene> scenes;
         public List<GLTFNode> nodes;
         public List<GLTFMesh> meshes;
-        public List<GLTFAnimation> animations;
+        //public List<GLTFAnimation> animations;
         public List<GLTFBuffer> buffers;
         public List<GLTFBufferView> bufferViews;
         public List<GLTFAccessor> accessors;
-        public List<GLTFSkin> skins;
+        //public List<GLTFSkin> skins;
         public List<GLTFTexture> textures;
         public List<GLTFImage> images;
         public List<GLTFMaterial> materials;
-#endregion
 
-#region Non-serialized fields
-        [JsonIgnore] public bool loaded { get; set; }
-        [JsonIgnore] public string directoryRoot { get; set; }
-        [JsonIgnore] public string mainFile { get; set; }
-#endregion
 
-        public GameObject[] Create() {
+/*         public GameObject Create() {
 
             // Get root node indices from scenes
             int[] rootNodes = scenes.SelectMany(x => x.nodes).ToArray();
@@ -49,6 +42,6 @@ namespace Siccity.GLTFUtility {
                 nodes[i].SetupComponents();
             }
             return roots;
-        }
+        } */
     }
 }

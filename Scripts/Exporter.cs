@@ -14,12 +14,13 @@ namespace Siccity.GLTFUtility {
 #endif
 
 		public static void ExportGLB(GameObject root) {
-			GLTFObject gltfObject = CreateGLTFObject(root.transform);
-			Debug.Log(JsonConvert.SerializeObject(gltfObject, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore }));
+			Debug.Log("Not implemented yet");
+			//GLTFObject gltfObject = CreateGLTFObject(root.transform);
+			//Debug.Log(JsonConvert.SerializeObject(gltfObject, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore }));
 		}
 
 		public static void ExportGLTF(GameObject root) {
-
+			Debug.Log("Not implemented yet");
 		}
 
 		public static GLTFObject CreateGLTFObject(Transform root) {

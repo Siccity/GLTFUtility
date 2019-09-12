@@ -9,7 +9,7 @@ using UnityEngine;
 namespace Siccity.GLTFUtility {
 	/// <summary> API used for importing .gltf and .glb files </summary>
 	public static class Importer {
-		public static GLTFObject LoadFromFile(string filepath) {
+		public static GameObject LoadFromFile(string filepath) {
 			string extension = Path.GetExtension(filepath).ToLower();
 			if (extension == ".glb") return ImportGLB(filepath);
 			else if (extension == ".gltf") return ImportGLTF(filepath);
@@ -19,7 +19,7 @@ namespace Siccity.GLTFUtility {
 			}
 		}
 
-		public static GLTFObject ImportGLB(string filepath) {
+		public static GameObject ImportGLB(string filepath) {
 			byte[] bytes = File.ReadAllBytes(filepath);
 
 			// 12 byte header
@@ -45,40 +45,33 @@ namespace Siccity.GLTFUtility {
 
 			// Parse json
 			GLTFObject gltfObject = JsonConvert.DeserializeObject<GLTFObject>(json);
-			gltfObject.LoadInternal(filepath);
-			return gltfObject;
+			return gltfObject.LoadInternal(filepath);
 		}
 
-		public static GLTFObject ImportGLTF(string filepath) {
+		public static GameObject ImportGLTF(string filepath) {
 			string json = File.ReadAllText(filepath);
 
 			// Parse json
 			GLTFObject gltfObject = JsonConvert.DeserializeObject<GLTFObject>(json);
-			gltfObject.LoadInternal(filepath);
-			return gltfObject;
+			return gltfObject.LoadInternal(filepath);
 		}
 
-		private static void LoadInternal(this GLTFObject gltfObject, string filepath) {
-			gltfObject.directoryRoot = Directory.GetParent(filepath).ToString() + "/";
-			gltfObject.mainFile = Path.GetFileName(filepath);
+		private static GameObject LoadInternal(this GLTFObject gltfObject, string filepath) {
+			string directoryRoot = Directory.GetParent(filepath).ToString() + "/";
 
 			GLTFBuffer.ImportResult[] buffers = gltfObject.buffers.Select(x => x.Import(filepath)).ToArray();
 			GLTFBufferView.ImportResult[] bufferViews = gltfObject.bufferViews.Select(x => x.Import(buffers)).ToArray();
 			GLTFAccessor.ImportResult[] accessors = gltfObject.accessors.Select(x => x.Import(bufferViews)).ToArray();
-			GLTFImage.ImportResult[] images = gltfObject.images.Select(x => x.GetImage(gltfObject.directoryRoot, bufferViews)).ToArray();
+			GLTFImage.ImportResult[] images = gltfObject.images.Select(x => x.GetImage(directoryRoot, bufferViews)).ToArray();
 			GLTFTexture.ImportResult[] textures = gltfObject.textures.Select(x => x.Import(images)).ToArray();
 			GLTFMaterial.ImportResult materials = gltfObject.materials.Import(textures);
 			GLTFMesh.ImportResult meshes = gltfObject.meshes.Import(accessors);
-			GLTFProperty.Load(gltfObject, gltfObject.scenes);
-			GLTFProperty.Load(gltfObject, gltfObject.nodes);
-			GLTFProperty.Load(gltfObject, gltfObject.animations);
-			GLTFProperty.Load(gltfObject, gltfObject.skins);
-			gltfObject.loaded = true;
-		}
+			GLTFNode.ImportResult[] nodes = gltfObject.nodes.Import();
+			//GLTFProperty.Load(gltfObject, gltfObject.scenes);
+			//GLTFProperty.Load(gltfObject, gltfObject.animations);
+			//GLTFProperty.Load(gltfObject, gltfObject.skins);
 
-		private static void NewLoader(this GLTFObject gltfObject, string filepath) {
-			
+			return nodes.GetRoot();
 		}
-
 	}
 }

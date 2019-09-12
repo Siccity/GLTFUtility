@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace Siccity.GLTFUtility {
+/* namespace Siccity.GLTFUtility {
     // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#skin
     public class GLTFSkin {
 
@@ -76,4 +76,4 @@ namespace Siccity.GLTFUtility {
             return smr;
         }
     }
-}
+} */
