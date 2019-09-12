@@ -19,9 +19,10 @@ namespace Siccity.GLTFUtility {
             ctx.SetMainAsset("main obj", root);
 #endif
             MeshRenderer[] renderers = root.GetComponentsInChildren<MeshRenderer>(true);
+            SkinnedMeshRenderer[] skinnedRenderers = root.GetComponentsInChildren<SkinnedMeshRenderer>(true);
             MeshFilter[] filters = root.GetComponentsInChildren<MeshFilter>(true);
             ApplyDefaultMaterial(renderers);
-            AddMeshes(filters, ctx);
+            AddMeshes(filters, skinnedRenderers, ctx);
             AddMaterials(renderers, ctx);
         }
 
@@ -35,10 +36,16 @@ namespace Siccity.GLTFUtility {
             }
         }
 
-        public static void AddMeshes(MeshFilter[] filters, AssetImportContext ctx) {
+        public static void AddMeshes(MeshFilter[] filters, SkinnedMeshRenderer[] skinnedRenderers, AssetImportContext ctx) {
             HashSet<Mesh> visitedMeshes = new HashSet<Mesh>();
             for (int i = 0; i < filters.Length; i++) {
                 Mesh mesh = filters[i].sharedMesh;
+                if (visitedMeshes.Contains(mesh)) continue;
+                ctx.AddAsset(mesh.name, mesh);
+                visitedMeshes.Add(mesh);
+            }
+            for (int i = 0; i < skinnedRenderers.Length; i++) {
+                Mesh mesh = skinnedRenderers[i].sharedMesh;
                 if (visitedMeshes.Contains(mesh)) continue;
                 ctx.AddAsset(mesh.name, mesh);
                 visitedMeshes.Add(mesh);

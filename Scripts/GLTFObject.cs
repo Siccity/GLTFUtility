@@ -19,29 +19,9 @@ namespace Siccity.GLTFUtility {
         public List<GLTFBuffer> buffers;
         public List<GLTFBufferView> bufferViews;
         public List<GLTFAccessor> accessors;
-        //public List<GLTFSkin> skins;
+        public List<GLTFSkin> skins;
         public List<GLTFTexture> textures;
         public List<GLTFImage> images;
         public List<GLTFMaterial> materials;
-
-
-/*         public GameObject Create() {
-
-            // Get root node indices from scenes
-            int[] rootNodes = scenes.SelectMany(x => x.nodes).ToArray();
-
-            GameObject[] roots = new GameObject[rootNodes.Length];
-            for (int i = 0; i < rootNodes.Length; i++) {
-                // Recursively construct transform hierarchy
-                int nodeIndex = rootNodes[i];
-                roots[i] = nodes[nodeIndex].CreateTransform(null).gameObject;
-            }
-
-            // Setup mesh renderers and such
-            for (int i = 0; i < nodes.Count; i++) {
-                nodes[i].SetupComponents();
-            }
-            return roots;
-        } */
     }
 }

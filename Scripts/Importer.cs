@@ -66,9 +66,9 @@ namespace Siccity.GLTFUtility {
 			GLTFTexture.ImportResult[] textures = gltfObject.textures.Import(images);
 			GLTFMaterial.ImportResult materials = gltfObject.materials.Import(textures);
 			GLTFMesh.ImportResult[] meshes = gltfObject.meshes.Import(accessors, materials);
-			GLTFNode.ImportResult[] nodes = gltfObject.nodes.Import(meshes);
+			GLTFSkin.ImportResult[] skins = gltfObject.skins.Select(x => x.Import(accessors)).ToArray();
+			GLTFNode.ImportResult[] nodes = gltfObject.nodes.Import(meshes, skins);
 			//GLTFProperty.Load(gltfObject, gltfObject.animations);
-			//GLTFProperty.Load(gltfObject, gltfObject.skins);
 
 			return nodes.GetRoot();
 		}

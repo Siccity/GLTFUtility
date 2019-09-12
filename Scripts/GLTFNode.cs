@@ -75,7 +75,7 @@ namespace Siccity.GLTFUtility {
 
     public static class GLTFNodeExtensions {
 #region Import
-        public static GLTFNode.ImportResult[] Import(this List<GLTFNode> nodes, GLTFMesh.ImportResult[] meshes) {
+        public static GLTFNode.ImportResult[] Import(this List<GLTFNode> nodes, GLTFMesh.ImportResult[] meshes, GLTFSkin.ImportResult[] skins) {
             GLTFNode.ImportResult[] results = new GLTFNode.ImportResult[nodes.Count];
 
             // Initialize transforms
@@ -107,9 +107,8 @@ namespace Siccity.GLTFUtility {
                     Mesh mesh = meshResult.mesh;
                     Renderer renderer;
                     if (nodes[i].skin.HasValue) {
-                        Debug.Log("Not implemented");
-                        renderer = null;
-                        //renderer = Skin.SetupSkinnedRenderer(results[i].transform.gameObject, mesh);
+                        GLTFSkin.ImportResult skin = skins[nodes[i].skin.Value];
+                        renderer = skin.SetupSkinnedRenderer(results[i].transform.gameObject, mesh, results);
                     } else {
                         MeshRenderer mr = results[i].transform.gameObject.AddComponent<MeshRenderer>();
                         MeshFilter mf = results[i].transform.gameObject.AddComponent<MeshFilter>();

@@ -2,29 +2,65 @@
 using Newtonsoft.Json;
 using UnityEngine;
 
-/* namespace Siccity.GLTFUtility {
+namespace Siccity.GLTFUtility {
     // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#skin
     public class GLTFSkin {
 
-#region Serialized fields
         /// <summary> Index of accessor containing inverse bind shape matrices </summary>
         public int? inverseBindMatrices;
         public int[] joints;
         public int? skeleton;
         public string name;
-#endregion
 
-#region Non-serialized fields
-        [JsonIgnore] public Matrix4x4[] InverseBindMatrices { get; private set; }
-#endregion
+        public class ImportResult {
+            public Matrix4x4[] inverseBindMatrices;
+            public int[] joints;
 
-        protected override bool OnLoad() {
+            public SkinnedMeshRenderer SetupSkinnedRenderer(GameObject go, Mesh mesh, GLTFNode.ImportResult[] nodes) {
+                
+                SkinnedMeshRenderer smr = go.AddComponent<SkinnedMeshRenderer>();
+                Transform[] bones = new Transform[joints.Length];
+                for (int i = 0; i < bones.Length; i++) {
+                    int jointNodeIndex = joints[i];
+                    GLTFNode.ImportResult jointNode = nodes[jointNodeIndex];
+                    bones[i] = jointNode.transform;
+                    if (string.IsNullOrEmpty(jointNode.transform.name)) jointNode.transform.name = "joint" + i;
+                }
+                smr.bones = bones;
+                smr.rootBone = bones[0];
+
+                // Bindposes
+                if (inverseBindMatrices != null) {
+                    if (inverseBindMatrices.Length != joints.Length) Debug.LogWarning("InverseBindMatrices count and joints count not the same");
+                    Matrix4x4 m = nodes[0].transform.localToWorldMatrix;
+                    Matrix4x4[] bindPoses = new Matrix4x4[joints.Length];
+                    for (int i = 0; i < joints.Length; i++) {
+                        bindPoses[i] = inverseBindMatrices[i];
+                    }
+                    mesh.bindposes = bindPoses;
+                } else {
+                    Matrix4x4 m = nodes[0].transform.localToWorldMatrix;
+                    Matrix4x4[] bindPoses = new Matrix4x4[joints.Length];
+                    for (int i = 0; i < joints.Length; i++) {
+                        bindPoses[i] = nodes[joints[i]].transform.worldToLocalMatrix * m;
+                    }
+                    mesh.bindposes = bindPoses;
+                }
+                smr.sharedMesh = mesh;
+                return smr;
+            }
+        }
+
+        public ImportResult Import(GLTFAccessor.ImportResult[] accessors) {
+            ImportResult result = new ImportResult();
+            result.joints = joints;
+
             // Inverse bind matrices
             if (inverseBindMatrices.HasValue) {
-                InverseBindMatrices = glTFObject.accessors[inverseBindMatrices.Value].ReadMatrix4x4();
-                for (int i = 0; i < InverseBindMatrices.Length; i++) {
+                result.inverseBindMatrices = accessors[inverseBindMatrices.Value].ReadMatrix4x4();
+                for (int i = 0; i < result.inverseBindMatrices.Length; i++) {
                     // Flip the matrix from GLTF to Unity format. This was done through trial and error, i can't explain it.
-                    Matrix4x4 m = InverseBindMatrices[i];
+                    Matrix4x4 m = result.inverseBindMatrices[i];
                     Vector4 row0 = m.GetRow(0);
                     row0.z = -row0.z;
                     Vector4 row1 = m.GetRow(1);
@@ -38,42 +74,10 @@ using UnityEngine;
                     m.SetColumn(1, row1);
                     m.SetColumn(2, row2);
                     m.SetColumn(3, row3);
-                    InverseBindMatrices[i] = m;
+                    result.inverseBindMatrices[i] = m;
                 }
             }
-            return true;
-        }
-
-        public SkinnedMeshRenderer SetupSkinnedRenderer(GameObject go, Mesh mesh) {
-            SkinnedMeshRenderer smr = go.AddComponent<SkinnedMeshRenderer>();
-            Transform[] bones = new Transform[joints.Length];
-            for (int i = 0; i < bones.Length; i++) {
-                int jointNodeIndex = joints[i];
-                GLTFNode jointNode = glTFObject.nodes[jointNodeIndex];
-                bones[i] = jointNode.Transform;
-            }
-            smr.bones = bones;
-            smr.rootBone = bones[0];
-
-            // Bindposes
-            if (InverseBindMatrices != null) {
-                if (InverseBindMatrices.Length != joints.Length) Debug.LogWarning("InverseBindMatrices count and joints count not the same");
-                Matrix4x4 m = glTFObject.nodes[0].Transform.localToWorldMatrix;
-                Matrix4x4[] bindPoses = new Matrix4x4[joints.Length];
-                for (int i = 0; i < joints.Length; i++) {
-                    bindPoses[i] = InverseBindMatrices[i];
-                }
-                mesh.bindposes = bindPoses;
-            } else {
-                Matrix4x4 m = glTFObject.nodes[0].Transform.localToWorldMatrix;
-                Matrix4x4[] bindPoses = new Matrix4x4[joints.Length];
-                for (int i = 0; i < joints.Length; i++) {
-                    bindPoses[i] = glTFObject.nodes[joints[i]].Transform.worldToLocalMatrix * m;
-                }
-                mesh.bindposes = bindPoses;
-            }
-            smr.sharedMesh = mesh;
-            return smr;
+            return result;
         }
     }
-} */
+}
