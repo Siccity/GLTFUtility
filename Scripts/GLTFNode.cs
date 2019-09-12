@@ -11,7 +11,7 @@ namespace Siccity.GLTFUtility {
 
         public string name;
         /// <summary> Indices of child nodes </summary>
-        public List<int> children;
+        public int[] children;
         /// <summary> Local TRS </summary>
         [JsonProperty, JsonConverter(typeof(Matrix4x4Converter))] private Matrix4x4 matrix { set { value.UnpackTRS(ref translation, ref rotation, ref scale); } }
         /// <summary> Local position </summary>
@@ -44,13 +44,6 @@ namespace Siccity.GLTFUtility {
             transform.localScale = scale;
         }
 
-        public GLTFNode(Transform transform) {
-            name = transform.name;
-            translation = transform.localPosition;
-            rotation = transform.localRotation;
-            scale = transform.localScale;
-        }
-
 #region Export
         public static List<GLTFNode> CreateNodeList(Transform root) {
             List<GLTFNode> nodes = new List<GLTFNode>();
@@ -59,69 +52,97 @@ namespace Siccity.GLTFUtility {
         }
 
         private static void CreateNodeListRecursive(Transform transform, List<GLTFNode> nodes) {
-            GLTFNode node = new GLTFNode(transform);
+            GLTFNode node = new GLTFNode();
+            node.name = transform.name;
+            node.translation = transform.localPosition;
+            node.rotation = transform.localRotation;
+            node.scale = transform.localScale;
+
             nodes.Add(node);
             if (transform.childCount > 0) {
-                node.children = new List<int>();
-                foreach (Transform child in transform) {
-                    node.children.Add(nodes.Count);
-                    CreateNodeListRecursive(child, nodes);
+                if (transform.childCount > 0) {
+                    node.children = new int[transform.childCount];
+                    for (int i = 0; i < node.children.Length; i++) {
+                        Transform child = transform.GetChild(i);
+                        node.children[i] = nodes.Count;
+                        CreateNodeListRecursive(child, nodes);
+                    }
                 }
             }
         }
 #endregion
 
-        /// <summary> Set up various components defined in the node. Call after all transforms have been set up </summary>
-        /* public void SetupComponents() {
-            if (Transform == null) {
-                Debug.LogWarning("Transform is null. Call CreateTransform before calling SetupComponents");
-                return;
-            }
-            if (this.mesh.HasValue) {
-                GLTFMesh glTFMesh = glTFObject.meshes[this.mesh.Value];
-                Mesh mesh = glTFMesh.GetMesh();
-                Renderer renderer;
-                if (Skin != null) {
-                    renderer = Skin.SetupSkinnedRenderer(Transform.gameObject, mesh);
-                } else {
-                    MeshRenderer mr = Transform.gameObject.AddComponent<MeshRenderer>();
-                    MeshFilter mf = Transform.gameObject.AddComponent<MeshFilter>();
-                    renderer = mr;
-                    mf.sharedMesh = mesh;
-                }
+        /*         /// <summary> Set up various components defined in the node. Call after all transforms have been set up </summary>
+                public void SetupComponents() {
+                    if (this.mesh.HasValue) {
+                        GLTFMesh glTFMesh = glTFObject.meshes[this.mesh.Value];
+                        Mesh mesh = glTFMesh.GetMesh();
+                        Renderer renderer;
+                        if (Skin != null) {
+                            renderer = Skin.SetupSkinnedRenderer(Transform.gameObject, mesh);
+                        } else {
+                            MeshRenderer mr = Transform.gameObject.AddComponent<MeshRenderer>();
+                            MeshFilter mf = Transform.gameObject.AddComponent<MeshFilter>();
+                            renderer = mr;
+                            mf.sharedMesh = mesh;
+                        }
 
-                //Materials
-                Material[] materials = new Material[glTFMesh.primitives.Count];
-                for (int i = 0; i < glTFMesh.primitives.Count; i++) {
-                    GLTFPrimitive primitive = glTFMesh.primitives[i];
-                    // Create material if id is positive or 0
-                    if (primitive.material.HasValue) materials[i] = glTFObject.materials[primitive.material.Value].GetMaterial();
-                }
-                renderer.materials = materials;
-            }
-        } */
+                        //Materials
+                        Material[] materials = new Material[glTFMesh.primitives.Count];
+                        for (int i = 0; i < glTFMesh.primitives.Count; i++) {
+                            GLTFPrimitive primitive = glTFMesh.primitives[i];
+                            // Create material if id is positive or 0
+                            if (primitive.material.HasValue) materials[i] = glTFObject.materials[primitive.material.Value].GetMaterial();
+                        }
+                        renderer.materials = materials;
+                    }
+                } */
     }
 
     public static class GLTFNodeExtensions {
 #region Import
-        public static GLTFNode.ImportResult[] Import(this List<GLTFNode> nodes) {
+        public static GLTFNode.ImportResult[] Import(this List<GLTFNode> nodes, GLTFMesh.ImportResult[] meshes) {
             GLTFNode.ImportResult[] results = new GLTFNode.ImportResult[nodes.Count];
             // Initialize transforms
             for (int i = 0; i < results.Length; i++) {
+                results[i] = new GLTFNode.ImportResult();
                 results[i].transform = new GameObject().transform;
                 results[i].transform.name = nodes[i].name;
             }
             // Set up hierarchy
             for (int i = 0; i < results.Length; i++) {
-                results[i].children = nodes[i].children.ToArray();
-                for (int k = 0; k < nodes[i].children.Count; k++) {
-                    results[k].parent = i;
-                    results[k].transform.parent = results[i].transform;
+                if (nodes[i].children != null) {
+                    results[i].children = nodes[i].children;
+                    for (int k = 0; k < results[i].children.Length; k++) {
+                        results[k].parent = i;
+                        results[k].transform.parent = results[i].transform;
+                    }
                 }
             }
             // Apply TRS
             for (int i = 0; i < results.Length; i++) {
                 nodes[i].ApplyTRS(results[i].transform);
+            }
+            // Setup components
+            for (int i = 0; i < results.Length; i++) {
+                if (nodes[i].mesh.HasValue) {
+                    GLTFMesh.ImportResult meshResult = meshes[nodes[i].mesh.Value];
+                    Mesh mesh = meshResult.mesh;
+                    Renderer renderer;
+                    if (nodes[i].skin.HasValue) {
+                        Debug.Log("Not implemented");
+                        renderer = null;
+                        //renderer = Skin.SetupSkinnedRenderer(results[i].transform.gameObject, mesh);
+                    } else {
+                        MeshRenderer mr = results[i].transform.gameObject.AddComponent<MeshRenderer>();
+                        MeshFilter mf = results[i].transform.gameObject.AddComponent<MeshFilter>();
+                        renderer = mr;
+                        mf.sharedMesh = mesh;
+                    }
+
+                    //Materials
+                    renderer.materials = meshResult.materials;
+                }
             }
             return results;
         }

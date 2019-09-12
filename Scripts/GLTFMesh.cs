@@ -14,7 +14,8 @@ namespace Siccity.GLTFUtility {
         public string name;
 
         public class ImportResult {
-            public Mesh[] meshes;
+            public Material[] materials;
+            public Mesh mesh;
         }
 
         public Mesh CreateMesh(GLTFAccessor.ImportResult[] accessors) {
@@ -160,14 +161,21 @@ namespace Siccity.GLTFUtility {
     }
 
     public static class GLTFMeshExtensions {
-        public static GLTFMesh.ImportResult Import(this List<GLTFMesh> meshes, GLTFAccessor.ImportResult[] accessors) {
-            GLTFMesh.ImportResult result = new GLTFMesh.ImportResult();
-            result.meshes = new Mesh[meshes.Count];
-            for (int i = 0; i < meshes.Count; i++) {
-                result.meshes[i] = meshes[i].CreateMesh(accessors);
+        public static GLTFMesh.ImportResult[] Import(this List<GLTFMesh> meshes, GLTFAccessor.ImportResult[] accessors, GLTFMaterial.ImportResult materials) {
+            GLTFMesh.ImportResult[] results = new GLTFMesh.ImportResult[meshes.Count];
+            for (int i = 0; i < results.Length; i++) {
+                results[i] = new GLTFMesh.ImportResult();
+                results[i].mesh = meshes[i].CreateMesh(accessors);
+                results[i].materials = new Material[meshes[i].primitives.Count];
+                for (int k = 0; k < meshes[i].primitives.Count; k++) {
+                    int? matIndex = meshes[i].primitives[k].material;
+                    if (matIndex.HasValue) {
+                        results[i].materials[k] = materials.materials[matIndex.Value];
+                    }
+                }
                 if (meshes[i].name == null) meshes[i].name = "mesh" + i;
             }
-            return result;
+            return results;
         }
     }
 }
