@@ -24,7 +24,7 @@ namespace Siccity.GLTFUtility {
 			public Material[] materials;
 		}
 
-		public Material CreateMaterial(GLTFTexture.ImportResult[] textures, int index) {
+		public Material CreateMaterial(GLTFTexture.ImportResult[] textures) {
 			Material mat;
 			// Load metallic-roughness materials
 			if (pbrMetallicRoughness != null) {
@@ -177,7 +177,7 @@ namespace Siccity.GLTFUtility {
 			GLTFMaterial.ImportResult result = new GLTFMaterial.ImportResult();
 			result.materials = new Material[materials.Count];
 			for (int i = 0; i < materials.Count; i++) {
-				result.materials[i] = materials[i].CreateMaterial(textures, i);
+				result.materials[i] = materials[i].CreateMaterial(textures);
 				if (materials[i].name == null) materials[i].name = "material" + i;
 			}
 			return result;
