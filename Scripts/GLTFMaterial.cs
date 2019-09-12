@@ -26,6 +26,7 @@ namespace Siccity.GLTFUtility {
 
 		public Material CreateMaterial(GLTFTexture.ImportResult[] textures) {
 			Material mat;
+
 			// Load metallic-roughness materials
 			if (pbrMetallicRoughness != null) {
 				mat = pbrMetallicRoughness.CreateMaterial(textures);

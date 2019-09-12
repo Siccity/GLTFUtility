@@ -139,7 +139,6 @@ namespace Siccity.GLTFUtility {
                         renderer = mr;
                         mf.sharedMesh = mesh;
                     }
-
                     //Materials
                     renderer.materials = meshResult.materials;
                 }

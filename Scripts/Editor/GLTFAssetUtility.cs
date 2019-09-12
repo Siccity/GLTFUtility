@@ -22,6 +22,7 @@ namespace Siccity.GLTFUtility {
             MeshFilter[] filters = root.GetComponentsInChildren<MeshFilter>(true);
             ApplyDefaultMaterial(renderers);
             AddMeshes(filters, ctx);
+            AddMaterials(renderers, ctx);
         }
 
         private static void ApplyDefaultMaterial(MeshRenderer[] renderers) {
@@ -35,9 +36,12 @@ namespace Siccity.GLTFUtility {
         }
 
         public static void AddMeshes(MeshFilter[] filters, AssetImportContext ctx) {
+            HashSet<Mesh> visitedMeshes = new HashSet<Mesh>();
             for (int i = 0; i < filters.Length; i++) {
                 Mesh mesh = filters[i].sharedMesh;
+                if (visitedMeshes.Contains(mesh)) continue;
                 ctx.AddAsset(mesh.name, mesh);
+                visitedMeshes.Add(mesh);
             }
         }
 
@@ -49,6 +53,7 @@ namespace Siccity.GLTFUtility {
                     if (visitedMaterials.Contains(mat)) continue;
                     if (string.IsNullOrEmpty(mat.name)) mat.name = "material" + visitedMaterials.Count.ToString();
                     ctx.AddAsset(mat.name, mat);
+                    visitedMaterials.Add(mat);
 
                     // Add textures
                     foreach (Texture2D tex in mat.AllTextures()) {
@@ -58,6 +63,7 @@ namespace Siccity.GLTFUtility {
                         if (AssetDatabase.Contains(tex)) continue;
                         if (string.IsNullOrEmpty(tex.name)) tex.name = "texture" + i.ToString();
                         ctx.AddAsset(tex.name, tex);
+                        visitedTextures.Add(tex);
                     }
                 }
             }
@@ -75,7 +81,7 @@ namespace Siccity.GLTFUtility {
             int[] ids = mat.GetTexturePropertyNameIDs();
             for (int i = 0; i < ids.Length; i++) {
                 Texture2D tex = mat.GetTexture(ids[i]) as Texture2D;
-                yield return tex;
+                if (tex != null) yield return tex;
             }
         }
     }
