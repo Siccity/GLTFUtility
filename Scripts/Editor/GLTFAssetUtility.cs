@@ -51,7 +51,7 @@ namespace Siccity.GLTFUtility {
             for (int i = 0; i < renderers.Length; i++) {
                 foreach (Material mat in renderers[i].sharedMaterials) {
                     if (visitedMaterials.Contains(mat)) continue;
-                    if (string.IsNullOrEmpty(mat.name)) mat.name = "material" + visitedMaterials.Count.ToString();
+                    if (string.IsNullOrEmpty(mat.name)) mat.name = "material" + visitedMaterials.Count;
                     ctx.AddAsset(mat.name, mat);
                     visitedMaterials.Add(mat);
 
@@ -61,7 +61,7 @@ namespace Siccity.GLTFUtility {
                         //if (images[i].isAsset) continue;
                         if (visitedTextures.Contains(tex)) continue;
                         if (AssetDatabase.Contains(tex)) continue;
-                        if (string.IsNullOrEmpty(tex.name)) tex.name = "texture" + i.ToString();
+                        if (string.IsNullOrEmpty(tex.name)) tex.name = "texture" + visitedTextures.Count;
                         ctx.AddAsset(tex.name, tex);
                         visitedTextures.Add(tex);
                     }
