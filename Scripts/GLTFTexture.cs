@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -21,6 +22,18 @@ namespace Siccity.GLTFUtility {
 				return result;
 			}
 			return null;
+		}
+	}
+
+	public static class GLTFTextureExtensions {
+		public static GLTFTexture.ImportResult[] Import(this List<GLTFTexture> textures, GLTFImage.ImportResult[] images) {
+			if (textures == null) return null;
+
+			GLTFTexture.ImportResult[] results = new GLTFTexture.ImportResult[textures.Count];
+			for (int i = 0; i < textures.Count; i++) {
+				results[i] = textures[i].Import(images);
+			}
+			return results;
 		}
 	}
 }

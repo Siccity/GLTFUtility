@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -80,6 +82,18 @@ namespace Siccity.GLTFUtility {
 				Debug.Log("Couldn't find texture at " + directoryRoot + uri);
 				return null;
 			}
+		}
+	}
+
+	public static class GLTFImageExtensions {
+		public static GLTFImage.ImportResult[] Import(this List<GLTFImage> images, string directoryRoot, GLTFBufferView.ImportResult[] bufferViews) {
+			if (images == null) return null;
+
+			GLTFImage.ImportResult[] results = new GLTFImage.ImportResult[images.Count];
+			for (int i = 0; i < images.Count; i++) {
+				results[i] = images[i].GetImage(directoryRoot, bufferViews);
+			}
+			return results;
 		}
 	}
 }

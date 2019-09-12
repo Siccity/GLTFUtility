@@ -71,38 +71,13 @@ namespace Siccity.GLTFUtility {
             }
         }
 #endregion
-
-        /*         /// <summary> Set up various components defined in the node. Call after all transforms have been set up </summary>
-                public void SetupComponents() {
-                    if (this.mesh.HasValue) {
-                        GLTFMesh glTFMesh = glTFObject.meshes[this.mesh.Value];
-                        Mesh mesh = glTFMesh.GetMesh();
-                        Renderer renderer;
-                        if (Skin != null) {
-                            renderer = Skin.SetupSkinnedRenderer(Transform.gameObject, mesh);
-                        } else {
-                            MeshRenderer mr = Transform.gameObject.AddComponent<MeshRenderer>();
-                            MeshFilter mf = Transform.gameObject.AddComponent<MeshFilter>();
-                            renderer = mr;
-                            mf.sharedMesh = mesh;
-                        }
-
-                        //Materials
-                        Material[] materials = new Material[glTFMesh.primitives.Count];
-                        for (int i = 0; i < glTFMesh.primitives.Count; i++) {
-                            GLTFPrimitive primitive = glTFMesh.primitives[i];
-                            // Create material if id is positive or 0
-                            if (primitive.material.HasValue) materials[i] = glTFObject.materials[primitive.material.Value].GetMaterial();
-                        }
-                        renderer.materials = materials;
-                    }
-                } */
     }
 
     public static class GLTFNodeExtensions {
 #region Import
         public static GLTFNode.ImportResult[] Import(this List<GLTFNode> nodes, GLTFMesh.ImportResult[] meshes) {
             GLTFNode.ImportResult[] results = new GLTFNode.ImportResult[nodes.Count];
+
             // Initialize transforms
             for (int i = 0; i < results.Length; i++) {
                 results[i] = new GLTFNode.ImportResult();
@@ -112,10 +87,12 @@ namespace Siccity.GLTFUtility {
             // Set up hierarchy
             for (int i = 0; i < results.Length; i++) {
                 if (nodes[i].children != null) {
-                    results[i].children = nodes[i].children;
-                    for (int k = 0; k < results[i].children.Length; k++) {
-                        results[k].parent = i;
-                        results[k].transform.parent = results[i].transform;
+                    int[] children = nodes[i].children;
+                    results[i].children = children;
+                    for (int k = 0; k < children.Length; k++) {
+                        int childIndex = children[k];
+                        results[childIndex].parent = i;
+                        results[childIndex].transform.parent = results[i].transform;
                     }
                 }
             }
@@ -141,14 +118,20 @@ namespace Siccity.GLTFUtility {
                     }
                     //Materials
                     renderer.materials = meshResult.materials;
+                    if (string.IsNullOrEmpty(results[i].transform.name)) results[i].transform.name = "node" + i;
+                } else {
+                    if (string.IsNullOrEmpty(results[i].transform.name)) results[i].transform.name = "node" + i;
                 }
             }
+
             return results;
         }
 
         /// <summary> Returns the root if there is one, otherwise creates a new empty root </summary>
         public static GameObject GetRoot(this GLTFNode.ImportResult[] nodes) {
             GLTFNode.ImportResult[] roots = nodes.Where(x => x.IsRoot).ToArray();
+            Debug.Log(roots.Length + " roots");
+
             if (roots.Length == 1) return roots[0].transform.gameObject;
             else {
                 GameObject root = new GameObject("Root");
