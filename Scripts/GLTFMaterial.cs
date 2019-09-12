@@ -24,17 +24,7 @@ namespace Siccity.GLTFUtility {
 			public Material[] materials;
 		}
 
-		public static ImportResult Import(this GLTFMaterial[] materials, GLTFTexture.ImportResult[] textures) {
-			ImportResult result = new ImportResult();
-			result.materials = new Material[materials.Length];
-			for (int i = 0; i < materials.Length; i++) {
-				result.materials[i] = materials[i].CreateMaterial(textures, i);
-				if (materials[i].name == null) materials[i].name = "material" + i;
-			}
-			return result;
-		}
-
-		private Material CreateMaterial(GLTFTexture.ImportResult[] textures, int index) {
+		public Material CreateMaterial(GLTFTexture.ImportResult[] textures, int index) {
 			Material mat;
 			// Load metallic-roughness materials
 			if (pbrMetallicRoughness != null) {
@@ -179,6 +169,18 @@ namespace Siccity.GLTFUtility {
 			[JsonProperty(Required = Required.Always)] public int index;
 			public int texCoord = 0;
 			public float scale = 1;
+		}
+	}
+
+	public static class GLTFMaterialExtensions {
+		public static GLTFMaterial.ImportResult Import(this List<GLTFMaterial> materials, GLTFTexture.ImportResult[] textures) {
+			GLTFMaterial.ImportResult result = new GLTFMaterial.ImportResult();
+			result.materials = new Material[materials.Count];
+			for (int i = 0; i < materials.Count; i++) {
+				result.materials[i] = materials[i].CreateMaterial(textures, i);
+				if (materials[i].name == null) materials[i].name = "material" + i;
+			}
+			return result;
 		}
 	}
 }

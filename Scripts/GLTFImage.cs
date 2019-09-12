@@ -52,7 +52,7 @@ namespace Siccity.GLTFUtility {
 			}
 		}
 
-		public ImportResult GetImage(string directoryRoot, byte[][] bufferViews) {
+		public ImportResult GetImage(string directoryRoot, GLTFBufferView.ImportResult[] bufferViews) {
 			ImportResult result = new ImportResult();
 			result.isAsset = false;
 
@@ -67,7 +67,7 @@ namespace Siccity.GLTFUtility {
 				Debug.Log("Couldn't load texture at " + directoryRoot + uri);
 				return null;
 			} else if (bufferView.HasValue && !string.IsNullOrEmpty(mimeType)) {
-				byte[] bytes = bufferViews[bufferView.Value];
+				byte[] bytes = bufferViews[bufferView.Value].bytes;
 				result.texture = new Texture2D(2, 2);
 				// If this fails, you may need to find "Image Conversion" package and enable it
 				if (result.texture.LoadImage(bytes)) {
