@@ -24,16 +24,16 @@ namespace Siccity.GLTFUtility {
 			public Material[] materials;
 		}
 
-		public Material CreateMaterial(GLTFTexture.ImportResult[] textures) {
+		public Material CreateMaterial(GLTFTexture.ImportResult[] textures, ShaderSettings shaderSettings) {
 			Material mat;
 
 			// Load metallic-roughness materials
 			if (pbrMetallicRoughness != null) {
-				mat = pbrMetallicRoughness.CreateMaterial(textures, alphaMode);
+				mat = pbrMetallicRoughness.CreateMaterial(textures, alphaMode, shaderSettings);
 			}
 			// Load specular-glossiness materials
 			else if (extensions != null && extensions.KHR_materials_pbrSpecularGlossiness != null) {
-				mat = extensions.KHR_materials_pbrSpecularGlossiness.CreateMaterial(textures, alphaMode);
+				mat = extensions.KHR_materials_pbrSpecularGlossiness.CreateMaterial(textures, alphaMode, shaderSettings);
 			}
 			// Load fallback material
 			else mat = new Material(Shader.Find("Standard"));
@@ -88,7 +88,7 @@ namespace Siccity.GLTFUtility {
 			public float roughnessFactor = 1f;
 			public TextureInfo metallicRoughnessTexture;
 
-			public Material CreateMaterial(GLTFTexture.ImportResult[] textures, AlphaMode alphaMode) {
+			public Material CreateMaterial(GLTFTexture.ImportResult[] textures, AlphaMode alphaMode, ShaderSettings shaderSettings) {
 				// Shader
 				Shader sh = null;
 #if UNITY_2019_1_OR_NEWER
@@ -96,8 +96,8 @@ namespace Siccity.GLTFUtility {
 				if (GraphicsSettings.renderPipelineAsset) sh = GraphicsSettings.renderPipelineAsset.defaultShader;
 #endif
 				if (sh == null) {
-					if (alphaMode == AlphaMode.BLEND) sh = Shader.Find("GLTFUtility/Standard Transparent (Metallic)");
-					else sh = Shader.Find("GLTFUtility/Standard (Metallic)");
+					if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.metallicBlend;
+					else sh = shaderSettings.metallic;
 				}
 
 				// Material
@@ -142,7 +142,7 @@ namespace Siccity.GLTFUtility {
 			/// <summary> The specular-glossiness texture </summary>
 			public TextureInfo specularGlossinessTexture;
 
-			public Material CreateMaterial(GLTFTexture.ImportResult[] textures, AlphaMode alphaMode) {
+			public Material CreateMaterial(GLTFTexture.ImportResult[] textures, AlphaMode alphaMode, ShaderSettings shaderSettings) {
 				// Shader
 				Shader sh = null;
 #if UNITY_2019_1_OR_NEWER
@@ -150,8 +150,8 @@ namespace Siccity.GLTFUtility {
 				if (GraphicsSettings.renderPipelineAsset) sh = GraphicsSettings.renderPipelineAsset.defaultShader;
 #endif
 				if (sh == null) {
-					if (alphaMode == AlphaMode.BLEND) sh = Shader.Find("GLTFUtility/Standard Transparent (Specular)");
-					else sh = Shader.Find("GLTFUtility/Standard (Specular)");
+					if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.specularBlend;
+					else sh = shaderSettings.specular;
 				}
 
 				// Material
@@ -190,11 +190,11 @@ namespace Siccity.GLTFUtility {
 	}
 
 	public static class GLTFMaterialExtensions {
-		public static GLTFMaterial.ImportResult Import(this List<GLTFMaterial> materials, GLTFTexture.ImportResult[] textures) {
+		public static GLTFMaterial.ImportResult Import(this List<GLTFMaterial> materials, GLTFTexture.ImportResult[] textures, ShaderSettings shaderSettings) {
 			GLTFMaterial.ImportResult result = new GLTFMaterial.ImportResult();
 			result.materials = new Material[materials.Count];
 			for (int i = 0; i < materials.Count; i++) {
-				result.materials[i] = materials[i].CreateMaterial(textures);
+				result.materials[i] = materials[i].CreateMaterial(textures, shaderSettings);
 				if (materials[i].name == null) materials[i].name = "material" + i;
 			}
 			return result;
