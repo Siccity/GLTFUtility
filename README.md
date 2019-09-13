@@ -40,6 +40,7 @@ Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-for
 - [x] Vertex colors
 - [x] Materials (metallic/specular, opaque/mask/blend)
 - [x] Textures (embedded/external)
+- [ ] Remote textures
 - [x] Rig
 - [x] Animations (multiple)
 - [ ] Morph targets
