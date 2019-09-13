@@ -7,9 +7,10 @@ namespace Siccity.GLTFUtility {
 
         public override void OnImportAsset(AssetImportContext ctx) {
             // Load asset
-            GameObject root = Importer.ImportGLTF(ctx.assetPath);
+            GLTFAnimation.ImportResult[] animations;
+            GameObject root = Importer.ImportGLTF(ctx.assetPath, out animations);
             // Save asset
-            GLTFAssetUtility.SaveToAsset(root, ctx);
+            GLTFAssetUtility.SaveToAsset(root, animations, ctx);
         }
     }
 }

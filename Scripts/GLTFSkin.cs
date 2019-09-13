@@ -88,7 +88,6 @@ namespace Siccity.GLTFUtility {
 
             GLTFSkin.ImportResult[] results = new GLTFSkin.ImportResult[skins.Count];
             for (int i = 0; i < results.Length; i++) {
-                results[i] = new GLTFSkin.ImportResult();
                 results[i] = skins[i].Import(accessors);
             }
             return results;

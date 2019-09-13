@@ -11,7 +11,7 @@ namespace Siccity.GLTFUtility {
         public static Material defaultMaterial { get { return _defaultMaterial != null ? _defaultMaterial : AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat"); } }
         private static Material _defaultMaterial;
 
-        public static void SaveToAsset(GameObject root, AssetImportContext ctx) {
+        public static void SaveToAsset(GameObject root, GLTFAnimation.ImportResult[] animations, AssetImportContext ctx) {
 #if UNITY_2018_2_OR_NEWER
             ctx.AddObjectToAsset("main", root);
             ctx.SetMainObject(root);
@@ -24,6 +24,7 @@ namespace Siccity.GLTFUtility {
             ApplyDefaultMaterial(renderers);
             AddMeshes(filters, skinnedRenderers, ctx);
             AddMaterials(renderers, skinnedRenderers, ctx);
+            AddAnimations(animations, ctx);
         }
 
         private static void ApplyDefaultMaterial(MeshRenderer[] renderers) {
@@ -49,6 +50,17 @@ namespace Siccity.GLTFUtility {
                 if (visitedMeshes.Contains(mesh)) continue;
                 ctx.AddAsset(mesh.name, mesh);
                 visitedMeshes.Add(mesh);
+            }
+        }
+
+        public static void AddAnimations(GLTFAnimation.ImportResult[] animations, AssetImportContext ctx) {
+            if (animations == null) return;
+            HashSet<AnimationClip> visitedAnimations = new HashSet<AnimationClip>();
+            for (int i = 0; i < animations.Length; i++) {
+                AnimationClip clip = animations[i].clip;
+                if (visitedAnimations.Contains(clip)) continue;
+                ctx.AddAsset(clip.name, clip);
+                visitedAnimations.Add(clip);
             }
         }
 

@@ -1,4 +1,5 @@
-﻿/* using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -47,13 +48,10 @@ namespace Siccity.GLTFUtility {
         }
 #endregion
 
-        protected ImportResult Import(GLTFAccessor.ImportResult[] accessors, GLTFNode.ImportResult[] nodes, int index) {
+        public ImportResult Import(GLTFAccessor.ImportResult[] accessors, GLTFNode.ImportResult[] nodes) {
             ImportResult result = new ImportResult();
             result.clip = new AnimationClip();
-
-            // Name
-            if (string.IsNullOrEmpty(name)) result.clip.name = "animation" + index;
-            else result.clip.name = name;
+            result.clip.name = name;
 
             for (int i = 0; i < channels.Length; i++) {
                 Channel channel = channels[i];
@@ -66,10 +64,12 @@ namespace Siccity.GLTFUtility {
                 string relativePath = "";
 
                 GLTFNode.ImportResult node = nodes[channel.target.node.Value];
-                while (node != null && !node.IsRootTransform()) {
-                    if (string.IsNullOrEmpty(relativePath)) relativePath = node.GetName();
-                    else relativePath = node.GetName() + "/" + relativePath;
-                    node = node.GetParentNode();
+                while (node != null && !node.IsRoot) {
+                    if (string.IsNullOrEmpty(relativePath)) relativePath = node.transform.name;
+                    else relativePath = node.transform.name + "/" + relativePath;
+
+                    if (node.parent.HasValue) node = nodes[node.parent.Value];
+                    else node = null;
                 }
 
                 float[] keyframeInput = accessors[sampler.input].ReadFloat().ToArray();
@@ -127,4 +127,17 @@ namespace Siccity.GLTFUtility {
             return result;
         }
     }
-} */
+
+    public static class GLTFAnimationExtensions {
+        public static GLTFAnimation.ImportResult[] Import(this List<GLTFAnimation> animations, GLTFAccessor.ImportResult[] accessors, GLTFNode.ImportResult[] nodes) {
+            if (animations == null) return null;
+
+            GLTFAnimation.ImportResult[] results = new GLTFAnimation.ImportResult[animations.Count];
+            for (int i = 0; i < results.Length; i++) {
+                results[i] = animations[i].Import(accessors, nodes);
+                if (string.IsNullOrEmpty(results[i].clip.name)) results[i].clip.name = "animation" + i;
+            }
+            return results;
+        }
+    }
+}

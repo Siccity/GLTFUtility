@@ -20,7 +20,13 @@ namespace Siccity.GLTFUtility {
 		}
 
 		public static GameObject ImportGLB(string filepath) {
+			GLTFAnimation.ImportResult[] animations;
+			return ImportGLB(filepath, out animations);
+		}
+
+		public static GameObject ImportGLB(string filepath, out GLTFAnimation.ImportResult[] animations) {
 			byte[] bytes = File.ReadAllBytes(filepath);
+			animations = null;
 
 			// 12 byte header
 			// 0-4  - magic = "glTF"
@@ -45,18 +51,23 @@ namespace Siccity.GLTFUtility {
 
 			// Parse json
 			GLTFObject gltfObject = JsonConvert.DeserializeObject<GLTFObject>(json);
-			return gltfObject.LoadInternal(filepath);
+			return gltfObject.LoadInternal(filepath, out animations);
 		}
 
 		public static GameObject ImportGLTF(string filepath) {
+			GLTFAnimation.ImportResult[] animations;
+			return ImportGLTF(filepath, out animations);
+		}
+
+		public static GameObject ImportGLTF(string filepath, out GLTFAnimation.ImportResult[] animations) {
 			string json = File.ReadAllText(filepath);
 
 			// Parse json
 			GLTFObject gltfObject = JsonConvert.DeserializeObject<GLTFObject>(json);
-			return gltfObject.LoadInternal(filepath);
+			return gltfObject.LoadInternal(filepath, out animations);
 		}
 
-		private static GameObject LoadInternal(this GLTFObject gltfObject, string filepath) {
+		private static GameObject LoadInternal(this GLTFObject gltfObject, string filepath, out GLTFAnimation.ImportResult[] animations) {
 			string directoryRoot = Directory.GetParent(filepath).ToString() + "/";
 
 			GLTFBuffer.ImportResult[] buffers = gltfObject.buffers.Select(x => x.Import(filepath)).ToArray();
@@ -68,7 +79,7 @@ namespace Siccity.GLTFUtility {
 			GLTFMesh.ImportResult[] meshes = gltfObject.meshes.Import(accessors, materials);
 			GLTFSkin.ImportResult[] skins = gltfObject.skins.Import(accessors);
 			GLTFNode.ImportResult[] nodes = gltfObject.nodes.Import(meshes, skins);
-			//GLTFProperty.Load(gltfObject, gltfObject.animations);
+			animations = gltfObject.animations.Import(accessors, nodes);
 
 			return nodes.GetRoot();
 		}
