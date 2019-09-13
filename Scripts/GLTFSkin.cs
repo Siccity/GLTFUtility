@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -17,7 +18,7 @@ namespace Siccity.GLTFUtility {
             public int[] joints;
 
             public SkinnedMeshRenderer SetupSkinnedRenderer(GameObject go, Mesh mesh, GLTFNode.ImportResult[] nodes) {
-                
+
                 SkinnedMeshRenderer smr = go.AddComponent<SkinnedMeshRenderer>();
                 Transform[] bones = new Transform[joints.Length];
                 for (int i = 0; i < bones.Length; i++) {
@@ -78,6 +79,19 @@ namespace Siccity.GLTFUtility {
                 }
             }
             return result;
+        }
+    }
+
+    public static class GLTFSkinExtensions {
+        public static GLTFSkin.ImportResult[] Import(this List<GLTFSkin> skins, GLTFAccessor.ImportResult[] accessors) {
+            if (skins == null) return null;
+
+            GLTFSkin.ImportResult[] results = new GLTFSkin.ImportResult[skins.Count];
+            for (int i = 0; i < results.Length; i++) {
+                results[i] = new GLTFSkin.ImportResult();
+                results[i] = skins[i].Import(accessors);
+            }
+            return results;
         }
     }
 }
