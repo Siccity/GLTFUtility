@@ -9,6 +9,7 @@
 		[NoScaleOffset] _OcclusionMap ("Occlusion", 2D) = "white" {}
 		[NoScaleOffset] _EmissionMap ("Emission", 2D) = "black" {}
 		_EmissionColor ("Emission Color", Color) = (0,0,0,0)
+		_AlphaCutoff ("Alpha Cutoff", Range(0,1)) = 0
 	}
 	SubShader {
 		Tags { "RenderType"="Opaque" }
@@ -33,6 +34,7 @@
 		};
 
 		half _GlossyReflections;
+		half _AlphaCutoff;
 		fixed4 _Color;
 		fixed4 _EmissionColor;
 
@@ -47,7 +49,7 @@
 			// Albedo comes from a texture tinted by color
 			fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
 			o.Albedo = c.rgb * IN.color;
-			o.Alpha = c.a;
+			clip(c.a - _AlphaCutoff);
 			// Specular / roughness
 			fixed4 s = tex2D (_SpecGlossMap, IN.uv_MainTex);
 			o.Specular = s.rgb * _SpecColor;

@@ -1,4 +1,4 @@
-﻿Shader "GLTFUtility/Standard (Metallic)" {
+﻿Shader "GLTFUtility/Standard Transparent (Metallic)" {
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
 		_MainTex ("Albedo (RGB)", 2D) = "white" {}
@@ -9,15 +9,14 @@
 		[NoScaleOffset] _OcclusionMap ("Occlusion", 2D) = "white" {}
 		[NoScaleOffset] _EmissionMap ("Emission", 2D) = "black" {}
 		_EmissionColor ("Emission Color", Color) = (0,0,0,0)
-		_AlphaCutoff ("Alpha Cutoff", Range(0,1)) = 0
 	}
 	SubShader {
-		Tags { "RenderType"="Opaque" }
+		Tags { "RenderType"="Transparent" "Queue"="Transparent" }
 		LOD 200
 
 		CGPROGRAM
 		// Physically based Standard lighting model, and enable shadows on all light types
-		#pragma surface surf Standard fullforwardshadows
+		#pragma surface surf Standard fullforwardshadows alpha:fade
 		// Use shader model 3.0 target, to get nicer looking lighting
 		#pragma target 3.0
 
@@ -49,7 +48,7 @@
 			// Albedo comes from a texture tinted by color
 			fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
 			o.Albedo = c.rgb * IN.color;
-			clip(c.a - _AlphaCutoff);
+			o.Alpha = c.a;
 			// Metallic comes from blue channel tinted by slider variables
 			fixed4 m = tex2D (_MetallicGlossMap, IN.uv_MainTex);
 			o.Metallic = m.b * _Metallic;

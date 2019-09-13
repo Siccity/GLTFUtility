@@ -29,11 +29,11 @@ namespace Siccity.GLTFUtility {
 
 			// Load metallic-roughness materials
 			if (pbrMetallicRoughness != null) {
-				mat = pbrMetallicRoughness.CreateMaterial(textures);
+				mat = pbrMetallicRoughness.CreateMaterial(textures, alphaMode);
 			}
 			// Load specular-glossiness materials
 			else if (extensions != null && extensions.KHR_materials_pbrSpecularGlossiness != null) {
-				mat = extensions.KHR_materials_pbrSpecularGlossiness.CreateMaterial(textures);
+				mat = extensions.KHR_materials_pbrSpecularGlossiness.CreateMaterial(textures, alphaMode);
 			}
 			// Load fallback material
 			else mat = new Material(Shader.Find("Standard"));
@@ -53,6 +53,9 @@ namespace Siccity.GLTFUtility {
 			if (TryGetTexture(textures, emissiveTexture, out tex)) {
 				mat.SetTexture("_EmissionMap", tex);
 				mat.EnableKeyword("_EMISSION");
+			}
+			if (alphaMode == AlphaMode.MASK) {
+				mat.SetFloat("_AlphaCutoff", alphaCutoff);
 			}
 			mat.name = name;
 			return mat;
@@ -85,17 +88,20 @@ namespace Siccity.GLTFUtility {
 			public float roughnessFactor = 1f;
 			public TextureInfo metallicRoughnessTexture;
 
-			public Material CreateMaterial(GLTFTexture.ImportResult[] textures) {
-				Material mat;
-				// Material
+			public Material CreateMaterial(GLTFTexture.ImportResult[] textures, AlphaMode alphaMode) {
+				// Shader
 				Shader sh = null;
 #if UNITY_2019_1_OR_NEWER
 				// LWRP support
 				if (GraphicsSettings.renderPipelineAsset) sh = GraphicsSettings.renderPipelineAsset.defaultShader;
 #endif
-				if (sh == null) sh = Shader.Find("GLTFUtility/Standard (Metallic)");
+				if (sh == null) {
+					if (alphaMode == AlphaMode.BLEND) sh = Shader.Find("GLTFUtility/Standard Transparent (Metallic)");
+					else sh = Shader.Find("GLTFUtility/Standard (Metallic)");
+				}
 
-				mat = new Material(sh);
+				// Material
+				Material mat = new Material(sh);
 				mat.color = baseColorFactor;
 				mat.SetFloat("_Metallic", metallicFactor);
 				mat.SetFloat("_Glossiness", 1 - roughnessFactor);
@@ -136,10 +142,20 @@ namespace Siccity.GLTFUtility {
 			/// <summary> The specular-glossiness texture </summary>
 			public TextureInfo specularGlossinessTexture;
 
-			public Material CreateMaterial(GLTFTexture.ImportResult[] textures) {
-				Material mat;
-				// Material base values
-				mat = new Material(Shader.Find("GLTFUtility/Standard (Specular)"));
+			public Material CreateMaterial(GLTFTexture.ImportResult[] textures, AlphaMode alphaMode) {
+				// Shader
+				Shader sh = null;
+#if UNITY_2019_1_OR_NEWER
+				// LWRP support
+				if (GraphicsSettings.renderPipelineAsset) sh = GraphicsSettings.renderPipelineAsset.defaultShader;
+#endif
+				if (sh == null) {
+					if (alphaMode == AlphaMode.BLEND) sh = Shader.Find("GLTFUtility/Standard Transparent (Specular)");
+					else sh = Shader.Find("GLTFUtility/Standard (Specular)");
+				}
+
+				// Material
+				Material mat = new Material(sh);
 				mat.color = diffuseFactor;
 				mat.SetColor("_SpecColor", specularFactor);
 				mat.SetFloat("_Glossiness", glossinessFactor);
