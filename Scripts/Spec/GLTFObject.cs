@@ -19,5 +19,7 @@ namespace Siccity.GLTFUtility {
 		public List<GLTFTexture> textures;
 		public List<GLTFImage> images;
 		public List<GLTFMaterial> materials;
+		//public List<string> extensionsUsed; not supported yet
+		//public List<string> extensionsRequired; not supported yet
 	}
 }
