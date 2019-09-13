@@ -25,15 +25,15 @@ Choose *one* of the following:
 **Features**
 - [x] Editor import
 - [ ] Editor export
-- [ ] Runtime import API
+- [x] Runtime import API
 - [ ] Runtime export API
 - [x] Static mesh (with submeshes)
 - [x] UVs (up to 8 channels)
 - [x] Normals
 - [x] Tangents
 - [x] Vertex colors
-- [x] Materials (metallic and specular)
-- [x] Textures (embedded and external)
+- [x] Materials (metallic/specular, opaque/mask/blend)
+- [x] Textures (embedded/external)
 - [x] Rig
 - [x] Animations (multiple)
 - [ ] Morph targets
