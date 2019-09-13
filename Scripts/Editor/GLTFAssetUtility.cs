@@ -7,10 +7,6 @@ using UnityEngine;
 namespace Siccity.GLTFUtility {
 	/// <summary> Contains methods for saving a gameobject as an asset </summary>
 	public static class GLTFAssetUtility {
-
-		public static Material defaultMaterial { get { return _defaultMaterial != null ? _defaultMaterial : AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat"); } }
-		private static Material _defaultMaterial;
-
 		public static void SaveToAsset(GameObject root, GLTFAnimation.ImportResult[] animations, AssetImportContext ctx) {
 #if UNITY_2018_2_OR_NEWER
 			ctx.AddObjectToAsset("main", root);
@@ -21,20 +17,9 @@ namespace Siccity.GLTFUtility {
 			MeshRenderer[] renderers = root.GetComponentsInChildren<MeshRenderer>(true);
 			SkinnedMeshRenderer[] skinnedRenderers = root.GetComponentsInChildren<SkinnedMeshRenderer>(true);
 			MeshFilter[] filters = root.GetComponentsInChildren<MeshFilter>(true);
-			ApplyDefaultMaterial(renderers);
 			AddMeshes(filters, skinnedRenderers, ctx);
 			AddMaterials(renderers, skinnedRenderers, ctx);
 			AddAnimations(animations, ctx);
-		}
-
-		private static void ApplyDefaultMaterial(MeshRenderer[] renderers) {
-			for (int i = 0; i < renderers.Length; i++) {
-				Material[] mats = renderers[i].sharedMaterials;
-				for (int k = 0; k < mats.Length; k++) {
-					if (mats[k] == null) mats[k] = defaultMaterial;
-				}
-				renderers[i].sharedMaterials = mats;
-			}
 		}
 
 		public static void AddMeshes(MeshFilter[] filters, SkinnedMeshRenderer[] skinnedRenderers, AssetImportContext ctx) {
@@ -69,6 +54,7 @@ namespace Siccity.GLTFUtility {
 			HashSet<Texture2D> visitedTextures = new HashSet<Texture2D>();
 			for (int i = 0; i < renderers.Length; i++) {
 				foreach (Material mat in renderers[i].sharedMaterials) {
+					if (mat == GLTFMaterial.defaultMaterial) continue;
 					if (visitedMaterials.Contains(mat)) continue;
 					if (string.IsNullOrEmpty(mat.name)) mat.name = "material" + visitedMaterials.Count;
 					ctx.AddAsset(mat.name, mat);

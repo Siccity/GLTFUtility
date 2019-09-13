@@ -8,6 +8,12 @@ using UnityEngine.Rendering;
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#material
 	public class GLTFMaterial {
+#if UNITY_EDITOR
+		public static Material defaultMaterial { get { return _defaultMaterial != null ? _defaultMaterial : _defaultMaterial = UnityEditor.AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat"); } }
+		private static Material _defaultMaterial;
+#else
+		public static Material defaultMaterial { get { return null; } }
+#endif
 
 		public string name;
 		public PbrMetalRoughness pbrMetallicRoughness;
@@ -190,11 +196,13 @@ namespace Siccity.GLTFUtility {
 	}
 
 	public static class GLTFMaterialExtensions {
-		public static GLTFMaterial.ImportResult Import(this List<GLTFMaterial> materials, GLTFTexture.ImportResult[] textures, ShaderSettings shaders) {
+		public static GLTFMaterial.ImportResult Import(this List<GLTFMaterial> materials, GLTFTexture.ImportResult[] textures, ImportSettings importSettings) {
+			if (!importSettings.materials) return null;
+
 			GLTFMaterial.ImportResult result = new GLTFMaterial.ImportResult();
 			result.materials = new Material[materials.Count];
 			for (int i = 0; i < materials.Count; i++) {
-				result.materials[i] = materials[i].CreateMaterial(textures, shaders);
+				result.materials[i] = materials[i].CreateMaterial(textures, importSettings.shaders);
 				if (materials[i].name == null) materials[i].name = "material" + i;
 			}
 			return result;
