@@ -1,3 +1,7 @@
+[![Discord](https://img.shields.io/discord/361769369404964864.svg)](https://discord.gg/qgPrHv4)
+[![GitHub issues](https://img.shields.io/github/issues/Siccity/GLTFUtility.svg)](https://github.com/Siccity/GLTFUtility/issues)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/Siccity/GLTFUtility/master/LICENSE.md)
+
 ## GLTFUtility
 Allows you to import and export glTF files during runtime and in editor.
 glTF is a new opensource 3d model transmission format which supports everything you'll ever need from a format in Unity.
