@@ -5,122 +5,122 @@ using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
-    /// <summary> Contains methods for saving a gameobject as an asset </summary>
-    public static class GLTFAssetUtility {
+	/// <summary> Contains methods for saving a gameobject as an asset </summary>
+	public static class GLTFAssetUtility {
 
-        public static Material defaultMaterial { get { return _defaultMaterial != null ? _defaultMaterial : AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat"); } }
-        private static Material _defaultMaterial;
+		public static Material defaultMaterial { get { return _defaultMaterial != null ? _defaultMaterial : AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat"); } }
+		private static Material _defaultMaterial;
 
-        public static void SaveToAsset(GameObject root, GLTFAnimation.ImportResult[] animations, AssetImportContext ctx) {
+		public static void SaveToAsset(GameObject root, GLTFAnimation.ImportResult[] animations, AssetImportContext ctx) {
 #if UNITY_2018_2_OR_NEWER
-            ctx.AddObjectToAsset("main", root);
-            ctx.SetMainObject(root);
+			ctx.AddObjectToAsset("main", root);
+			ctx.SetMainObject(root);
 #else
-            ctx.SetMainAsset("main obj", root);
+			ctx.SetMainAsset("main obj", root);
 #endif
-            MeshRenderer[] renderers = root.GetComponentsInChildren<MeshRenderer>(true);
-            SkinnedMeshRenderer[] skinnedRenderers = root.GetComponentsInChildren<SkinnedMeshRenderer>(true);
-            MeshFilter[] filters = root.GetComponentsInChildren<MeshFilter>(true);
-            ApplyDefaultMaterial(renderers);
-            AddMeshes(filters, skinnedRenderers, ctx);
-            AddMaterials(renderers, skinnedRenderers, ctx);
-            AddAnimations(animations, ctx);
-        }
+			MeshRenderer[] renderers = root.GetComponentsInChildren<MeshRenderer>(true);
+			SkinnedMeshRenderer[] skinnedRenderers = root.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+			MeshFilter[] filters = root.GetComponentsInChildren<MeshFilter>(true);
+			ApplyDefaultMaterial(renderers);
+			AddMeshes(filters, skinnedRenderers, ctx);
+			AddMaterials(renderers, skinnedRenderers, ctx);
+			AddAnimations(animations, ctx);
+		}
 
-        private static void ApplyDefaultMaterial(MeshRenderer[] renderers) {
-            for (int i = 0; i < renderers.Length; i++) {
-                Material[] mats = renderers[i].sharedMaterials;
-                for (int k = 0; k < mats.Length; k++) {
-                    if (mats[k] == null) mats[k] = defaultMaterial;
-                }
-                renderers[i].sharedMaterials = mats;
-            }
-        }
+		private static void ApplyDefaultMaterial(MeshRenderer[] renderers) {
+			for (int i = 0; i < renderers.Length; i++) {
+				Material[] mats = renderers[i].sharedMaterials;
+				for (int k = 0; k < mats.Length; k++) {
+					if (mats[k] == null) mats[k] = defaultMaterial;
+				}
+				renderers[i].sharedMaterials = mats;
+			}
+		}
 
-        public static void AddMeshes(MeshFilter[] filters, SkinnedMeshRenderer[] skinnedRenderers, AssetImportContext ctx) {
-            HashSet<Mesh> visitedMeshes = new HashSet<Mesh>();
-            for (int i = 0; i < filters.Length; i++) {
-                Mesh mesh = filters[i].sharedMesh;
-                if (visitedMeshes.Contains(mesh)) continue;
-                ctx.AddAsset(mesh.name, mesh);
-                visitedMeshes.Add(mesh);
-            }
-            for (int i = 0; i < skinnedRenderers.Length; i++) {
-                Mesh mesh = skinnedRenderers[i].sharedMesh;
-                if (visitedMeshes.Contains(mesh)) continue;
-                ctx.AddAsset(mesh.name, mesh);
-                visitedMeshes.Add(mesh);
-            }
-        }
+		public static void AddMeshes(MeshFilter[] filters, SkinnedMeshRenderer[] skinnedRenderers, AssetImportContext ctx) {
+			HashSet<Mesh> visitedMeshes = new HashSet<Mesh>();
+			for (int i = 0; i < filters.Length; i++) {
+				Mesh mesh = filters[i].sharedMesh;
+				if (visitedMeshes.Contains(mesh)) continue;
+				ctx.AddAsset(mesh.name, mesh);
+				visitedMeshes.Add(mesh);
+			}
+			for (int i = 0; i < skinnedRenderers.Length; i++) {
+				Mesh mesh = skinnedRenderers[i].sharedMesh;
+				if (visitedMeshes.Contains(mesh)) continue;
+				ctx.AddAsset(mesh.name, mesh);
+				visitedMeshes.Add(mesh);
+			}
+		}
 
-        public static void AddAnimations(GLTFAnimation.ImportResult[] animations, AssetImportContext ctx) {
-            if (animations == null) return;
-            HashSet<AnimationClip> visitedAnimations = new HashSet<AnimationClip>();
-            for (int i = 0; i < animations.Length; i++) {
-                AnimationClip clip = animations[i].clip;
-                if (visitedAnimations.Contains(clip)) continue;
-                ctx.AddAsset(clip.name, clip);
-                visitedAnimations.Add(clip);
-            }
-        }
+		public static void AddAnimations(GLTFAnimation.ImportResult[] animations, AssetImportContext ctx) {
+			if (animations == null) return;
+			HashSet<AnimationClip> visitedAnimations = new HashSet<AnimationClip>();
+			for (int i = 0; i < animations.Length; i++) {
+				AnimationClip clip = animations[i].clip;
+				if (visitedAnimations.Contains(clip)) continue;
+				ctx.AddAsset(clip.name, clip);
+				visitedAnimations.Add(clip);
+			}
+		}
 
-        public static void AddMaterials(MeshRenderer[] renderers, SkinnedMeshRenderer[] skinnedRenderers, AssetImportContext ctx) {
-            HashSet<Material> visitedMaterials = new HashSet<Material>();
-            HashSet<Texture2D> visitedTextures = new HashSet<Texture2D>();
-            for (int i = 0; i < renderers.Length; i++) {
-                foreach (Material mat in renderers[i].sharedMaterials) {
-                    if (visitedMaterials.Contains(mat)) continue;
-                    if (string.IsNullOrEmpty(mat.name)) mat.name = "material" + visitedMaterials.Count;
-                    ctx.AddAsset(mat.name, mat);
-                    visitedMaterials.Add(mat);
+		public static void AddMaterials(MeshRenderer[] renderers, SkinnedMeshRenderer[] skinnedRenderers, AssetImportContext ctx) {
+			HashSet<Material> visitedMaterials = new HashSet<Material>();
+			HashSet<Texture2D> visitedTextures = new HashSet<Texture2D>();
+			for (int i = 0; i < renderers.Length; i++) {
+				foreach (Material mat in renderers[i].sharedMaterials) {
+					if (visitedMaterials.Contains(mat)) continue;
+					if (string.IsNullOrEmpty(mat.name)) mat.name = "material" + visitedMaterials.Count;
+					ctx.AddAsset(mat.name, mat);
+					visitedMaterials.Add(mat);
 
-                    // Add textures
-                    foreach (Texture2D tex in mat.AllTextures()) {
-                        // Dont add asset textures
-                        //if (images[i].isAsset) continue;
-                        if (visitedTextures.Contains(tex)) continue;
-                        if (AssetDatabase.Contains(tex)) continue;
-                        if (string.IsNullOrEmpty(tex.name)) tex.name = "texture" + visitedTextures.Count;
-                        ctx.AddAsset(tex.name, tex);
-                        visitedTextures.Add(tex);
-                    }
-                }
-            }
-            for (int i = 0; i < skinnedRenderers.Length; i++) {
-                foreach (Material mat in skinnedRenderers[i].sharedMaterials) {
-                    if (visitedMaterials.Contains(mat)) continue;
-                    if (string.IsNullOrEmpty(mat.name)) mat.name = "material" + visitedMaterials.Count;
-                    ctx.AddAsset(mat.name, mat);
-                    visitedMaterials.Add(mat);
+					// Add textures
+					foreach (Texture2D tex in mat.AllTextures()) {
+						// Dont add asset textures
+						//if (images[i].isAsset) continue;
+						if (visitedTextures.Contains(tex)) continue;
+						if (AssetDatabase.Contains(tex)) continue;
+						if (string.IsNullOrEmpty(tex.name)) tex.name = "texture" + visitedTextures.Count;
+						ctx.AddAsset(tex.name, tex);
+						visitedTextures.Add(tex);
+					}
+				}
+			}
+			for (int i = 0; i < skinnedRenderers.Length; i++) {
+				foreach (Material mat in skinnedRenderers[i].sharedMaterials) {
+					if (visitedMaterials.Contains(mat)) continue;
+					if (string.IsNullOrEmpty(mat.name)) mat.name = "material" + visitedMaterials.Count;
+					ctx.AddAsset(mat.name, mat);
+					visitedMaterials.Add(mat);
 
-                    // Add textures
-                    foreach (Texture2D tex in mat.AllTextures()) {
-                        // Dont add asset textures
-                        //if (images[i].isAsset) continue;
-                        if (visitedTextures.Contains(tex)) continue;
-                        if (AssetDatabase.Contains(tex)) continue;
-                        if (string.IsNullOrEmpty(tex.name)) tex.name = "texture" + visitedTextures.Count;
-                        ctx.AddAsset(tex.name, tex);
-                        visitedTextures.Add(tex);
-                    }
-                }
-            }
-        }
+					// Add textures
+					foreach (Texture2D tex in mat.AllTextures()) {
+						// Dont add asset textures
+						//if (images[i].isAsset) continue;
+						if (visitedTextures.Contains(tex)) continue;
+						if (AssetDatabase.Contains(tex)) continue;
+						if (string.IsNullOrEmpty(tex.name)) tex.name = "texture" + visitedTextures.Count;
+						ctx.AddAsset(tex.name, tex);
+						visitedTextures.Add(tex);
+					}
+				}
+			}
+		}
 
-        public static void AddAsset(this AssetImportContext ctx, string identifier, Object obj) {
+		public static void AddAsset(this AssetImportContext ctx, string identifier, Object obj) {
 #if UNITY_2018_2_OR_NEWER
-            ctx.AddObjectToAsset(identifier, obj);
+			ctx.AddObjectToAsset(identifier, obj);
 #else
-            ctx.AddSubAsset(identifier, obj);
+			ctx.AddSubAsset(identifier, obj);
 #endif
-        }
+		}
 
-        public static IEnumerable<Texture2D> AllTextures(this Material mat) {
-            int[] ids = mat.GetTexturePropertyNameIDs();
-            for (int i = 0; i < ids.Length; i++) {
-                Texture2D tex = mat.GetTexture(ids[i]) as Texture2D;
-                if (tex != null) yield return tex;
-            }
-        }
-    }
+		public static IEnumerable<Texture2D> AllTextures(this Material mat) {
+			int[] ids = mat.GetTexturePropertyNameIDs();
+			for (int i = 0; i < ids.Length; i++) {
+				Texture2D tex = mat.GetTexture(ids[i]) as Texture2D;
+				if (tex != null) yield return tex;
+			}
+		}
+	}
 }
