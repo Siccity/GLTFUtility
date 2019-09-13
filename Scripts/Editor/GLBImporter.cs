@@ -8,7 +8,7 @@ namespace Siccity.GLTFUtility {
 		public override void OnImportAsset(AssetImportContext ctx) {
 			// Load asset
 			GLTFAnimation.ImportResult[] animations;
-			GameObject root = Importer.ImportGLB(ctx.assetPath, shaderSettings, out animations);
+			GameObject root = Importer.ImportGLB(ctx.assetPath, importSettings, out animations);
 			// Save asset
 			GLTFAssetUtility.SaveToAsset(root, animations, ctx);
 		}

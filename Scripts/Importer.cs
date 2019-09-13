@@ -21,15 +21,15 @@ namespace Siccity.GLTFUtility {
 
 		public static GameObject ImportGLB(string filepath) {
 			GLTFAnimation.ImportResult[] animations;
-			return ImportGLB(filepath, ShaderSettings.Default, out animations);
+			return ImportGLB(filepath, new ImportSettings(), out animations);
 		}
 
-		public static GameObject ImportGLB(string filepath, ShaderSettings shaderSettings) {
+		public static GameObject ImportGLB(string filepath, ImportSettings importSettings) {
 			GLTFAnimation.ImportResult[] animations;
-			return ImportGLB(filepath, shaderSettings, out animations);
+			return ImportGLB(filepath, importSettings, out animations);
 		}
 
-		public static GameObject ImportGLB(string filepath, ShaderSettings shaderSettings, out GLTFAnimation.ImportResult[] animations) {
+		public static GameObject ImportGLB(string filepath, ImportSettings importSettings, out GLTFAnimation.ImportResult[] animations) {
 			byte[] bytes = File.ReadAllBytes(filepath);
 			animations = null;
 
@@ -56,28 +56,28 @@ namespace Siccity.GLTFUtility {
 
 			// Parse json
 			GLTFObject gltfObject = JsonConvert.DeserializeObject<GLTFObject>(json);
-			return gltfObject.LoadInternal(filepath, shaderSettings, out animations);
+			return gltfObject.LoadInternal(filepath, importSettings, out animations);
 		}
 
 		public static GameObject ImportGLTF(string filepath) {
 			GLTFAnimation.ImportResult[] animations;
-			return ImportGLTF(filepath, ShaderSettings.Default, out animations);
+			return ImportGLTF(filepath, new ImportSettings(), out animations);
 		}
 
-		public static GameObject ImportGLTF(string filepath, ShaderSettings shaderSettings) {
+		public static GameObject ImportGLTF(string filepath, ImportSettings importSettings) {
 			GLTFAnimation.ImportResult[] animations;
-			return ImportGLTF(filepath, shaderSettings, out animations);
+			return ImportGLTF(filepath, importSettings, out animations);
 		}
 
-		public static GameObject ImportGLTF(string filepath, ShaderSettings shaderSettings, out GLTFAnimation.ImportResult[] animations) {
+		public static GameObject ImportGLTF(string filepath, ImportSettings importSettings, out GLTFAnimation.ImportResult[] animations) {
 			string json = File.ReadAllText(filepath);
 
 			// Parse json
 			GLTFObject gltfObject = JsonConvert.DeserializeObject<GLTFObject>(json);
-			return gltfObject.LoadInternal(filepath, shaderSettings, out animations);
+			return gltfObject.LoadInternal(filepath, importSettings, out animations);
 		}
 
-		private static GameObject LoadInternal(this GLTFObject gltfObject, string filepath, ShaderSettings shaderSettings, out GLTFAnimation.ImportResult[] animations) {
+		private static GameObject LoadInternal(this GLTFObject gltfObject, string filepath, ImportSettings importSettings, out GLTFAnimation.ImportResult[] animations) {
 			string directoryRoot = Directory.GetParent(filepath).ToString() + "/";
 
 			GLTFBuffer.ImportResult[] buffers = gltfObject.buffers.Select(x => x.Import(filepath)).ToArray();
@@ -85,7 +85,7 @@ namespace Siccity.GLTFUtility {
 			GLTFAccessor.ImportResult[] accessors = gltfObject.accessors.Select(x => x.Import(bufferViews)).ToArray();
 			GLTFImage.ImportResult[] images = gltfObject.images.Import(directoryRoot, bufferViews);
 			GLTFTexture.ImportResult[] textures = gltfObject.textures.Import(images);
-			GLTFMaterial.ImportResult materials = gltfObject.materials.Import(textures, shaderSettings);
+			GLTFMaterial.ImportResult materials = gltfObject.materials.Import(textures, importSettings.shaders);
 			GLTFMesh.ImportResult[] meshes = gltfObject.meshes.Import(accessors, materials);
 			GLTFSkin.ImportResult[] skins = gltfObject.skins.Import(accessors);
 			GLTFNode.ImportResult[] nodes = gltfObject.nodes.Import(meshes, skins);

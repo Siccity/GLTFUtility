@@ -190,11 +190,11 @@ namespace Siccity.GLTFUtility {
 	}
 
 	public static class GLTFMaterialExtensions {
-		public static GLTFMaterial.ImportResult Import(this List<GLTFMaterial> materials, GLTFTexture.ImportResult[] textures, ShaderSettings shaderSettings) {
+		public static GLTFMaterial.ImportResult Import(this List<GLTFMaterial> materials, GLTFTexture.ImportResult[] textures, ShaderSettings shaders) {
 			GLTFMaterial.ImportResult result = new GLTFMaterial.ImportResult();
 			result.materials = new Material[materials.Count];
 			for (int i = 0; i < materials.Count; i++) {
-				result.materials[i] = materials[i].CreateMaterial(textures, shaderSettings);
+				result.materials[i] = materials[i].CreateMaterial(textures, shaders);
 				if (materials[i].name == null) materials[i].name = "material" + i;
 			}
 			return result;
