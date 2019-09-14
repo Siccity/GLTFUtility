@@ -47,13 +47,14 @@ namespace Siccity.GLTFUtility {
 				Debug.LogWarning("Importer does not support gltf version " + version);
 				return null;
 			}
-			uint length = System.BitConverter.ToUInt32(bytes, 8);
+			// What do we even need the length for.
+			//uint length = System.BitConverter.ToUInt32(bytes, 8);
 
 			// Chunk 0 (json)
 			uint chunkLength = System.BitConverter.ToUInt32(bytes, 12);
-			string chunkType = Encoding.ASCII.GetString(bytes.SubArray(16, 4));
+			// This prints out JSON. So predictable.
+			//string chunkType = Encoding.ASCII.GetString(bytes.SubArray(16, 4));
 			string json = Encoding.ASCII.GetString(bytes.SubArray(20, (int) chunkLength));
-
 			// Parse json
 			GLTFObject gltfObject = JsonConvert.DeserializeObject<GLTFObject>(json);
 			return gltfObject.LoadInternal(filepath, importSettings, out animations);
