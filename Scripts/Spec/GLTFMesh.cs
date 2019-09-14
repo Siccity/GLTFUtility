@@ -8,11 +8,14 @@ namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#mesh
 	public class GLTFMesh {
 
+#region Serialization
 		[JsonProperty(Required = Required.Always)] public List<GLTFPrimitive> primitives;
 		/// <summary> Morph target weights </summary>
 		public List<float> weights;
 		public string name;
+#endregion
 
+#region Import
 		public class ImportResult {
 			public Material[] materials;
 			public Mesh mesh;
@@ -158,6 +161,38 @@ namespace Siccity.GLTFUtility {
 				uv[i].y = 1 - uv[i].y;
 			}
 		}
+#endregion
+
+#region Export
+		public class ExportResult : GLTFMesh {
+			[JsonIgnore] public Mesh mesh;
+		}
+
+		public static List<ExportResult> Export(List<GLTFNode.ExportResult> nodes) {
+			List<ExportResult> results = new List<ExportResult>();
+			for (int i = 0; i < nodes.Count; i++) {
+				if (nodes[i].filter) {
+					Mesh mesh = nodes[i].filter.sharedMesh;
+					if (mesh) {
+						nodes[i].mesh = results.Count;
+						results.Add(Export(mesh));
+					}
+				}
+			}
+			return results;
+		}
+
+		public static ExportResult Export(Mesh mesh) {
+			ExportResult result = new ExportResult();
+			result.name = mesh.name;
+			result.primitives = new List<GLTFPrimitive>();
+			for (int i = 0; i < mesh.subMeshCount; i++) {
+				GLTFPrimitive primitive = new GLTFPrimitive();
+				result.primitives.Add(primitive);
+			}
+			return result;
+		}
+#endregion
 	}
 
 	public static class GLTFMeshExtensions {

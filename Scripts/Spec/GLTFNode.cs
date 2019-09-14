@@ -9,6 +9,7 @@ namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#node
 	public class GLTFNode {
 
+#region Serialization
 		public string name;
 		/// <summary> Indices of child nodes </summary>
 		public int[] children;
@@ -28,7 +29,9 @@ namespace Siccity.GLTFUtility {
 		public bool ShouldSerializetranslation() { return translation != Vector3.zero; }
 		public bool ShouldSerializerotation() { return rotation != Quaternion.identity; }
 		public bool ShouldSerializescale() { return scale != Vector3.one; }
+#endregion
 
+#region Import
 		public class ImportResult {
 			public int? parent;
 			public int[] children;
@@ -43,21 +46,30 @@ namespace Siccity.GLTFUtility {
 			transform.localRotation = rotation;
 			transform.localScale = scale;
 		}
+#endregion
 
 #region Export
-		public static List<GLTFNode> CreateNodeList(Transform root) {
-			List<GLTFNode> nodes = new List<GLTFNode>();
+		public class ExportResult : GLTFNode {
+			[JsonIgnore] public MeshRenderer renderer;
+			[JsonIgnore] public MeshFilter filter;
+			[JsonIgnore] public SkinnedMeshRenderer skinnedRenderer;
+		}
+
+		public static List<ExportResult> Export(Transform root) {
+			List<ExportResult> nodes = new List<ExportResult>();
 			CreateNodeListRecursive(root, nodes);
 			return nodes;
 		}
 
-		private static void CreateNodeListRecursive(Transform transform, List<GLTFNode> nodes) {
-			GLTFNode node = new GLTFNode();
+		private static void CreateNodeListRecursive(Transform transform, List<ExportResult> nodes) {
+			ExportResult node = new ExportResult();
 			node.name = transform.name;
 			node.translation = transform.localPosition;
 			node.rotation = transform.localRotation;
 			node.scale = transform.localScale;
-
+			node.renderer = transform.gameObject.GetComponent<MeshRenderer>();
+			node.filter = transform.gameObject.GetComponent<MeshFilter>();
+			node.skinnedRenderer = transform.gameObject.GetComponent<SkinnedMeshRenderer>();
 			nodes.Add(node);
 			if (transform.childCount > 0) {
 				if (transform.childCount > 0) {
