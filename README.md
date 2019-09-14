@@ -24,7 +24,7 @@ Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-for
     * (git) Clone into your assets folder `git clone git@github.com:Siccity/GLTFUtility.git`
     * (git) Add repo as submodule `git submodule add git@github.com:Siccity/GLTFUtility.git Assets/Submodules/GLTFUtility`
     * (package) If using Unity 2018.3 or later, you can add a new entry to the manifest.json file in your Packages folder
-  `"com.siccity.gltfutility": "https://github.com/siccity/gltfutility.git"`
+  `"com.siccity.gltfutility": "https://github.com/siccity/gltfutility.git"` [Manual](https://docs.unity3d.com/Manual/upm-git.html)
 
 **NOTICE** This is a work in progress. Expect bugs. Current features can be tracked below:
 
