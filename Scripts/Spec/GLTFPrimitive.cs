@@ -15,26 +15,26 @@ namespace Siccity.GLTFUtility {
 		public List<GLTFAttributes> targets;
 
 		public class GLTFAttributes {
-			public int POSITION = -1;
-			public int NORMAL = -1;
-			public int TANGENT = -1;
-			public int COLOR_0 = -1;
-			public int TEXCOORD_0 = -1;
-			public int TEXCOORD_1 = -1;
-			public int TEXCOORD_2 = -1;
-			public int TEXCOORD_3 = -1;
-			public int TEXCOORD_4 = -1;
-			public int TEXCOORD_5 = -1;
-			public int TEXCOORD_6 = -1;
-			public int TEXCOORD_7 = -1;
-			public int JOINTS_0 = -1;
-			public int JOINTS_1 = -1;
-			public int JOINTS_2 = -1;
-			public int JOINTS_3 = -1;
-			public int WEIGHTS_0 = -1;
-			public int WEIGHTS_1 = -1;
-			public int WEIGHTS_2 = -1;
-			public int WEIGHTS_3 = -1;
+			public int? POSITION;
+			public int? NORMAL;
+			public int? TANGENT;
+			public int? COLOR_0;
+			public int? TEXCOORD_0;
+			public int? TEXCOORD_1;
+			public int? TEXCOORD_2;
+			public int? TEXCOORD_3;
+			public int? TEXCOORD_4;
+			public int? TEXCOORD_5;
+			public int? TEXCOORD_6;
+			public int? TEXCOORD_7;
+			public int? JOINTS_0;
+			public int? JOINTS_1;
+			public int? JOINTS_2;
+			public int? JOINTS_3;
+			public int? WEIGHTS_0;
+			public int? WEIGHTS_1;
+			public int? WEIGHTS_2;
+			public int? WEIGHTS_3;
 		}
 	}
 }

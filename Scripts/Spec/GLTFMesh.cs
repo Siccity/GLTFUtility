@@ -50,37 +50,37 @@ namespace Siccity.GLTFUtility {
 					int vertStartIndex = verts.Count;
 
 					// Verts - (Z points backwards in GLTF)
-					if (primitive.attributes.POSITION != -1) {
-						IEnumerable<Vector3> newVerts = accessors[primitive.attributes.POSITION].ReadVec3().Select(v => { v.z = -v.z; return v; });
+					if (primitive.attributes.POSITION.HasValue) {
+						IEnumerable<Vector3> newVerts = accessors[primitive.attributes.POSITION.Value].ReadVec3().Select(v => { v.z = -v.z; return v; });
 						verts.AddRange(newVerts);
 					}
 
 					int vertCount = verts.Count;
 
 					// Tris - (Invert all triangles. Instead of flipping each triangle, just flip the entire array. Much easier)
-					if (primitive.indices != -1) {
+					if (primitive.indices.HasValue) {
 						submeshTris.Add(new List<int>(accessors[primitive.indices.Value].ReadInt().Reverse().Select(x => x + vertStartIndex)));
 					}
 
 					/// Normals - (Z points backwards in GLTF)
-					if (primitive.attributes.NORMAL != -1) {
-						normals.AddRange(accessors[primitive.attributes.NORMAL].ReadVec3().Select(v => { v.z = -v.z; return v; }));
+					if (primitive.attributes.NORMAL.HasValue) {
+						normals.AddRange(accessors[primitive.attributes.NORMAL.Value].ReadVec3().Select(v => { v.z = -v.z; return v; }));
 					} else mesh.RecalculateNormals();
 
 					// Tangents - (Z points backwards in GLTF)
-					if (primitive.attributes.TANGENT != -1) {
-						tangents.AddRange(accessors[primitive.attributes.TANGENT].ReadVec4().Select(v => { v.z = -v.z; return v; }));
+					if (primitive.attributes.TANGENT.HasValue) {
+						tangents.AddRange(accessors[primitive.attributes.TANGENT.Value].ReadVec4().Select(v => { v.z = -v.z; return v; }));
 					} else mesh.RecalculateTangents();
 
 					// Vertex colors
-					if (primitive.attributes.COLOR_0 != -1) {
-						colors.AddRange(accessors[primitive.attributes.COLOR_0].ReadColor());
+					if (primitive.attributes.COLOR_0.HasValue) {
+						colors.AddRange(accessors[primitive.attributes.COLOR_0.Value].ReadColor());
 					}
 
 					// Weights
-					if (primitive.attributes.WEIGHTS_0 != -1 && primitive.attributes.JOINTS_0 != -1) {
-						Vector4[] weights0 = accessors[primitive.attributes.WEIGHTS_0].ReadVec4();
-						Vector4[] joints0 = accessors[primitive.attributes.JOINTS_0].ReadVec4();
+					if (primitive.attributes.WEIGHTS_0.HasValue && primitive.attributes.JOINTS_0.HasValue) {
+						Vector4[] weights0 = accessors[primitive.attributes.WEIGHTS_0.Value].ReadVec4();
+						Vector4[] joints0 = accessors[primitive.attributes.JOINTS_0.Value].ReadVec4();
 						if (joints0.Length == weights0.Length) {
 							BoneWeight[] boneWeights = new BoneWeight[weights0.Length];
 							for (int k = 0; k < boneWeights.Length; k++) {
@@ -134,14 +134,14 @@ namespace Siccity.GLTFUtility {
 			return mesh;
 		}
 
-		private void ReadUVs(ref List<Vector2> uvs, GLTFAccessor.ImportResult[] accessors, int texcoord, int vertCount) {
+		private void ReadUVs(ref List<Vector2> uvs, GLTFAccessor.ImportResult[] accessors, int? texcoord, int vertCount) {
 			// If there are no valid texcoords
-			if (texcoord == -1) {
+			if (!texcoord.HasValue) {
 				// If there are already uvs, add some empty filler uvs so it still matches the vertex array
 				if (uvs != null) uvs.AddRange(new Vector2[vertCount - uvs.Count]);
 				return;
 			}
-			Vector2[] _uvs = accessors[texcoord].ReadVec2();
+			Vector2[] _uvs = accessors[texcoord.Value].ReadVec2();
 			FlipY(ref _uvs);
 			if (uvs == null) uvs = new List<Vector2>(_uvs);
 			else uvs.AddRange(_uvs);
