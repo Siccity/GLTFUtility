@@ -17,9 +17,16 @@ namespace Siccity.GLTFUtility {
 		}
 		private static ShaderSettings _default;
 
-		public Shader metallic;
-		public Shader metallicBlend;
-		public Shader specular;
-		public Shader specularBlend;
+		[SerializeField] private Shader metallic;
+		public Shader Metallic { get { return metallic != null ? metallic : Default.metallic; } }
+
+		[SerializeField] private Shader metallicBlend;
+		public Shader MetallicBlend { get { return metallicBlend != null ? metallicBlend : Default.metallicBlend; } }
+
+		[SerializeField] private Shader specular;
+		public Shader Specular { get { return specular != null ? specular : Default.specular; } }
+
+		[SerializeField] private Shader specularBlend;
+		public Shader SpecularBlend { get { return specularBlend != null ? specularBlend : Default.specularBlend; } }
 	}
 }

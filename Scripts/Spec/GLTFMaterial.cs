@@ -102,8 +102,8 @@ namespace Siccity.GLTFUtility {
 				if (GraphicsSettings.renderPipelineAsset) sh = GraphicsSettings.renderPipelineAsset.defaultShader;
 #endif
 				if (sh == null) {
-					if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.metallicBlend;
-					else sh = shaderSettings.metallic;
+					if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.MetallicBlend;
+					else sh = shaderSettings.Metallic;
 				}
 
 				// Material
@@ -156,8 +156,8 @@ namespace Siccity.GLTFUtility {
 				if (GraphicsSettings.renderPipelineAsset) sh = GraphicsSettings.renderPipelineAsset.defaultShader;
 #endif
 				if (sh == null) {
-					if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.specularBlend;
-					else sh = shaderSettings.specular;
+					if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.SpecularBlend;
+					else sh = shaderSettings.Specular;
 				}
 
 				// Material

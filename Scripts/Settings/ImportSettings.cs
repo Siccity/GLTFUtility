@@ -7,6 +7,6 @@ namespace Siccity.GLTFUtility {
 	[Serializable]
 	public class ImportSettings {
 		public bool materials = true;
-		public ShaderSettings shaders = ShaderSettings.Default;
+		public ShaderSettings shaders;
 	}
 }
