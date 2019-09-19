@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -80,21 +81,23 @@ namespace Siccity.GLTFUtility {
 			return gltfObject.LoadInternal(filepath, importSettings, out animations);
 		}
 
-		public static void ImportGLTFAsync(MonoBehaviour go, string filepath, ImportSettings importSettings) {
+		/* public static void ImportGLTFAsync(MonoBehaviour go, string filepath, ImportSettings importSettings) {
 			string json = File.ReadAllText(filepath);
 
 			// Parse json
 			GLTFObject gltfObject = JsonConvert.DeserializeObject<GLTFObject>(json);
 			go.StartCoroutine(gltfObject.LoadInternalAsync(filepath, importSettings));
-		}
+		} */
 
 		private static GameObject LoadInternal(this GLTFObject gltfObject, string filepath, ImportSettings importSettings, out GLTFAnimation.ImportResult[] animations) {
 			string directoryRoot = Directory.GetParent(filepath).ToString() + "/";
 
-			GLTFBuffer.ImportResult[] buffers = gltfObject.buffers.Select(x => x.Import(filepath)).ToArray();
-			GLTFBufferView.ImportResult[] bufferViews = gltfObject.bufferViews.Select(x => x.Import(buffers)).ToArray();
-			GLTFAccessor.ImportResult[] accessors = gltfObject.accessors.Select(x => x.Import(bufferViews)).ToArray();
-			GLTFImage.ImportResult[] images = gltfObject.images.Import(directoryRoot, bufferViews);
+			Task<GLTFBuffer.ImportResult[]> bufferTask = gltfObject.buffers.ImportTask(filepath);
+			bufferTask.RunSynchronously();
+			Task<GLTFBufferView.ImportResult[]> bufferViewTask = gltfObject.bufferViews.ImportTask(bufferTask.Result);
+			bufferViewTask.RunSynchronously();
+			GLTFAccessor.ImportResult[] accessors = gltfObject.accessors.Select(x => x.Import(bufferViewTask.Result)).ToArray();
+			GLTFImage.ImportResult[] images = gltfObject.images.Import(directoryRoot, bufferViewTask.Result);
 			GLTFTexture.ImportResult[] textures = gltfObject.textures.Import(images);
 			GLTFMaterial.ImportResult materials = gltfObject.materials.Import(textures, importSettings);
 			GLTFMesh.ImportResult[] meshes = gltfObject.meshes.Import(accessors, materials, importSettings);
@@ -103,35 +106,6 @@ namespace Siccity.GLTFUtility {
 			animations = gltfObject.animations.Import(accessors, nodes);
 
 			return nodes.GetRoot();
-		}
-
-		private static IEnumerator LoadInternalAsync(this GLTFObject gltfObject, string filepath, ImportSettings importSettings) {
-			System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-			stopwatch.Start();
-			string directoryRoot = Directory.GetParent(filepath).ToString() + "/";
-
-			GLTFBuffer.ImportResult[] buffers = null;
-
-			Thread thread1 = new Thread(() => buffers = gltfObject.buffers.Select(x => x.Import(filepath)).ToArray());
-			thread1.Start();
-			while (thread1.IsAlive) yield return null;
-			GLTFBufferView.ImportResult[] bufferViews = null;
-			thread1 = new Thread(() => bufferViews = gltfObject.bufferViews.Select(x => x.Import(buffers)).ToArray());
-			thread1.Start();
-			while (thread1.IsAlive) yield return null;
-			GLTFAccessor.ImportResult[] accessors = null;
-			thread1 = new Thread(() => accessors = gltfObject.accessors.Select(x => x.Import(bufferViews)).ToArray());
-			thread1.Start();
-			while (thread1.IsAlive) yield return null;
-			GLTFImage.ImportResult[] images = gltfObject.images.Import(directoryRoot, bufferViews);
-			GLTFTexture.ImportResult[] textures = gltfObject.textures.Import(images);
-			GLTFMaterial.ImportResult materials = gltfObject.materials.Import(textures, importSettings);
-			GLTFMesh.ImportResult[] meshes = gltfObject.meshes.Import(accessors, materials, importSettings);
-			GLTFSkin.ImportResult[] skins = gltfObject.skins.Import(accessors);
-			GLTFNode.ImportResult[] nodes = gltfObject.nodes.Import(meshes, skins);
-			GLTFAnimation.ImportResult[] animations = gltfObject.animations.Import(accessors, nodes);
-			GameObject root = nodes.GetRoot();
-			Debug.Log(stopwatch.Elapsed);
 		}
 	}
 }

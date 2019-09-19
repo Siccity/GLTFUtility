@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace Siccity.GLTFUtility {
@@ -39,5 +41,19 @@ namespace Siccity.GLTFUtility {
 			if (startIndex != 0) result.bytes = result.bytes.SubArray(startIndex, byteLength);
 			return result;
 		}
+	}
+
+	public static class GLTFBufferExtensions {
+#region Import
+		public static Task<GLTFBuffer.ImportResult[]> ImportTask(this List<GLTFBuffer> buffers, string filepath) {
+			return new Task<GLTFBuffer.ImportResult[]>(() => {
+				GLTFBuffer.ImportResult[] results = new GLTFBuffer.ImportResult[buffers.Count];
+				for (int i = 0; i < results.Length; i++) {
+					results[i] = buffers[i].Import(filepath);
+				}
+				return results;
+			});
+		}
+#endregion
 	}
 }

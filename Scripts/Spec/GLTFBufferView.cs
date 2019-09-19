@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace Siccity.GLTFUtility {
@@ -22,11 +24,24 @@ namespace Siccity.GLTFUtility {
 				else return bytes;
 			}
 		}
+	}
 
-		public ImportResult Import(GLTFBuffer.ImportResult[] buffers) {
-			ImportResult result = new ImportResult();
-			result.bytes = buffers[buffer].bytes.SubArray(this.byteOffset, byteLength);
-			return result;
+	public static class GLTFBufferViewExtensions {
+#region Import
+		public static Task<GLTFBufferView.ImportResult[]> ImportTask(this List<GLTFBufferView> bufferViews, GLTFBuffer.ImportResult[] buffers) {
+			return new Task<GLTFBufferView.ImportResult[]>(() => {
+				GLTFBufferView.ImportResult[] results = new GLTFBufferView.ImportResult[bufferViews.Count];
+				for (int i = 0; i < results.Length; i++) {
+					int byteOffset = bufferViews[i].byteOffset;
+					int byteLength = bufferViews[i].byteLength;
+					GLTFBuffer.ImportResult buffer = buffers[bufferViews[i].buffer];
+					GLTFBufferView.ImportResult result = new GLTFBufferView.ImportResult();
+					result.bytes = buffer.bytes.SubArray(byteOffset, byteLength);
+					results[i] = result;
+				}
+				return results;
+			});
 		}
+#endregion
 	}
 }
