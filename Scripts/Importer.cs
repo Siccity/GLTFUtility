@@ -81,31 +81,84 @@ namespace Siccity.GLTFUtility {
 			return gltfObject.LoadInternal(filepath, importSettings, out animations);
 		}
 
-		/* public static void ImportGLTFAsync(MonoBehaviour go, string filepath, ImportSettings importSettings) {
+		public static void ImportGLTFAsync(string filepath, ImportSettings importSettings, Action onFinished) {
 			string json = File.ReadAllText(filepath);
 
 			// Parse json
 			GLTFObject gltfObject = JsonConvert.DeserializeObject<GLTFObject>(json);
-			go.StartCoroutine(gltfObject.LoadInternalAsync(filepath, importSettings));
-		} */
+			gltfObject.LoadAsync(filepath, importSettings, onFinished);
+		}
 
 		private static GameObject LoadInternal(this GLTFObject gltfObject, string filepath, ImportSettings importSettings, out GLTFAnimation.ImportResult[] animations) {
 			string directoryRoot = Directory.GetParent(filepath).ToString() + "/";
 
-			Task<GLTFBuffer.ImportResult[]> bufferTask = gltfObject.buffers.ImportTask(filepath);
-			bufferTask.RunSynchronously();
-			Task<GLTFBufferView.ImportResult[]> bufferViewTask = gltfObject.bufferViews.ImportTask(bufferTask.Result);
-			bufferViewTask.RunSynchronously();
-			GLTFAccessor.ImportResult[] accessors = gltfObject.accessors.Select(x => x.Import(bufferViewTask.Result)).ToArray();
-			GLTFImage.ImportResult[] images = gltfObject.images.Import(directoryRoot, bufferViewTask.Result);
-			GLTFTexture.ImportResult[] textures = gltfObject.textures.Import(images);
+			GLTFBuffer.ImportTask bufferTask = new GLTFBuffer.ImportTask(gltfObject.buffers, filepath);
+			bufferTask.task.RunSynchronously();
+			GLTFBufferView.ImportTask bufferViewTask = new GLTFBufferView.ImportTask(gltfObject.bufferViews, bufferTask);
+			bufferViewTask.task.RunSynchronously();
+			GLTFAccessor.ImportTask accessorTask = new GLTFAccessor.ImportTask(gltfObject.accessors, bufferViewTask);
+			accessorTask.task.RunSynchronously();
+			GLTFImage.ImportTask imageTask = new GLTFImage.ImportTask(gltfObject.images, directoryRoot, bufferViewTask);
+			imageTask.task.RunSynchronously();
+			GLTFTexture.ImportResult[] textures = gltfObject.textures.Import(imageTask.task.Result);
 			GLTFMaterial.ImportResult materials = gltfObject.materials.Import(textures, importSettings);
-			GLTFMesh.ImportResult[] meshes = gltfObject.meshes.Import(accessors, materials, importSettings);
-			GLTFSkin.ImportResult[] skins = gltfObject.skins.Import(accessors);
+			GLTFMesh.ImportResult[] meshes = gltfObject.meshes.Import(accessorTask.task.Result, materials, importSettings);
+			GLTFSkin.ImportResult[] skins = gltfObject.skins.Import(accessorTask.task.Result);
 			GLTFNode.ImportResult[] nodes = gltfObject.nodes.Import(meshes, skins);
-			animations = gltfObject.animations.Import(accessors, nodes);
+			animations = gltfObject.animations.Import(accessorTask.task.Result, nodes);
 
 			return nodes.GetRoot();
+		}
+
+		private static void LoadAsync(this GLTFObject gltfObject, string filepath, ImportSettings importSettings, Action onFinished) {
+			// directory root is sometimes used for loading buffers from containing file, or local images
+			string directoryRoot = Directory.GetParent(filepath).ToString() + "/";
+
+			// Setup import tasks
+			List<ImportTask> importTasks = new List<ImportTask>();
+
+			GLTFBuffer.ImportTask bufferTask = new GLTFBuffer.ImportTask(gltfObject.buffers, filepath);
+			importTasks.Add(bufferTask);
+
+			GLTFBufferView.ImportTask bufferViewTask = new GLTFBufferView.ImportTask(gltfObject.bufferViews, bufferTask);
+			importTasks.Add(bufferViewTask);
+
+			GLTFAccessor.ImportTask accessorTask = new GLTFAccessor.ImportTask(gltfObject.accessors, bufferViewTask);
+			importTasks.Add(accessorTask);
+
+			// Ignite
+			for (int i = 0; i < importTasks.Count; i++) {
+				TaskSupervisor(importTasks[i]).RunCoroutine();
+			}
+			if (onFinished != null) TaskIsDone(importTasks, onFinished).RunCoroutine();
+		}
+
+		public abstract class ImportTask {
+			public abstract Task Task { get; }
+			public bool IsCompleted { get { return Task.IsCompleted; } }
+			public readonly ImportTask[] waitFor;
+			public bool IsReady { get { return waitFor.All(x => x.IsCompleted); } }
+
+			public ImportTask(params ImportTask[] waitFor) {
+				this.waitFor = waitFor;
+			}
+
+			/// <summary> Called from the main thread </summary>
+			public abstract void OnCompleted();
+		}
+
+		private static IEnumerator TaskSupervisor(ImportTask importTask) {
+			// Wait for required results to complete
+			while (!importTask.IsReady) yield return null;
+			importTask.Task.Start();
+			while (!importTask.IsCompleted) yield return null;
+			importTask.OnCompleted();
+		}
+
+		private static IEnumerator TaskIsDone(List<ImportTask> tasks, Action onFinish) {
+			// Wait for required results to complete
+			while (!tasks.All(x => x.IsCompleted)) yield return null;
+			onFinish();
 		}
 	}
 }

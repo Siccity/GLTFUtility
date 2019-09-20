@@ -19,6 +19,7 @@ namespace Siccity.GLTFUtility {
 			public byte[] bytes;
 		}
 
+#region Import
 		public ImportResult Import(string filepath) {
 			ImportResult result = new ImportResult();
 
@@ -26,7 +27,7 @@ namespace Siccity.GLTFUtility {
 				// Load entire file
 				result.bytes = File.ReadAllBytes(filepath);
 			} else if (uri.StartsWith(embeddedPrefix)) {
-				// Load embedded 
+				// Load embedded
 				string b64 = uri.Substring(embeddedPrefix.Length, uri.Length - embeddedPrefix.Length);
 				result.bytes = Convert.FromBase64String(b64);
 			} else {
@@ -41,18 +42,22 @@ namespace Siccity.GLTFUtility {
 			if (startIndex != 0) result.bytes = result.bytes.SubArray(startIndex, byteLength);
 			return result;
 		}
-	}
 
-	public static class GLTFBufferExtensions {
-#region Import
-		public static Task<GLTFBuffer.ImportResult[]> ImportTask(this List<GLTFBuffer> buffers, string filepath) {
-			return new Task<GLTFBuffer.ImportResult[]>(() => {
-				GLTFBuffer.ImportResult[] results = new GLTFBuffer.ImportResult[buffers.Count];
-				for (int i = 0; i < results.Length; i++) {
-					results[i] = buffers[i].Import(filepath);
-				}
-				return results;
-			});
+		public class ImportTask : Importer.ImportTask {
+			public override Task Task { get { return task; } }
+			public Task<ImportResult[]> task;
+
+			public ImportTask(List<GLTFBuffer> buffers, string filepath) : base() {
+				task = new Task<ImportResult[]>(() => {
+					ImportResult[] results = new ImportResult[buffers.Count];
+					for (int i = 0; i < results.Length; i++) {
+						results[i] = buffers[i].Import(filepath);
+					}
+					return results;
+				});
+			}
+
+			public override void OnCompleted() { }
 		}
 #endregion
 	}

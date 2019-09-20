@@ -2,13 +2,19 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#image
 	public class GLTFImage {
-
+		/// <summary>
+		/// The uri of the image.
+		/// Relative paths are relative to the .gltf file.
+		/// Instead of referencing an external file, the uri can also be a data-uri.
+		/// The image format must be jpg or png.
+		/// </summary>
 		public string uri;
 		public string mimeType;
 		public int? bufferView;
@@ -83,17 +89,22 @@ namespace Siccity.GLTFUtility {
 				return null;
 			}
 		}
-	}
 
-	public static class GLTFImageExtensions {
-		public static GLTFImage.ImportResult[] Import(this List<GLTFImage> images, string directoryRoot, GLTFBufferView.ImportResult[] bufferViews) {
-			if (images == null) return null;
+		public class ImportTask : Importer.ImportTask {
+			public override Task Task { get { return task; } }
+			public Task<ImportResult[]> task;
 
-			GLTFImage.ImportResult[] results = new GLTFImage.ImportResult[images.Count];
-			for (int i = 0; i < images.Count; i++) {
-				results[i] = images[i].GetImage(directoryRoot, bufferViews);
+			public ImportTask(List<GLTFImage> images, string directoryRoot, GLTFBufferView.ImportTask bufferViewTask) : base(bufferViewTask) {
+				task = new Task<ImportResult[]>(() => {
+					ImportResult[] results = new ImportResult[images.Count];
+					for (int i = 0; i < results.Length; i++) {
+						results[i] = images[i].GetImage(directoryRoot, bufferViewTask.task.Result);
+					}
+					return results;
+				});
 			}
-			return results;
+
+			public override void OnCompleted() { }
 		}
 	}
 }

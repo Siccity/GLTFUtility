@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using UnityEngine;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#bufferview
@@ -24,24 +25,27 @@ namespace Siccity.GLTFUtility {
 				else return bytes;
 			}
 		}
-	}
 
-	public static class GLTFBufferViewExtensions {
-#region Import
-		public static Task<GLTFBufferView.ImportResult[]> ImportTask(this List<GLTFBufferView> bufferViews, GLTFBuffer.ImportResult[] buffers) {
-			return new Task<GLTFBufferView.ImportResult[]>(() => {
-				GLTFBufferView.ImportResult[] results = new GLTFBufferView.ImportResult[bufferViews.Count];
-				for (int i = 0; i < results.Length; i++) {
-					int byteOffset = bufferViews[i].byteOffset;
-					int byteLength = bufferViews[i].byteLength;
-					GLTFBuffer.ImportResult buffer = buffers[bufferViews[i].buffer];
-					GLTFBufferView.ImportResult result = new GLTFBufferView.ImportResult();
-					result.bytes = buffer.bytes.SubArray(byteOffset, byteLength);
-					results[i] = result;
-				}
-				return results;
-			});
+		public class ImportTask : Importer.ImportTask {
+			public override Task Task { get { return task; } }
+			public Task<ImportResult[]> task;
+
+			public ImportTask(List<GLTFBufferView> bufferViews, GLTFBuffer.ImportTask bufferTask) : base(bufferTask) {
+				task = new Task<ImportResult[]>(() => {
+					ImportResult[] results = new ImportResult[bufferViews.Count];
+					for (int i = 0; i < results.Length; i++) {
+						int byteOffset = bufferViews[i].byteOffset;
+						int byteLength = bufferViews[i].byteLength;
+						GLTFBuffer.ImportResult buffer = bufferTask.task.Result[bufferViews[i].buffer];
+						ImportResult result = new ImportResult();
+						result.bytes = buffer.bytes.SubArray(byteOffset, byteLength);
+						results[i] = result;
+					}
+					return results;
+				});
+			}
+
+			public override void OnCompleted() { }
 		}
-#endregion
 	}
 }

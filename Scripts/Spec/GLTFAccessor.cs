@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Siccity.GLTFUtility.Converters;
 using UnityEngine;
@@ -19,6 +21,28 @@ namespace Siccity.GLTFUtility {
 		public Sparse sparse;
 #endregion
 
+		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#sparse
+		public class Sparse {
+			[JsonProperty(Required = Required.Always)] public int count;
+			[JsonProperty(Required = Required.Always)] public Indices indices;
+			[JsonProperty(Required = Required.Always)] public Values values;
+
+			// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#values
+			public class Values {
+				[JsonProperty(Required = Required.Always)] public int bufferView;
+				public int byteOffset = 0;
+
+			}
+
+			// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#indices
+			public class Indices {
+				[JsonProperty(Required = Required.Always)] public int bufferView;
+				[JsonProperty(Required = Required.Always)] public int componentType;
+				public int byteOffset = 0;
+			}
+		}
+
+#region Import
 		public class ImportResult {
 			public byte[] bytes;
 			public int count;
@@ -307,25 +331,22 @@ namespace Siccity.GLTFUtility {
 			return result;
 		}
 
-		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#sparse
-		public class Sparse {
-			[JsonProperty(Required = Required.Always)] public int count;
-			[JsonProperty(Required = Required.Always)] public Indices indices;
-			[JsonProperty(Required = Required.Always)] public Values values;
+		public class ImportTask : Importer.ImportTask {
+			public override Task Task { get { return task; } }
+			public Task<ImportResult[]> task;
 
-			// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#values
-			public class Values {
-				[JsonProperty(Required = Required.Always)] public int bufferView;
-				public int byteOffset = 0;
-
+			public ImportTask(List<GLTFAccessor> accessors, GLTFBufferView.ImportTask bufferViewTask) : base(bufferViewTask) {
+				task = new Task<ImportResult[]>(() => {
+					ImportResult[] results = new ImportResult[accessors.Count];
+					for (int i = 0; i < results.Length; i++) {
+						results[i] = accessors[i].Import(bufferViewTask.task.Result);
+					}
+					return results;
+				});
 			}
 
-			// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#indices
-			public class Indices {
-				[JsonProperty(Required = Required.Always)] public int bufferView;
-				[JsonProperty(Required = Required.Always)] public int componentType;
-				public int byteOffset = 0;
-			}
+			public override void OnCompleted() { }
 		}
+#endregion
 	}
 }
