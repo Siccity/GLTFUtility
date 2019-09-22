@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Siccity.GLTFUtility.Converters;
 using UnityEngine;
@@ -27,7 +28,7 @@ namespace Siccity.GLTFUtility {
 		public MaterialExtensions extensions;
 
 		public class ImportResult {
-			public Material[] materials;
+			public Material material;
 		}
 
 		public Material CreateMaterial(GLTFTexture.ImportResult[] textures, ShaderSettings shaderSettings) {
@@ -193,19 +194,24 @@ namespace Siccity.GLTFUtility {
 			public int texCoord = 0;
 			public float scale = 1;
 		}
-	}
 
-	public static class GLTFMaterialExtensions {
-		public static GLTFMaterial.ImportResult Import(this List<GLTFMaterial> materials, GLTFTexture.ImportResult[] textures, ImportSettings importSettings) {
-			if (!importSettings.materials) return null;
+		public class ImportTask : Importer.ImportTask {
+			public override Task Task { get { return task; } }
+			public Task<ImportResult[]> task;
 
-			GLTFMaterial.ImportResult result = new GLTFMaterial.ImportResult();
-			result.materials = new Material[materials.Count];
-			for (int i = 0; i < materials.Count; i++) {
-				result.materials[i] = materials[i].CreateMaterial(textures, importSettings.shaders);
-				if (materials[i].name == null) materials[i].name = "material" + i;
+			public ImportTask(List<GLTFMaterial> materials, GLTFTexture.ImportTask textureTask, ImportSettings importSettings) : base(textureTask) {
+				task = new Task<ImportResult[]>(() => {
+					ImportResult[] results = new ImportResult[materials.Count];
+					for (int i = 0; i < results.Length; i++) {
+						results[i] = new ImportResult();
+						results[i].material = materials[i].CreateMaterial(textureTask.task.Result, importSettings.shaders);
+						if (results[i].material.name == null) results[i].material.name = "material" + i;
+					}
+					return results;
+				});
 			}
-			return result;
+
+			protected override void OnCompleted() { }
 		}
 	}
 }

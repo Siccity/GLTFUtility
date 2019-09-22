@@ -45,7 +45,7 @@ namespace Siccity.GLTFUtility {
 				});
 			}
 
-			public override void OnCompleted() { }
+			protected override void OnCompleted() { }
 		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -23,17 +24,22 @@ namespace Siccity.GLTFUtility {
 			}
 			return null;
 		}
-	}
 
-	public static class GLTFTextureExtensions {
-		public static GLTFTexture.ImportResult[] Import(this List<GLTFTexture> textures, GLTFImage.ImportResult[] images) {
-			if (textures == null) return null;
+		public class ImportTask : Importer.ImportTask {
+			public override Task Task { get { return task; } }
+			public Task<ImportResult[]> task;
 
-			GLTFTexture.ImportResult[] results = new GLTFTexture.ImportResult[textures.Count];
-			for (int i = 0; i < textures.Count; i++) {
-				results[i] = textures[i].Import(images);
+			public ImportTask(List<GLTFTexture> textures, GLTFImage.ImportTask imageTask) : base(imageTask) {
+				task = new Task<ImportResult[]>(() => {
+					ImportResult[] results = new ImportResult[textures.Count];
+					for (int i = 0; i < results.Length; i++) {
+						results[i] = textures[i].Import(imageTask.task.Result);
+					}
+					return results;
+				});
 			}
-			return results;
+
+			protected override void OnCompleted() { }
 		}
 	}
 }

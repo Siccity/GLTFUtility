@@ -196,7 +196,7 @@ namespace Siccity.GLTFUtility {
 	}
 
 	public static class GLTFMeshExtensions {
-		public static GLTFMesh.ImportResult[] Import(this List<GLTFMesh> meshes, GLTFAccessor.ImportResult[] accessors, GLTFMaterial.ImportResult materials, ImportSettings importSettings) {
+		public static GLTFMesh.ImportResult[] Import(this List<GLTFMesh> meshes, GLTFAccessor.ImportResult[] accessors, GLTFMaterial.ImportResult[] materials, ImportSettings importSettings) {
 			GLTFMesh.ImportResult[] results = new GLTFMesh.ImportResult[meshes.Count];
 			for (int i = 0; i < results.Length; i++) {
 				results[i] = new GLTFMesh.ImportResult();
@@ -205,7 +205,7 @@ namespace Siccity.GLTFUtility {
 				for (int k = 0; k < meshes[i].primitives.Count; k++) {
 					int? matIndex = meshes[i].primitives[k].material;
 					if (matIndex.HasValue && materials != null) {
-						results[i].materials[k] = materials.materials[matIndex.Value];
+						results[i].materials[k] = materials[matIndex.Value].material;
 					} else {
 						results[i].materials[k] = GLTFMaterial.defaultMaterial;
 					}
