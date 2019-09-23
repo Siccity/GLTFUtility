@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -161,6 +162,34 @@ namespace Siccity.GLTFUtility {
 				uv[i].y = 1 - uv[i].y;
 			}
 		}
+
+		public class ImportTask : Importer.ImportTask {
+			public override Task Task { get { return task; } }
+			public Task<ImportResult[]> task;
+
+			public ImportTask(List<GLTFMesh> meshes, GLTFAccessor.ImportTask accessorTask, GLTFMaterial.ImportTask materialTask, ImportSettings importSettings) : base(accessorTask, materialTask) {
+				task = new Task<ImportResult[]>(() => {
+					ImportResult[] results = new ImportResult[meshes.Count];
+					for (int i = 0; i < results.Length; i++) {
+						results[i] = new GLTFMesh.ImportResult();
+						results[i].mesh = meshes[i].CreateMesh(accessorTask.task.Result);
+						results[i].materials = new Material[meshes[i].primitives.Count];
+						for (int k = 0; k < meshes[i].primitives.Count; k++) {
+							int? matIndex = meshes[i].primitives[k].material;
+							if (matIndex.HasValue && materialTask.task.Result != null) {
+								results[i].materials[k] = materialTask.task.Result[matIndex.Value].material;
+							} else {
+								results[i].materials[k] = GLTFMaterial.defaultMaterial;
+							}
+						}
+						if (meshes[i].name == null) meshes[i].name = "mesh" + i;
+					}
+					return results;
+				});
+			}
+
+			protected override void OnCompleted() { }
+		}
 #endregion
 
 #region Export
@@ -193,26 +222,5 @@ namespace Siccity.GLTFUtility {
 			return result;
 		}
 #endregion
-	}
-
-	public static class GLTFMeshExtensions {
-		public static GLTFMesh.ImportResult[] Import(this List<GLTFMesh> meshes, GLTFAccessor.ImportResult[] accessors, GLTFMaterial.ImportResult[] materials, ImportSettings importSettings) {
-			GLTFMesh.ImportResult[] results = new GLTFMesh.ImportResult[meshes.Count];
-			for (int i = 0; i < results.Length; i++) {
-				results[i] = new GLTFMesh.ImportResult();
-				results[i].mesh = meshes[i].CreateMesh(accessors);
-				results[i].materials = new Material[meshes[i].primitives.Count];
-				for (int k = 0; k < meshes[i].primitives.Count; k++) {
-					int? matIndex = meshes[i].primitives[k].material;
-					if (matIndex.HasValue && materials != null) {
-						results[i].materials[k] = materials[matIndex.Value].material;
-					} else {
-						results[i].materials[k] = GLTFMaterial.defaultMaterial;
-					}
-				}
-				if (meshes[i].name == null) meshes[i].name = "mesh" + i;
-			}
-			return results;
-		}
 	}
 }

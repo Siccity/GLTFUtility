@@ -114,8 +114,10 @@ namespace Siccity.GLTFUtility {
 
 #region Sync
 		private static GameObject LoadInternal(this GLTFObject gltfObject, string filepath, ImportSettings importSettings, out GLTFAnimation.ImportResult[] animations) {
+			// directory root is sometimes used for loading buffers from containing file, or local images
 			string directoryRoot = Directory.GetParent(filepath).ToString() + "/";
 
+			// Import tasks synchronously
 			GLTFBuffer.ImportTask bufferTask = new GLTFBuffer.ImportTask(gltfObject.buffers, filepath);
 			bufferTask.RunSynchronously();
 			GLTFBufferView.ImportTask bufferViewTask = new GLTFBufferView.ImportTask(gltfObject.bufferViews, bufferTask);
@@ -128,9 +130,10 @@ namespace Siccity.GLTFUtility {
 			textureTask.RunSynchronously();
 			GLTFMaterial.ImportTask materialTask = new GLTFMaterial.ImportTask(gltfObject.materials, textureTask, importSettings);
 			materialTask.RunSynchronously();
-			GLTFMesh.ImportResult[] meshes = gltfObject.meshes.Import(accessorTask.task.Result, materialTask.task.Result, importSettings);
+			GLTFMesh.ImportTask meshTask = new GLTFMesh.ImportTask(gltfObject.meshes, accessorTask, materialTask, importSettings);
+			meshTask.RunSynchronously();
 			GLTFSkin.ImportResult[] skins = gltfObject.skins.Import(accessorTask.task.Result);
-			GLTFNode.ImportResult[] nodes = gltfObject.nodes.Import(meshes, skins);
+			GLTFNode.ImportResult[] nodes = gltfObject.nodes.Import(meshTask.task.Result, skins);
 			animations = gltfObject.animations.Import(accessorTask.task.Result, nodes);
 
 			return nodes.GetRoot();
@@ -157,6 +160,8 @@ namespace Siccity.GLTFUtility {
 			importTasks.Add(textureTask);
 			GLTFMaterial.ImportTask materialTask = new GLTFMaterial.ImportTask(gltfObject.materials, textureTask, importSettings);
 			importTasks.Add(materialTask);
+			GLTFMesh.ImportTask meshTask = new GLTFMesh.ImportTask(gltfObject.meshes, accessorTask, materialTask, importSettings);
+			importTasks.Add(meshTask);
 
 			// Ignite
 			for (int i = 0; i < importTasks.Count; i++) {
