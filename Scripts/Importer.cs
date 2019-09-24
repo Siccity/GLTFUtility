@@ -132,11 +132,13 @@ namespace Siccity.GLTFUtility {
 			materialTask.RunSynchronously();
 			GLTFMesh.ImportTask meshTask = new GLTFMesh.ImportTask(gltfObject.meshes, accessorTask, materialTask, importSettings);
 			meshTask.RunSynchronously();
-			GLTFSkin.ImportResult[] skins = gltfObject.skins.Import(accessorTask.task.Result);
-			GLTFNode.ImportResult[] nodes = gltfObject.nodes.Import(meshTask.task.Result, skins);
-			animations = gltfObject.animations.Import(accessorTask.task.Result, nodes);
+			GLTFSkin.ImportTask skinTask = new GLTFSkin.ImportTask(gltfObject.skins, accessorTask);
+			skinTask.RunSynchronously();
+			GLTFNode.ImportTask nodeTask = new GLTFNode.ImportTask(gltfObject.nodes, meshTask, skinTask);
+			nodeTask.RunSynchronously();
+			animations = gltfObject.animations.Import(accessorTask.task.Result, nodeTask.task.Result);
 
-			return nodes.GetRoot();
+			return nodeTask.task.Result.GetRoot();
 		}
 #endregion
 
@@ -162,6 +164,10 @@ namespace Siccity.GLTFUtility {
 			importTasks.Add(materialTask);
 			GLTFMesh.ImportTask meshTask = new GLTFMesh.ImportTask(gltfObject.meshes, accessorTask, materialTask, importSettings);
 			importTasks.Add(meshTask);
+			GLTFSkin.ImportTask skinTask = new GLTFSkin.ImportTask(gltfObject.skins, accessorTask);
+			importTasks.Add(skinTask);
+			GLTFNode.ImportTask nodeTask = new GLTFNode.ImportTask(gltfObject.nodes, meshTask, skinTask);
+			importTasks.Add(nodeTask);
 
 			// Ignite
 			for (int i = 0; i < importTasks.Count; i++) {

@@ -201,6 +201,8 @@ namespace Siccity.GLTFUtility {
 
 			public ImportTask(List<GLTFMaterial> materials, GLTFTexture.ImportTask textureTask, ImportSettings importSettings) : base(textureTask) {
 				task = new Task<ImportResult[]>(() => {
+					if (materials == null) return new ImportResult[0];
+
 					ImportResult[] results = new ImportResult[materials.Count];
 					for (int i = 0; i < results.Length; i++) {
 						results[i] = new ImportResult();

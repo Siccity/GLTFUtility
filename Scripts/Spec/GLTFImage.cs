@@ -96,6 +96,8 @@ namespace Siccity.GLTFUtility {
 
 			public ImportTask(List<GLTFImage> images, string directoryRoot, GLTFBufferView.ImportTask bufferViewTask) : base(bufferViewTask) {
 				task = new Task<ImportResult[]>(() => {
+					if (images == null) return new ImportResult[0];
+
 					ImportResult[] results = new ImportResult[images.Count];
 					for (int i = 0; i < results.Length; i++) {
 						results[i] = images[i].GetImage(directoryRoot, bufferViewTask.task.Result);

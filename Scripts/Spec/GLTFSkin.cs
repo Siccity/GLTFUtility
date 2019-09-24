@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -17,6 +18,7 @@ namespace Siccity.GLTFUtility {
 			public Matrix4x4[] inverseBindMatrices;
 			public int[] joints;
 
+#region Import
 			public SkinnedMeshRenderer SetupSkinnedRenderer(GameObject go, Mesh mesh, GLTFNode.ImportResult[] nodes) {
 
 				SkinnedMeshRenderer smr = go.AddComponent<SkinnedMeshRenderer>();
@@ -80,17 +82,25 @@ namespace Siccity.GLTFUtility {
 			}
 			return result;
 		}
-	}
 
-	public static class GLTFSkinExtensions {
-		public static GLTFSkin.ImportResult[] Import(this List<GLTFSkin> skins, GLTFAccessor.ImportResult[] accessors) {
-			if (skins == null) return null;
+		public class ImportTask : Importer.ImportTask {
+			public override Task Task { get { return task; } }
+			public Task<ImportResult[]> task;
 
-			GLTFSkin.ImportResult[] results = new GLTFSkin.ImportResult[skins.Count];
-			for (int i = 0; i < results.Length; i++) {
-				results[i] = skins[i].Import(accessors);
+			public ImportTask(List<GLTFSkin> skins, GLTFAccessor.ImportTask accessorTask) : base(accessorTask) {
+				task = new Task<ImportResult[]>(() => {
+					if (skins == null) return new ImportResult[0];
+
+					ImportResult[] results = new ImportResult[skins.Count];
+					for (int i = 0; i < results.Length; i++) {
+						results[i] = skins[i].Import(accessorTask.task.Result);
+					}
+					return results;
+				});
 			}
-			return results;
+
+			protected override void OnCompleted() { }
 		}
+#endregion
 	}
 }

@@ -169,6 +169,8 @@ namespace Siccity.GLTFUtility {
 
 			public ImportTask(List<GLTFMesh> meshes, GLTFAccessor.ImportTask accessorTask, GLTFMaterial.ImportTask materialTask, ImportSettings importSettings) : base(accessorTask, materialTask) {
 				task = new Task<ImportResult[]>(() => {
+					if (meshes == null) return new ImportResult[0];
+
 					ImportResult[] results = new ImportResult[meshes.Count];
 					for (int i = 0; i < results.Length; i++) {
 						results[i] = new GLTFMesh.ImportResult();

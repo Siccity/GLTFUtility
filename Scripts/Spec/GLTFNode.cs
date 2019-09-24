@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Siccity.GLTFUtility.Converters;
 using UnityEngine;
@@ -46,6 +47,68 @@ namespace Siccity.GLTFUtility {
 			transform.localRotation = rotation;
 			transform.localScale = scale;
 		}
+
+		public class ImportTask : Importer.ImportTask {
+			public override Task Task { get { return task; } }
+			public Task<ImportResult[]> task;
+
+			public ImportTask(List<GLTFNode> nodes, GLTFMesh.ImportTask meshTask, GLTFSkin.ImportTask skinTask) : base(meshTask, skinTask) {
+				task = new Task<ImportResult[]>(() => {
+					if (nodes == null) return new ImportResult[0];
+
+					ImportResult[] results = new ImportResult[nodes.Count];
+
+					// Initialize transforms
+					for (int i = 0; i < results.Length; i++) {
+						results[i] = new GLTFNode.ImportResult();
+						results[i].transform = new GameObject().transform;
+						results[i].transform.name = nodes[i].name;
+					}
+					// Set up hierarchy
+					for (int i = 0; i < results.Length; i++) {
+						if (nodes[i].children != null) {
+							int[] children = nodes[i].children;
+							results[i].children = children;
+							for (int k = 0; k < children.Length; k++) {
+								int childIndex = children[k];
+								results[childIndex].parent = i;
+								results[childIndex].transform.parent = results[i].transform;
+							}
+						}
+					}
+					// Apply TRS
+					for (int i = 0; i < results.Length; i++) {
+						nodes[i].ApplyTRS(results[i].transform);
+					}
+					// Setup components
+					for (int i = 0; i < results.Length; i++) {
+						if (nodes[i].mesh.HasValue) {
+							GLTFMesh.ImportResult meshResult = meshTask.task.Result[nodes[i].mesh.Value];
+							Mesh mesh = meshResult.mesh;
+							Renderer renderer;
+							if (nodes[i].skin.HasValue) {
+								GLTFSkin.ImportResult skin = skinTask.task.Result[nodes[i].skin.Value];
+								renderer = skin.SetupSkinnedRenderer(results[i].transform.gameObject, mesh, results);
+							} else {
+								MeshRenderer mr = results[i].transform.gameObject.AddComponent<MeshRenderer>();
+								MeshFilter mf = results[i].transform.gameObject.AddComponent<MeshFilter>();
+								renderer = mr;
+								mf.sharedMesh = mesh;
+							}
+							//Materials
+							renderer.materials = meshResult.materials;
+							if (string.IsNullOrEmpty(results[i].transform.name)) results[i].transform.name = "node" + i;
+						} else {
+							if (string.IsNullOrEmpty(results[i].transform.name)) results[i].transform.name = "node" + i;
+						}
+					}
+
+					return results;
+				});
+			}
+
+			protected override void OnCompleted() { }
+		}
 #endregion
 
 #region Export
@@ -87,57 +150,6 @@ namespace Siccity.GLTFUtility {
 
 	public static class GLTFNodeExtensions {
 #region Import
-		public static GLTFNode.ImportResult[] Import(this List<GLTFNode> nodes, GLTFMesh.ImportResult[] meshes, GLTFSkin.ImportResult[] skins) {
-			GLTFNode.ImportResult[] results = new GLTFNode.ImportResult[nodes.Count];
-
-			// Initialize transforms
-			for (int i = 0; i < results.Length; i++) {
-				results[i] = new GLTFNode.ImportResult();
-				results[i].transform = new GameObject().transform;
-				results[i].transform.name = nodes[i].name;
-			}
-			// Set up hierarchy
-			for (int i = 0; i < results.Length; i++) {
-				if (nodes[i].children != null) {
-					int[] children = nodes[i].children;
-					results[i].children = children;
-					for (int k = 0; k < children.Length; k++) {
-						int childIndex = children[k];
-						results[childIndex].parent = i;
-						results[childIndex].transform.parent = results[i].transform;
-					}
-				}
-			}
-			// Apply TRS
-			for (int i = 0; i < results.Length; i++) {
-				nodes[i].ApplyTRS(results[i].transform);
-			}
-			// Setup components
-			for (int i = 0; i < results.Length; i++) {
-				if (nodes[i].mesh.HasValue) {
-					GLTFMesh.ImportResult meshResult = meshes[nodes[i].mesh.Value];
-					Mesh mesh = meshResult.mesh;
-					Renderer renderer;
-					if (nodes[i].skin.HasValue) {
-						GLTFSkin.ImportResult skin = skins[nodes[i].skin.Value];
-						renderer = skin.SetupSkinnedRenderer(results[i].transform.gameObject, mesh, results);
-					} else {
-						MeshRenderer mr = results[i].transform.gameObject.AddComponent<MeshRenderer>();
-						MeshFilter mf = results[i].transform.gameObject.AddComponent<MeshFilter>();
-						renderer = mr;
-						mf.sharedMesh = mesh;
-					}
-					//Materials
-					renderer.materials = meshResult.materials;
-					if (string.IsNullOrEmpty(results[i].transform.name)) results[i].transform.name = "node" + i;
-				} else {
-					if (string.IsNullOrEmpty(results[i].transform.name)) results[i].transform.name = "node" + i;
-				}
-			}
-
-			return results;
-		}
-
 		/// <summary> Returns the root if there is one, otherwise creates a new empty root </summary>
 		public static GameObject GetRoot(this GLTFNode.ImportResult[] nodes) {
 			GLTFNode.ImportResult[] roots = nodes.Where(x => x.IsRoot).ToArray();
