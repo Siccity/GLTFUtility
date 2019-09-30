@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Newtonsoft.Json;
 using Siccity.GLTFUtility.Converters;
 using UnityEngine;
@@ -89,8 +90,10 @@ namespace Siccity.GLTFUtility {
 				return verts;
 			}
 
-			public Color[] ReadColor() {
-				if (!ValidateAccessorType(type, AccessorType.VEC4)) return new Color[count];
+			public Color[] ReadColor()
+			{
+				if (!ValidateAccessorTypeAny(type, AccessorType.VEC3, AccessorType.VEC4))
+					return new Color[count];
 
 				Color[] colors = new Color[count];
 				int componentSize = GetComponentSize();
@@ -293,6 +296,16 @@ namespace Siccity.GLTFUtility {
 					return false;
 				}
 				return true;
+			}
+
+			public static bool ValidateAccessorTypeAny(AccessorType type, params AccessorType[] expected)
+			{
+				if (expected.Any(accessorType => accessorType == type))
+					return true;
+
+				string @join = string.Join("or ", expected);
+				Debug.Log("Type mismatch! Expected " + @join + ", got " + type);
+				return false;
 			}
 		}
 
