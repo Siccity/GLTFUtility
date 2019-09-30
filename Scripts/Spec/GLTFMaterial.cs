@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Siccity.GLTFUtility.Converters;
@@ -99,7 +99,8 @@ namespace Siccity.GLTFUtility {
 				Shader sh = null;
 #if UNITY_2019_1_OR_NEWER
 				// LWRP support
-				if (GraphicsSettings.renderPipelineAsset) sh = GraphicsSettings.renderPipelineAsset.defaultShader;
+				if (GraphicsSettings.renderPipelineAsset && shaderSettings.UseDefaultShader)
+					sh = GraphicsSettings.renderPipelineAsset.defaultShader;
 #endif
 				if (sh == null) {
 					if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.MetallicBlend;
