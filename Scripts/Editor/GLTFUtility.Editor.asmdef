@@ -1,7 +1,11 @@
 {
-    "name": "GLTFUtility",
-    "references": [],
-    "includePlatforms": [],
+    "name": "GLTFUtility.Editor",
+    "references": [
+        "GUID:774f0e7b520e24644b448f5ac7fa5d94"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
