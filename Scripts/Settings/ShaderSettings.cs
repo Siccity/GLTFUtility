@@ -3,18 +3,16 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
 	/// <summary> Defines which shaders to use in the gltf import process </summary>
-	[Serializable]
-	public class ShaderSettings {
+	[CreateAssetMenu]
+	public class ShaderSettings : ScriptableObject {
 		[SerializeField] private Shader metallic;
-		public Shader Metallic { get { return metallic != null ? metallic : Shader.Find("GLTFUtility/Standard (Metallic)"); } }
-
 		[SerializeField] private Shader metallicBlend;
-		public Shader MetallicBlend { get { return metallicBlend != null ? metallicBlend : Shader.Find("GLTFUtility/Standard Transparent (Metallic)"); } }
-
 		[SerializeField] private Shader specular;
-		public Shader Specular { get { return specular != null ? specular : Shader.Find("GLTFUtility/Standard (Specular)"); } }
-
 		[SerializeField] private Shader specularBlend;
-		public Shader SpecularBlend { get { return specularBlend != null ? specularBlend : Shader.Find("GLTFUtility/Standard Transparent (Specular)"); } }
+
+		public Shader Metallic { get { return metallic; } }
+		public Shader MetallicBlend { get { return metallicBlend; } }
+		public Shader Specular { get { return specular; } }
+		public Shader SpecularBlend { get { return specularBlend; } }
 	}
 }

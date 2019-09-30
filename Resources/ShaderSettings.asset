@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc38d0f9a32cd0443ac479afd967ab81, type: 3}
+  m_Name: ShaderSettings
+  m_EditorClassIdentifier: 
+  metallic: {fileID: 4800000, guid: 057d08f5d01be134593d0fe0e40c1759, type: 3}
+  metallicBlend: {fileID: 4800000, guid: 7258d825fa9aac6439f21eb173b880c6, type: 3}
+  specular: {fileID: 4800000, guid: d28fc76bfd3057e4c8f1c6f0b91590c8, type: 3}
+  specularBlend: {fileID: 4800000, guid: 475158e3052e5c4488fa32f8df9d7be7, type: 3}
