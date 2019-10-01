@@ -44,25 +44,10 @@ namespace Siccity.GLTFUtility {
 			// Load fallback material
 			else mat = new Material(Shader.Find("Standard"));
 
-			Texture2D tex;
-			if (TryGetTexture(textures, normalTexture, out tex, x => x.GetNormalMap())) {
-				mat.SetTexture("_BumpMap", tex);
-				mat.EnableKeyword("_NORMALMAP");
-			}
-			if (TryGetTexture(textures, occlusionTexture, out tex)) {
-				mat.SetTexture("_OcclusionMap", tex);
-			}
-			if (emissiveFactor != Color.black) {
-				mat.SetColor("_EmissionColor", emissiveFactor);
-				mat.EnableKeyword("_EMISSION");
-			}
-			if (TryGetTexture(textures, emissiveTexture, out tex)) {
-				mat.SetTexture("_EmissionMap", tex);
-				mat.EnableKeyword("_EMISSION");
-			}
-			if (alphaMode == AlphaMode.MASK) {
-				mat.SetFloat("_AlphaCutoff", alphaCutoff);
-			}
+			IMaterialMapper materialMapper;
+			if (MaterialMapperService.TryGetMapper(mat.shader.name, out materialMapper))
+				materialMapper.Apply(mat, this, textures);
+
 			mat.name = name;
 			return mat;
 		}

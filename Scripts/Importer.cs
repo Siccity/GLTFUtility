@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
@@ -79,6 +77,9 @@ namespace Siccity.GLTFUtility {
 		}
 
 		private static GameObject LoadInternal(this GLTFObject gltfObject, string filepath, ImportSettings importSettings, out GLTFAnimation.ImportResult[] animations) {
+			if (MaterialMapperService.defaultMapper == null)
+				MaterialMapperService.SetDefaultMapper(new DefaultMaterialMapper());
+
 			string directoryRoot = Directory.GetParent(filepath).ToString() + "/";
 
 			GLTFBuffer.ImportResult[] buffers = gltfObject.buffers.Select(x => x.Import(filepath)).ToArray();
