@@ -90,8 +90,7 @@ namespace Siccity.GLTFUtility {
 				return verts;
 			}
 
-			public Color[] ReadColor()
-			{
+			public Color[] ReadColor() {
 				if (!ValidateAccessorTypeAny(type, AccessorType.VEC3, AccessorType.VEC4))
 					return new Color[count];
 
@@ -298,8 +297,7 @@ namespace Siccity.GLTFUtility {
 				return true;
 			}
 
-			public static bool ValidateAccessorTypeAny(AccessorType type, params AccessorType[] expected)
-			{
+			public static bool ValidateAccessorTypeAny(AccessorType type, params AccessorType[] expected) {
 				if (expected.Any(accessorType => accessorType == type))
 					return true;
 
