@@ -23,12 +23,13 @@ namespace Siccity.GLTFUtility {
 		public class ImportResult {
 			public Texture2D texture;
 			/// <summary> True if image was loaded from a Texture2D asset. False if it was loaded from binary or from another source </summary>
-			public bool isAsset;
 			public bool isNormalMap;
 			public bool isMetallicRoughnessFixed;
+			public byte[] bytes;
+			public string mimeType;
 
 			public Texture2D GetNormalMap() {
-				if (isNormalMap || isAsset) return texture;
+				if (isNormalMap) return texture;
 				Color32[] pixels = texture.GetPixels32();
 				for (int i = 0; i < pixels.Length; i++) {
 					Color32 c = pixels[i];
@@ -44,7 +45,7 @@ namespace Siccity.GLTFUtility {
 
 			// glTF stores Metallic in blue channel and roughness in green channel. Unity stores Metallic in red and roughness in alpha. This method returns a unity-fixed texture
 			public Texture2D GetFixedMetallicRoughness() {
-				if (!isMetallicRoughnessFixed && !isAsset) {
+				if (!isMetallicRoughnessFixed) {
 					Color32[] pixels = texture.GetPixels32();
 					for (int i = 0; i < pixels.Length; i++) {
 						Color32 c = pixels[i];
@@ -62,28 +63,17 @@ namespace Siccity.GLTFUtility {
 
 		public ImportResult GetImage(string directoryRoot, GLTFBufferView.ImportResult[] bufferViews) {
 			ImportResult result = new ImportResult();
-			result.isAsset = false;
 
 			if (!string.IsNullOrEmpty(uri) && File.Exists(directoryRoot + uri)) {
-#if UNITY_EDITOR
-				result.texture = UnityEditor.AssetDatabase.LoadAssetAtPath(directoryRoot + uri, typeof(Texture2D)) as Texture2D;
-				if (result.texture != null) {
-					result.isAsset = true;
-					return result;
-				}
-#endif
-				Debug.Log("Couldn't load texture at " + directoryRoot + uri);
-				return null;
+				byte[] fileData = File.ReadAllBytes(directoryRoot + uri);
+				result.bytes = fileData;
+				result.mimeType = mimeType;
+				return result;
 			} else if (bufferView.HasValue && !string.IsNullOrEmpty(mimeType)) {
 				byte[] bytes = bufferViews[bufferView.Value].bytes;
-				result.texture = new Texture2D(2, 2);
-				// If this fails, you may need to find "Image Conversion" package and enable it
-				if (result.texture.LoadImage(bytes)) {
-					return result;
-				} else {
-					Debug.Log("mimeType not supported: " + mimeType);
-					return null;
-				}
+				result.bytes = bytes;
+				result.mimeType = mimeType;
+				return result;
 			} else {
 				Debug.Log("Couldn't find texture at " + directoryRoot + uri);
 				return null;
@@ -106,7 +96,14 @@ namespace Siccity.GLTFUtility {
 				});
 			}
 
-			protected override void OnCompleted() { }
+			protected override void OnCompleted() {
+				foreach (ImportResult result in task.Result) {
+					result.texture = new Texture2D(2, 2);
+					if (!result.texture.LoadImage(result.bytes)) {
+						Debug.Log("mimeType not supported: " + result.mimeType);
+					}
+				}
+			}
 		}
 	}
 }
