@@ -90,7 +90,7 @@ namespace Siccity.GLTFUtility {
 			}
 
 			public Color[] ReadColor() {
-				if (!ValidateAccessorType(type, AccessorType.VEC4)) return new Color[count];
+				if (!ValidateAccessorTypeAny(type, AccessorType.VEC3, AccessorType.VEC4)) return new Color[count];
 
 				Color[] colors = new Color[count];
 				int componentSize = GetComponentSize();
@@ -288,11 +288,19 @@ namespace Siccity.GLTFUtility {
 			}
 
 			private static bool ValidateAccessorType(AccessorType type, AccessorType expected) {
-				if (type != expected) {
+				if (type == expected) return true;
+				else {
 					Debug.LogError("Type mismatch! Expected " + expected + " got " + type);
 					return false;
 				}
-				return true;
+			}
+
+			public static bool ValidateAccessorTypeAny(AccessorType type, params AccessorType[] expected) {
+				for (int i = 0; i < expected.Length; i++) {
+					if (type == expected[i]) return true;
+				}
+				Debug.Log("Type mismatch! Expected " + string.Join("or ", expected) + ", got " + type);
+				return false;
 			}
 		}
 
