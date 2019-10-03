@@ -16,5 +16,13 @@ namespace Siccity.GLTFUtility {
 
 		[SerializeField] private Shader specularBlend;
 		public Shader SpecularBlend { get { return specularBlend != null ? specularBlend : Shader.Find("GLTFUtility/Standard Transparent (Specular)"); } }
+
+		/// <summary> Caches default shaders so that async import won't try to search for them while on a separate thread </summary>
+		public void CacheDefaultShaders() {
+			metallic = Metallic;
+			metallicBlend = MetallicBlend;
+			specular = Specular;
+			specularBlend = SpecularBlend;
+		}
 	}
 }

@@ -199,21 +199,29 @@ namespace Siccity.GLTFUtility {
 			public override Task Task { get { return task; } }
 			public Task<ImportResult[]> task;
 
+			private List<GLTFMaterial> materials;
+			private GLTFTexture.ImportTask textureTask;
+			private ImportSettings importSettings;
+
 			public ImportTask(List<GLTFMaterial> materials, GLTFTexture.ImportTask textureTask, ImportSettings importSettings) : base(textureTask) {
+				this.materials = materials;
+				this.textureTask = textureTask;
+				this.importSettings = importSettings;
+
 				task = new Task<ImportResult[]>(() => {
 					if (materials == null) return new ImportResult[0];
-
 					ImportResult[] results = new ImportResult[materials.Count];
-					for (int i = 0; i < results.Length; i++) {
-						results[i] = new ImportResult();
-						results[i].material = materials[i].CreateMaterial(textureTask.task.Result, importSettings.shaders);
-						if (results[i].material.name == null) results[i].material.name = "material" + i;
-					}
 					return results;
 				});
 			}
 
-			protected override void OnCompleted() { }
+			protected override void OnCompleted() {
+				for (int i = 0; i < task.Result.Length; i++) {
+					task.Result[i] = new ImportResult();
+					task.Result[i].material = materials[i].CreateMaterial(textureTask.task.Result, importSettings.shaders);
+					if (task.Result[i].material.name == null) task.Result[i].material.name = "material" + i;
+				}
+			}
 		}
 	}
 }

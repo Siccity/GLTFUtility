@@ -147,6 +147,8 @@ namespace Siccity.GLTFUtility {
 			// directory root is sometimes used for loading buffers from containing file, or local images
 			string directoryRoot = Directory.GetParent(filepath).ToString() + "/";
 
+			importSettings.shaders.CacheDefaultShaders();
+
 			// Setup import tasks
 			List<ImportTask> importTasks = new List<ImportTask>();
 
