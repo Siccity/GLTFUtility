@@ -80,24 +80,20 @@ namespace Siccity.GLTFUtility {
 			}
 		}
 
-		public class ImportTask : Importer.ImportTask {
-			public override Task Task { get { return task; } }
-			public Task<ImportResult[]> task;
-
+		public class ImportTask : Importer.ImportTask<ImportResult[]> {
 			public ImportTask(List<GLTFImage> images, string directoryRoot, GLTFBufferView.ImportTask bufferViewTask) : base(bufferViewTask) {
-				task = new Task<ImportResult[]>(() => {
-					if (images == null) return new ImportResult[0];
+				task = new Task(() => {
+					if (images == null) return;
 
-					ImportResult[] results = new ImportResult[images.Count];
-					for (int i = 0; i < results.Length; i++) {
-						results[i] = images[i].GetImage(directoryRoot, bufferViewTask.task.Result);
+					Result = new ImportResult[images.Count];
+					for (int i = 0; i < Result.Length; i++) {
+						Result[i] = images[i].GetImage(directoryRoot, bufferViewTask.Result);
 					}
-					return results;
 				});
 			}
 
-			protected override void OnCompleted() {
-				foreach (ImportResult result in task.Result) {
+			protected override void OnMainThreadFinalize() {
+				foreach (ImportResult result in Result) {
 					result.texture = new Texture2D(2, 2);
 					if (!result.texture.LoadImage(result.bytes)) {
 						Debug.Log("mimeType not supported: " + result.mimeType);

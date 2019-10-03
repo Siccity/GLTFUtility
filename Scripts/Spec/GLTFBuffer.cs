@@ -43,21 +43,15 @@ namespace Siccity.GLTFUtility {
 			return result;
 		}
 
-		public class ImportTask : Importer.ImportTask {
-			public override Task Task { get { return task; } }
-			public Task<ImportResult[]> task;
-
+		public class ImportTask : Importer.ImportTask<ImportResult[]> {
 			public ImportTask(List<GLTFBuffer> buffers, string filepath) : base() {
-				task = new Task<ImportResult[]>(() => {
-					ImportResult[] results = new ImportResult[buffers.Count];
-					for (int i = 0; i < results.Length; i++) {
-						results[i] = buffers[i].Import(filepath);
+				task = new Task(() => {
+					Result = new ImportResult[buffers.Count];
+					for (int i = 0; i < Result.Length; i++) {
+						Result[i] = buffers[i].Import(filepath);
 					}
-					return results;
 				});
 			}
-
-			protected override void OnCompleted() { }
 		}
 #endregion
 	}

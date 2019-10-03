@@ -48,66 +48,59 @@ namespace Siccity.GLTFUtility {
 			transform.localScale = scale;
 		}
 
-		public class ImportTask : Importer.ImportTask {
-			public override Task Task { get { return task; } }
-			public Task<ImportResult[]> task;
-
+		public class ImportTask : Importer.ImportTask<ImportResult[]> {
 			public ImportTask(List<GLTFNode> nodes, GLTFMesh.ImportTask meshTask, GLTFSkin.ImportTask skinTask) : base(meshTask, skinTask) {
-				task = new Task<ImportResult[]>(() => {
-					if (nodes == null) return new ImportResult[0];
+				task = new Task(() => {
+					if (nodes == null) return;
 
-					ImportResult[] results = new ImportResult[nodes.Count];
+					Result = new ImportResult[nodes.Count];
 
 					// Initialize transforms
-					for (int i = 0; i < results.Length; i++) {
-						results[i] = new GLTFNode.ImportResult();
-						results[i].transform = new GameObject().transform;
-						results[i].transform.name = nodes[i].name;
+					for (int i = 0; i < Result.Length; i++) {
+						Result[i] = new GLTFNode.ImportResult();
+						Result[i].transform = new GameObject().transform;
+						Result[i].transform.name = nodes[i].name;
 					}
 					// Set up hierarchy
-					for (int i = 0; i < results.Length; i++) {
+					for (int i = 0; i < Result.Length; i++) {
 						if (nodes[i].children != null) {
 							int[] children = nodes[i].children;
-							results[i].children = children;
+							Result[i].children = children;
 							for (int k = 0; k < children.Length; k++) {
 								int childIndex = children[k];
-								results[childIndex].parent = i;
-								results[childIndex].transform.parent = results[i].transform;
+								Result[childIndex].parent = i;
+								Result[childIndex].transform.parent = Result[i].transform;
 							}
 						}
 					}
 					// Apply TRS
-					for (int i = 0; i < results.Length; i++) {
-						nodes[i].ApplyTRS(results[i].transform);
+					for (int i = 0; i < Result.Length; i++) {
+						nodes[i].ApplyTRS(Result[i].transform);
 					}
 					// Setup components
-					for (int i = 0; i < results.Length; i++) {
+					for (int i = 0; i < Result.Length; i++) {
 						if (nodes[i].mesh.HasValue) {
-							GLTFMesh.ImportResult meshResult = meshTask.task.Result[nodes[i].mesh.Value];
+							GLTFMesh.ImportResult meshResult = meshTask.Result[nodes[i].mesh.Value];
 							Mesh mesh = meshResult.mesh;
 							Renderer renderer;
 							if (nodes[i].skin.HasValue) {
-								GLTFSkin.ImportResult skin = skinTask.task.Result[nodes[i].skin.Value];
-								renderer = skin.SetupSkinnedRenderer(results[i].transform.gameObject, mesh, results);
+								GLTFSkin.ImportResult skin = skinTask.Result[nodes[i].skin.Value];
+								renderer = skin.SetupSkinnedRenderer(Result[i].transform.gameObject, mesh, Result);
 							} else {
-								MeshRenderer mr = results[i].transform.gameObject.AddComponent<MeshRenderer>();
-								MeshFilter mf = results[i].transform.gameObject.AddComponent<MeshFilter>();
+								MeshRenderer mr = Result[i].transform.gameObject.AddComponent<MeshRenderer>();
+								MeshFilter mf = Result[i].transform.gameObject.AddComponent<MeshFilter>();
 								renderer = mr;
 								mf.sharedMesh = mesh;
 							}
 							//Materials
 							renderer.materials = meshResult.materials;
-							if (string.IsNullOrEmpty(results[i].transform.name)) results[i].transform.name = "node" + i;
+							if (string.IsNullOrEmpty(Result[i].transform.name)) Result[i].transform.name = "node" + i;
 						} else {
-							if (string.IsNullOrEmpty(results[i].transform.name)) results[i].transform.name = "node" + i;
+							if (string.IsNullOrEmpty(Result[i].transform.name)) Result[i].transform.name = "node" + i;
 						}
 					}
-
-					return results;
 				});
 			}
-
-			protected override void OnCompleted() { }
 		}
 #endregion
 

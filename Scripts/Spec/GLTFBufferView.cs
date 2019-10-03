@@ -26,26 +26,20 @@ namespace Siccity.GLTFUtility {
 			}
 		}
 
-		public class ImportTask : Importer.ImportTask {
-			public override Task Task { get { return task; } }
-			public Task<ImportResult[]> task;
-
+		public class ImportTask : Importer.ImportTask<ImportResult[]> {
 			public ImportTask(List<GLTFBufferView> bufferViews, GLTFBuffer.ImportTask bufferTask) : base(bufferTask) {
-				task = new Task<ImportResult[]>(() => {
-					ImportResult[] results = new ImportResult[bufferViews.Count];
-					for (int i = 0; i < results.Length; i++) {
+				task = new Task(() => {
+					Result = new ImportResult[bufferViews.Count];
+					for (int i = 0; i < Result.Length; i++) {
 						int byteOffset = bufferViews[i].byteOffset;
 						int byteLength = bufferViews[i].byteLength;
-						GLTFBuffer.ImportResult buffer = bufferTask.task.Result[bufferViews[i].buffer];
+						GLTFBuffer.ImportResult buffer = bufferTask.Result[bufferViews[i].buffer];
 						ImportResult result = new ImportResult();
 						result.bytes = buffer.bytes.SubArray(byteOffset, byteLength);
-						results[i] = result;
+						Result[i] = result;
 					}
-					return results;
 				});
 			}
-
-			protected override void OnCompleted() { }
 		}
 	}
 }

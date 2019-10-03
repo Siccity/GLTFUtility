@@ -83,23 +83,17 @@ namespace Siccity.GLTFUtility {
 			return result;
 		}
 
-		public class ImportTask : Importer.ImportTask {
-			public override Task Task { get { return task; } }
-			public Task<ImportResult[]> task;
-
+		public class ImportTask : Importer.ImportTask<ImportResult[]> {
 			public ImportTask(List<GLTFSkin> skins, GLTFAccessor.ImportTask accessorTask) : base(accessorTask) {
-				task = new Task<ImportResult[]>(() => {
-					if (skins == null) return new ImportResult[0];
+				task = new Task(() => {
+					if (skins == null) return;
 
-					ImportResult[] results = new ImportResult[skins.Count];
-					for (int i = 0; i < results.Length; i++) {
-						results[i] = skins[i].Import(accessorTask.task.Result);
+					Result = new ImportResult[skins.Count];
+					for (int i = 0; i < Result.Length; i++) {
+						Result[i] = skins[i].Import(accessorTask.Result);
 					}
-					return results;
 				});
 			}
-
-			protected override void OnCompleted() { }
 		}
 #endregion
 	}

@@ -195,10 +195,7 @@ namespace Siccity.GLTFUtility {
 			public float scale = 1;
 		}
 
-		public class ImportTask : Importer.ImportTask {
-			public override Task Task { get { return task; } }
-			public Task<ImportResult[]> task;
-
+		public class ImportTask : Importer.ImportTask<ImportResult[]> {
 			private List<GLTFMaterial> materials;
 			private GLTFTexture.ImportTask textureTask;
 			private ImportSettings importSettings;
@@ -208,18 +205,17 @@ namespace Siccity.GLTFUtility {
 				this.textureTask = textureTask;
 				this.importSettings = importSettings;
 
-				task = new Task<ImportResult[]>(() => {
-					if (materials == null) return new ImportResult[0];
-					ImportResult[] results = new ImportResult[materials.Count];
-					return results;
+				task = new Task(() => {
+					if (materials == null) return;
+					Result = new ImportResult[materials.Count];
 				});
 			}
 
-			protected override void OnCompleted() {
-				for (int i = 0; i < task.Result.Length; i++) {
-					task.Result[i] = new ImportResult();
-					task.Result[i].material = materials[i].CreateMaterial(textureTask.task.Result, importSettings.shaders);
-					if (task.Result[i].material.name == null) task.Result[i].material.name = "material" + i;
+			protected override void OnMainThreadFinalize() {
+				for (int i = 0; i < Result.Length; i++) {
+					Result[i] = new ImportResult();
+					Result[i].material = materials[i].CreateMaterial(textureTask.Result, importSettings.shaders);
+					if (Result[i].material.name == null) Result[i].material.name = "material" + i;
 				}
 			}
 		}

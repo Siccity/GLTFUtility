@@ -85,11 +85,25 @@ namespace Siccity.GLTFUtility {
 			gltfObject.LoadAsync(filepath, importSettings, onFinished);
 		}
 
+		public abstract class ImportTask<TReturn> : ImportTask {
+			public TReturn Result;
+
+			/// <summary> Constructor. Sets waitFor which ensures ImportTasks are completed before running. </summary>
+			public ImportTask(params ImportTask[] waitFor) : base(waitFor) { }
+
+			/// <summary> Runs task followed by OnCompleted </summary>
+			public TReturn RunSynchronously() {
+				task.RunSynchronously();
+				OnMainThreadFinalize();
+				return Result;
+			}
+		}
+
 		public abstract class ImportTask {
-			public abstract Task Task { get; }
+			public Task task;
 			public readonly ImportTask[] waitFor;
 			public bool IsReady { get { return waitFor.All(x => x.IsCompleted); } }
-			public bool IsCompleted { get; private set; }
+			public bool IsCompleted { get; protected set; }
 
 			/// <summary> Constructor. Sets waitFor which ensures ImportTasks are completed before running. </summary>
 			public ImportTask(params ImportTask[] waitFor) {
@@ -97,19 +111,12 @@ namespace Siccity.GLTFUtility {
 				this.waitFor = waitFor;
 			}
 
-			/// <summary> Runs task followed by OnCompleted </summary>
-			public void RunSynchronously() {
-				Task.RunSynchronously();
-				Complete();
-			}
-
-			/// <summary> Finish the job on main thread </summary>
-			public void Complete() {
-				OnCompleted();
+			public void MainThreadFinalize() {
+				OnMainThreadFinalize();
 				IsCompleted = true;
 			}
 
-			protected abstract void OnCompleted();
+			protected virtual void OnMainThreadFinalize() { }
 		}
 
 #region Sync
@@ -136,9 +143,9 @@ namespace Siccity.GLTFUtility {
 			skinTask.RunSynchronously();
 			GLTFNode.ImportTask nodeTask = new GLTFNode.ImportTask(gltfObject.nodes, meshTask, skinTask);
 			nodeTask.RunSynchronously();
-			animations = gltfObject.animations.Import(accessorTask.task.Result, nodeTask.task.Result);
+			animations = gltfObject.animations.Import(accessorTask.Result, nodeTask.Result);
 
-			return nodeTask.task.Result.GetRoot();
+			return nodeTask.Result.GetRoot();
 		}
 #endregion
 
@@ -181,9 +188,9 @@ namespace Siccity.GLTFUtility {
 		private static IEnumerator TaskSupervisor(ImportTask importTask) {
 			// Wait for required results to complete
 			while (!importTask.IsReady) yield return null;
-			importTask.Task.Start();
-			while (!importTask.Task.IsCompleted) yield return null;
-			importTask.Complete();
+			importTask.task.Start();
+			while (!importTask.task.IsCompleted) yield return null;
+			importTask.MainThreadFinalize();
 		}
 
 		private static IEnumerator TaskIsDone(List<ImportTask> tasks, Action onFinish) {

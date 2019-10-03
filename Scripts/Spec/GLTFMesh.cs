@@ -163,34 +163,28 @@ namespace Siccity.GLTFUtility {
 			}
 		}
 
-		public class ImportTask : Importer.ImportTask {
-			public override Task Task { get { return task; } }
-			public Task<ImportResult[]> task;
-
+		public class ImportTask : Importer.ImportTask<ImportResult[]> {
 			public ImportTask(List<GLTFMesh> meshes, GLTFAccessor.ImportTask accessorTask, GLTFMaterial.ImportTask materialTask, ImportSettings importSettings) : base(accessorTask, materialTask) {
-				task = new Task<ImportResult[]>(() => {
-					if (meshes == null) return new ImportResult[0];
+				task = new Task(() => {
+					if (meshes == null) return;
 
-					ImportResult[] results = new ImportResult[meshes.Count];
-					for (int i = 0; i < results.Length; i++) {
-						results[i] = new GLTFMesh.ImportResult();
-						results[i].mesh = meshes[i].CreateMesh(accessorTask.task.Result);
-						results[i].materials = new Material[meshes[i].primitives.Count];
+					Result = new ImportResult[meshes.Count];
+					for (int i = 0; i < Result.Length; i++) {
+						Result[i] = new GLTFMesh.ImportResult();
+						Result[i].mesh = meshes[i].CreateMesh(accessorTask.Result);
+						Result[i].materials = new Material[meshes[i].primitives.Count];
 						for (int k = 0; k < meshes[i].primitives.Count; k++) {
 							int? matIndex = meshes[i].primitives[k].material;
-							if (matIndex.HasValue && materialTask.task.Result != null) {
-								results[i].materials[k] = materialTask.task.Result[matIndex.Value].material;
+							if (matIndex.HasValue && materialTask.Result != null) {
+								Result[i].materials[k] = materialTask.Result[matIndex.Value].material;
 							} else {
-								results[i].materials[k] = GLTFMaterial.defaultMaterial;
+								Result[i].materials[k] = GLTFMaterial.defaultMaterial;
 							}
 						}
 						if (meshes[i].name == null) meshes[i].name = "mesh" + i;
 					}
-					return results;
 				});
 			}
-
-			protected override void OnCompleted() { }
 		}
 #endregion
 
