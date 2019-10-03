@@ -46,5 +46,7 @@ Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-for
 - [ ] Morph targets
 - [ ] Cameras
 - [ ] Lights
+- [ ] Draco compression
+- [ ] Multithreading
 - [x] GLTF format
 - [x] GLB format

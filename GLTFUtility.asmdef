@@ -1,15 +1,8 @@
 {
-    "name": "GLTFUtility",
+    "name": "Siccity.GLTFUtility",
     "references": [],
     "optionalUnityReferences": [],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": []
+    "allowUnsafeCode": false
 }
