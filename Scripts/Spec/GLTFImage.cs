@@ -83,6 +83,7 @@ namespace Siccity.GLTFUtility {
 		public class ImportTask : Importer.ImportTask<ImportResult[]> {
 			public ImportTask(List<GLTFImage> images, string directoryRoot, GLTFBufferView.ImportTask bufferViewTask) : base(bufferViewTask) {
 				task = new Task(() => {
+					// No images
 					if (images == null) return;
 
 					Result = new ImportResult[images.Count];
@@ -93,6 +94,9 @@ namespace Siccity.GLTFUtility {
 			}
 
 			protected override void OnMainThreadFinalize() {
+				// No images
+				if (Result == null) return;
+
 				foreach (ImportResult result in Result) {
 					result.texture = new Texture2D(2, 2);
 					if (!result.texture.LoadImage(result.bytes)) {
