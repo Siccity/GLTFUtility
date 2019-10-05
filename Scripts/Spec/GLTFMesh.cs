@@ -201,13 +201,18 @@ namespace Siccity.GLTFUtility {
 					Result[i].materials = new Material[meshes[i].primitives.Count];
 					for (int k = 0; k < meshes[i].primitives.Count; k++) {
 						int? matIndex = meshes[i].primitives[k].material;
-						if (matIndex.HasValue && materialTask.Result != null) {
-							Result[i].materials[k] = materialTask.Result[matIndex.Value].material;
+						if (matIndex.HasValue && materialTask.Result != null && materialTask.Result.Count() > matIndex.Value) {
+							GLTFMaterial.ImportResult matImport = materialTask.Result[matIndex.Value];
+							if (matImport != null) Result[i].materials[k] = matImport.material;
+							else {
+								Debug.LogWarning("Mesh[" + i + "].matIndex points to null material (index " + matIndex.Value + ")");
+								Result[i].materials[k] = GLTFMaterial.defaultMaterial;
+							}
 						} else {
 							Result[i].materials[k] = GLTFMaterial.defaultMaterial;
 						}
 					}
-					if (Result[i].mesh.name == null) Result[i].mesh.name = "mesh" + i;
+					if (string.IsNullOrEmpty(Result[i].mesh.name)) Result[i].mesh.name = "mesh" + i;
 				}
 			}
 		}

@@ -70,9 +70,8 @@ namespace Siccity.GLTFUtility {
 
 		public static bool TryGetTexture(GLTFTexture.ImportResult[] textures, TextureInfo texture, out Texture2D tex) {
 			tex = null;
-			if (texture == null || texture.index < 0) {
-				return false;
-			}
+			if (texture == null || texture.index < 0) return false;
+			if (textures == null) return false;
 			if (textures.Length <= texture.index) {
 				Debug.LogWarning("Attempted to get texture index " + texture.index + " when only " + textures.Length + " exist");
 				return false;
@@ -111,19 +110,25 @@ namespace Siccity.GLTFUtility {
 				mat.color = baseColorFactor;
 				mat.SetFloat("_Metallic", metallicFactor);
 				mat.SetFloat("_Roughness", roughnessFactor);
-				if (baseColorTexture != null && baseColorTexture.index >= 0) {
-					if (textures.Length <= baseColorTexture.index) {
-						Debug.LogWarning("Attempted to get basecolor texture index " + baseColorTexture.index + " when only " + textures.Length + " exist");
-					} else {
-						mat.SetTexture("_MainTex", textures[baseColorTexture.index].image.texture);
+
+				// Assign textures
+				if (textures != null) {
+					// Base color texture
+					if (baseColorTexture != null && baseColorTexture.index >= 0) {
+						if (textures.Length <= baseColorTexture.index) {
+							Debug.LogWarning("Attempted to get basecolor texture index " + baseColorTexture.index + " when only " + textures.Length + " exist");
+						} else {
+							mat.SetTexture("_MainTex", textures[baseColorTexture.index].image.texture);
+						}
 					}
-				}
-				if (metallicRoughnessTexture != null && metallicRoughnessTexture.index >= 0) {
-					if (textures.Length <= metallicRoughnessTexture.index) {
-						Debug.LogWarning("Attempted to get metallicRoughness texture index " + metallicRoughnessTexture.index + " when only " + textures.Length + " exist");
-					} else {
-						mat.SetTexture("_MetallicGlossMap", textures[metallicRoughnessTexture.index].image.texture);
-						mat.EnableKeyword("_METALLICGLOSSMAP");
+					// Metallic roughness texture
+					if (metallicRoughnessTexture != null && metallicRoughnessTexture.index >= 0) {
+						if (textures.Length <= metallicRoughnessTexture.index) {
+							Debug.LogWarning("Attempted to get metallicRoughness texture index " + metallicRoughnessTexture.index + " when only " + textures.Length + " exist");
+						} else {
+							mat.SetTexture("_MetallicGlossMap", textures[metallicRoughnessTexture.index].image.texture);
+							mat.EnableKeyword("_METALLICGLOSSMAP");
+						}
 					}
 				}
 
@@ -134,7 +139,6 @@ namespace Siccity.GLTFUtility {
 			}
 		}
 
-		[Serializable]
 		public class PbrSpecularGlossiness {
 
 			/// <summary> The reflected diffuse factor of the material </summary>
@@ -166,21 +170,24 @@ namespace Siccity.GLTFUtility {
 				mat.SetColor("_SpecColor", specularFactor);
 				mat.SetFloat("_Glossiness", glossinessFactor);
 
-				// Diffuse texture
-				if (diffuseTexture != null) {
-					if (textures.Length <= diffuseTexture.index) {
-						Debug.LogWarning("Attempted to get diffuseTexture texture index " + diffuseTexture.index + " when only " + textures.Length + " exist");
-					} else {
-						mat.SetTexture("_MainTex", textures[diffuseTexture.index].image.texture);
+				// Assign textures
+				if (textures != null) {
+					// Diffuse texture
+					if (diffuseTexture != null) {
+						if (textures.Length <= diffuseTexture.index) {
+							Debug.LogWarning("Attempted to get diffuseTexture texture index " + diffuseTexture.index + " when only " + textures.Length + " exist");
+						} else {
+							mat.SetTexture("_MainTex", textures[diffuseTexture.index].image.texture);
+						}
 					}
-				}
-				// Specular texture
-				if (specularGlossinessTexture != null) {
-					if (textures.Length <= specularGlossinessTexture.index) {
-						Debug.LogWarning("Attempted to get specularGlossinessTexture texture index " + specularGlossinessTexture.index + " when only " + textures.Length + " exist");
-					} else {
-						mat.SetTexture("_SpecGlossMap", textures[specularGlossinessTexture.index].image.texture);
-						mat.EnableKeyword("_SPECGLOSSMAP");
+					// Specular texture
+					if (specularGlossinessTexture != null) {
+						if (textures.Length <= specularGlossinessTexture.index) {
+							Debug.LogWarning("Attempted to get specularGlossinessTexture texture index " + specularGlossinessTexture.index + " when only " + textures.Length + " exist");
+						} else {
+							mat.SetTexture("_SpecGlossMap", textures[specularGlossinessTexture.index].image.texture);
+							mat.EnableKeyword("_SPECGLOSSMAP");
+						}
 					}
 				}
 				return mat;
@@ -211,7 +218,7 @@ namespace Siccity.GLTFUtility {
 			}
 
 			protected override void OnMainThreadFinalize() {
-				if (materials == null || textureTask.Result == null) return;
+				if (materials == null) return;
 
 				for (int i = 0; i < Result.Length; i++) {
 					Result[i] = new ImportResult();
