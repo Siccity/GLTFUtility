@@ -46,7 +46,7 @@ namespace Siccity.GLTFUtility {
 			else mat = new Material(Shader.Find("Standard"));
 
 			Texture2D tex;
-			if (TryGetTexture(textures, normalTexture, out tex, x => x.GetNormalMap())) {
+			if (TryGetTexture(textures, normalTexture, out tex)) {
 				mat.SetTexture("_BumpMap", tex);
 				mat.EnableKeyword("_NORMALMAP");
 			}
@@ -68,7 +68,7 @@ namespace Siccity.GLTFUtility {
 			return mat;
 		}
 
-		public static bool TryGetTexture(GLTFTexture.ImportResult[] textures, TextureInfo texture, out Texture2D tex, Func<GLTFImage.ImportResult, Texture2D> getter = null) {
+		public static bool TryGetTexture(GLTFTexture.ImportResult[] textures, TextureInfo texture, out Texture2D tex) {
 			tex = null;
 			if (texture == null || texture.index < 0) {
 				return false;
@@ -77,8 +77,7 @@ namespace Siccity.GLTFUtility {
 				Debug.LogWarning("Attempted to get texture index " + texture.index + " when only " + textures.Length + " exist");
 				return false;
 			}
-			if (getter == null) tex = textures[texture.index].image.texture;
-			else tex = getter(textures[texture.index].image);
+			tex = textures[texture.index].image.texture;
 			return true;
 		}
 
@@ -212,6 +211,8 @@ namespace Siccity.GLTFUtility {
 			}
 
 			protected override void OnMainThreadFinalize() {
+				if (materials == null || textureTask.Result == null) return;
+
 				for (int i = 0; i < Result.Length; i++) {
 					Result[i] = new ImportResult();
 					Result[i].material = materials[i].CreateMaterial(textureTask.Result, importSettings.shaders);

@@ -70,7 +70,7 @@ namespace Siccity.GLTFUtility {
 
 							// Tangents - (Z points backwards in GLTF)
 							if (primitive.attributes.TANGENT.HasValue) {
-								tangents.AddRange(accessors[primitive.attributes.TANGENT.Value].ReadVec4().Select(v => { v.z = -v.z; return v; }));
+								tangents.AddRange(accessors[primitive.attributes.TANGENT.Value].ReadVec4().Select(v => { v.z = -v.z; v.w = -v.w; return v; }));
 							}
 
 							// Vertex colors
@@ -122,8 +122,7 @@ namespace Siccity.GLTFUtility {
 					for (int i = 0; i < submeshTris.Count; i++) {
 						mesh.SetTriangles(submeshTris[i].ToArray(), i);
 					}
-					mesh.normals = normals.ToArray();
-					mesh.tangents = tangents.ToArray();
+
 					mesh.colors = colors.ToArray();
 					if (uv1 != null) mesh.uv = uv1.ToArray();
 					if (uv2 != null) mesh.uv2 = uv2.ToArray();
@@ -136,6 +135,13 @@ namespace Siccity.GLTFUtility {
 					if (weights != null) mesh.boneWeights = weights.ToArray();
 
 					mesh.RecalculateBounds();
+
+					if (normals.Count == 0) mesh.RecalculateNormals();
+					else mesh.normals = normals.ToArray();
+
+					if (tangents.Count == 0) mesh.RecalculateTangents();
+					else mesh.tangents = tangents.ToArray();
+
 					mesh.name = name;
 					return mesh;
 				}
