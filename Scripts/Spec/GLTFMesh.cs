@@ -24,6 +24,7 @@ namespace Siccity.GLTFUtility {
 
 		public class ImportTask : Importer.ImportTask<ImportResult[]> {
 			private class MeshData {
+				string name;
 				List<Vector3> normals = new List<Vector3>();
 				List<List<int>> submeshTris = new List<List<int>>();
 				List<Vector3> verts = new List<Vector3>();
@@ -40,6 +41,7 @@ namespace Siccity.GLTFUtility {
 				List<Vector2> uv8 = null;
 
 				public MeshData(GLTFMesh gltfMesh, GLTFAccessor.ImportResult[] accessors) {
+					name = gltfMesh.name;
 					if (gltfMesh.primitives.Count == 0) {
 						Debug.LogWarning("0 primitives in mesh");
 					} else {
@@ -134,6 +136,7 @@ namespace Siccity.GLTFUtility {
 					if (weights != null) mesh.boneWeights = weights.ToArray();
 
 					mesh.RecalculateBounds();
+					mesh.name = name;
 					return mesh;
 				}
 
