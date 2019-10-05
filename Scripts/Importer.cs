@@ -81,8 +81,7 @@ namespace Siccity.GLTFUtility {
 			string json = File.ReadAllText(filepath);
 
 			// Parse json
-			GLTFObject gltfObject = JsonConvert.DeserializeObject<GLTFObject>(json);
-			gltfObject.LoadAsync(filepath, importSettings, onFinished);
+			LoadAsync(json, filepath, importSettings, onFinished).RunCoroutine();
 		}
 
 		public abstract class ImportTask<TReturn> : ImportTask {
@@ -150,7 +149,13 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 #region Async
-		private static void LoadAsync(this GLTFObject gltfObject, string filepath, ImportSettings importSettings, Action onFinished) {
+		private static IEnumerator LoadAsync(string json, string filepath, ImportSettings importSettings, Action onFinished) {
+			// Threaded deserialization 
+			Task<GLTFObject> deserializeTask = new Task<GLTFObject>(() => JsonConvert.DeserializeObject<GLTFObject>(json));
+			deserializeTask.Start();
+			while (!deserializeTask.IsCompleted) yield return null;
+			GLTFObject gltfObject = deserializeTask.Result;
+
 			// directory root is sometimes used for loading buffers from containing file, or local images
 			string directoryRoot = Directory.GetParent(filepath).ToString() + "/";
 
@@ -182,21 +187,25 @@ namespace Siccity.GLTFUtility {
 			for (int i = 0; i < importTasks.Count; i++) {
 				TaskSupervisor(importTasks[i]).RunCoroutine();
 			}
-			if (onFinished != null) TaskIsDone(importTasks, onFinished).RunCoroutine();
+
+			// Fire onFinished when all tasks have completed
+			if (onFinished != null) {
+				// Wait for all tasks to finish
+				while (!importTasks.All(x => x.IsCompleted)) yield return null;
+				onFinished();
+			}
 		}
 
+		/// <summary> Keeps track of which threads to start when </summary>
 		private static IEnumerator TaskSupervisor(ImportTask importTask) {
-			// Wait for required results to complete
+			// Wait for required results to complete before starting
 			while (!importTask.IsReady) yield return null;
+			// Start threaded task
 			importTask.task.Start();
+			// Wait for task to complete
 			while (!importTask.task.IsCompleted) yield return null;
+			// Run additional unity code on main thread
 			importTask.MainThreadFinalize();
-		}
-
-		private static IEnumerator TaskIsDone(List<ImportTask> tasks, Action onFinish) {
-			// Wait for required results to complete
-			while (!tasks.All(x => x.IsCompleted)) yield return null;
-			onFinish();
 		}
 #endregion
 	}

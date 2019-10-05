@@ -49,57 +49,66 @@ namespace Siccity.GLTFUtility {
 		}
 
 		public class ImportTask : Importer.ImportTask<ImportResult[]> {
+			List<GLTFNode> nodes;
+			GLTFMesh.ImportTask meshTask;
+			GLTFSkin.ImportTask skinTask;
+
 			public ImportTask(List<GLTFNode> nodes, GLTFMesh.ImportTask meshTask, GLTFSkin.ImportTask skinTask) : base(meshTask, skinTask) {
-				task = new Task(() => {
-					if (nodes == null) return;
+				this.nodes = nodes;
+				this.meshTask = meshTask;
+				this.skinTask = skinTask;
+				task = new Task(() => { });
+			}
 
-					Result = new ImportResult[nodes.Count];
+			protected override void OnMainThreadFinalize() {
+				if (nodes == null) return;
 
-					// Initialize transforms
-					for (int i = 0; i < Result.Length; i++) {
-						Result[i] = new GLTFNode.ImportResult();
-						Result[i].transform = new GameObject().transform;
-						Result[i].transform.name = nodes[i].name;
-					}
-					// Set up hierarchy
-					for (int i = 0; i < Result.Length; i++) {
-						if (nodes[i].children != null) {
-							int[] children = nodes[i].children;
-							Result[i].children = children;
-							for (int k = 0; k < children.Length; k++) {
-								int childIndex = children[k];
-								Result[childIndex].parent = i;
-								Result[childIndex].transform.parent = Result[i].transform;
-							}
+				Result = new ImportResult[nodes.Count];
+
+				// Initialize transforms
+				for (int i = 0; i < Result.Length; i++) {
+					Result[i] = new GLTFNode.ImportResult();
+					Result[i].transform = new GameObject().transform;
+					Result[i].transform.name = nodes[i].name;
+				}
+				// Set up hierarchy
+				for (int i = 0; i < Result.Length; i++) {
+					if (nodes[i].children != null) {
+						int[] children = nodes[i].children;
+						Result[i].children = children;
+						for (int k = 0; k < children.Length; k++) {
+							int childIndex = children[k];
+							Result[childIndex].parent = i;
+							Result[childIndex].transform.parent = Result[i].transform;
 						}
 					}
-					// Apply TRS
-					for (int i = 0; i < Result.Length; i++) {
-						nodes[i].ApplyTRS(Result[i].transform);
-					}
-					// Setup components
-					for (int i = 0; i < Result.Length; i++) {
-						if (nodes[i].mesh.HasValue) {
-							GLTFMesh.ImportResult meshResult = meshTask.Result[nodes[i].mesh.Value];
-							Mesh mesh = meshResult.mesh;
-							Renderer renderer;
-							if (nodes[i].skin.HasValue) {
-								GLTFSkin.ImportResult skin = skinTask.Result[nodes[i].skin.Value];
-								renderer = skin.SetupSkinnedRenderer(Result[i].transform.gameObject, mesh, Result);
-							} else {
-								MeshRenderer mr = Result[i].transform.gameObject.AddComponent<MeshRenderer>();
-								MeshFilter mf = Result[i].transform.gameObject.AddComponent<MeshFilter>();
-								renderer = mr;
-								mf.sharedMesh = mesh;
-							}
-							//Materials
-							renderer.materials = meshResult.materials;
-							if (string.IsNullOrEmpty(Result[i].transform.name)) Result[i].transform.name = "node" + i;
+				}
+				// Apply TRS
+				for (int i = 0; i < Result.Length; i++) {
+					nodes[i].ApplyTRS(Result[i].transform);
+				}
+				// Setup components
+				for (int i = 0; i < Result.Length; i++) {
+					if (nodes[i].mesh.HasValue) {
+						GLTFMesh.ImportResult meshResult = meshTask.Result[nodes[i].mesh.Value];
+						Mesh mesh = meshResult.mesh;
+						Renderer renderer;
+						if (nodes[i].skin.HasValue) {
+							GLTFSkin.ImportResult skin = skinTask.Result[nodes[i].skin.Value];
+							renderer = skin.SetupSkinnedRenderer(Result[i].transform.gameObject, mesh, Result);
 						} else {
-							if (string.IsNullOrEmpty(Result[i].transform.name)) Result[i].transform.name = "node" + i;
+							MeshRenderer mr = Result[i].transform.gameObject.AddComponent<MeshRenderer>();
+							MeshFilter mf = Result[i].transform.gameObject.AddComponent<MeshFilter>();
+							renderer = mr;
+							mf.sharedMesh = mesh;
 						}
+						//Materials
+						renderer.materials = meshResult.materials;
+						if (string.IsNullOrEmpty(Result[i].transform.name)) Result[i].transform.name = "node" + i;
+					} else {
+						if (string.IsNullOrEmpty(Result[i].transform.name)) Result[i].transform.name = "node" + i;
 					}
-				});
+				}
 			}
 		}
 #endregion
