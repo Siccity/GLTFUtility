@@ -29,7 +29,7 @@ namespace Siccity.GLTFUtility {
 			public string mimeType;
 
 			// glTF stores Metallic in blue channel and roughness in green channel. Unity stores Metallic in red and roughness in alpha. This method returns a unity-fixed texture
-			public Texture2D GetFixedMetallicRoughness() {
+			/* public Texture2D GetFixedMetallicRoughness() {
 				if (!isMetallicRoughnessFixed) {
 					Color32[] pixels = texture.GetPixels32();
 					for (int i = 0; i < pixels.Length; i++) {
@@ -43,7 +43,7 @@ namespace Siccity.GLTFUtility {
 					isMetallicRoughnessFixed = true;
 				}
 				return texture;
-			}
+			} */
 		}
 
 		public ImportResult GetImage(string directoryRoot, GLTFBufferView.ImportResult[] bufferViews) {

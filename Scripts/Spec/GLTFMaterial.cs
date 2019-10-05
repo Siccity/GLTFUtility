@@ -110,7 +110,7 @@ namespace Siccity.GLTFUtility {
 				Material mat = new Material(sh);
 				mat.color = baseColorFactor;
 				mat.SetFloat("_Metallic", metallicFactor);
-				mat.SetFloat("_Glossiness", 1 - roughnessFactor);
+				mat.SetFloat("_Roughness", roughnessFactor);
 				if (baseColorTexture != null && baseColorTexture.index >= 0) {
 					if (textures.Length <= baseColorTexture.index) {
 						Debug.LogWarning("Attempted to get basecolor texture index " + baseColorTexture.index + " when only " + textures.Length + " exist");
@@ -122,7 +122,7 @@ namespace Siccity.GLTFUtility {
 					if (textures.Length <= metallicRoughnessTexture.index) {
 						Debug.LogWarning("Attempted to get metallicRoughness texture index " + metallicRoughnessTexture.index + " when only " + textures.Length + " exist");
 					} else {
-						mat.SetTexture("_MetallicGlossMap", textures[metallicRoughnessTexture.index].image.GetFixedMetallicRoughness());
+						mat.SetTexture("_MetallicGlossMap", textures[metallicRoughnessTexture.index].image.texture);
 						mat.EnableKeyword("_METALLICGLOSSMAP");
 					}
 				}
@@ -179,7 +179,7 @@ namespace Siccity.GLTFUtility {
 					if (textures.Length <= specularGlossinessTexture.index) {
 						Debug.LogWarning("Attempted to get specularGlossinessTexture texture index " + specularGlossinessTexture.index + " when only " + textures.Length + " exist");
 					} else {
-						mat.SetTexture("_SpecGlossMap", textures[specularGlossinessTexture.index].image.GetFixedMetallicRoughness());
+						mat.SetTexture("_SpecGlossMap", textures[specularGlossinessTexture.index].image.texture);
 						mat.EnableKeyword("_SPECGLOSSMAP");
 					}
 				}
