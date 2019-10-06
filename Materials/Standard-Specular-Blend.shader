@@ -4,7 +4,7 @@
 		_MainTex ("Albedo (RGB)", 2D) = "white" {}
 		[NoScaleOffset] _SpecGlossMap ("Specular Map", 2D) = "white" {}
 		_SpecColor ("Specular Color", Color) = (1,1,1,1)
-		_GlossyReflections ("Glossiness", Range(0,1)) = 0.0
+		_GlossyReflections ("Glossiness", Range(0,1)) = 1
 		[Normal][NoScaleOffset] _BumpMap ("Normal", 2D) = "bump" {}
 		[NoScaleOffset] _OcclusionMap ("Occlusion", 2D) = "white" {}
 		[NoScaleOffset] _EmissionMap ("Emission", 2D) = "black" {}
@@ -51,7 +51,7 @@
 			// Specular / roughness
 			fixed4 s = tex2D (_SpecGlossMap, IN.uv_MainTex);
 			o.Specular = s.rgb * _SpecColor;
-			o.Smoothness = 1 - (s.a * _GlossyReflections);
+			o.Smoothness = s.a * _GlossyReflections;
 			// Normal comes from a bump map
 			o.Normal = UnpackNormal (tex2D (_BumpMap, IN.uv_MainTex));
 			// Ambient Occlusion comes from red channel
