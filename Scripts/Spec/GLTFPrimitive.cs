@@ -13,6 +13,7 @@ namespace Siccity.GLTFUtility {
 		public int? material;
 		/// <summary> Morph targets </summary>
 		public List<GLTFAttributes> targets;
+		public Extensions extensions;
 
 		public class GLTFAttributes {
 			public int? POSITION;
@@ -35,6 +36,15 @@ namespace Siccity.GLTFUtility {
 			public int? WEIGHTS_1;
 			public int? WEIGHTS_2;
 			public int? WEIGHTS_3;
+		}
+
+		public class Extensions {
+			public DracoMeshCompression KHR_draco_mesh_compression;
+		}
+
+		public class DracoMeshCompression {
+			public int bufferView = 0;
+			public List<GLTFAttributes> attributes;
 		}
 	}
 }

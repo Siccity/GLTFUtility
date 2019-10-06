@@ -25,7 +25,7 @@ namespace Siccity.GLTFUtility {
 		[JsonConverter(typeof(EnumConverter))] public AlphaMode alphaMode = AlphaMode.OPAQUE;
 		public float alphaCutoff = 0.5f;
 		public bool doubleSided = false;
-		public MaterialExtensions extensions;
+		public Extensions extensions;
 
 		public class ImportResult {
 			public Material material;
@@ -80,7 +80,7 @@ namespace Siccity.GLTFUtility {
 			return true;
 		}
 
-		public class MaterialExtensions {
+		public class Extensions {
 			public PbrSpecularGlossiness KHR_materials_pbrSpecularGlossiness = null;
 		}
 
