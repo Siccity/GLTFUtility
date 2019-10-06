@@ -38,6 +38,11 @@ namespace Siccity.GLTFUtility {
 				}
 
 				public Texture2D ToTexture2D() {
+#if UNITY_EDITOR
+					Texture2D assetTexture = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(Texture2D)) as Texture2D;
+					if (assetTexture != null) return assetTexture;
+#endif
+
 					Texture2D tex = new Texture2D(2, 2);
 					if (!tex.LoadImage(bytes)) {
 						Debug.Log("mimeType not supported");
@@ -57,7 +62,7 @@ namespace Siccity.GLTFUtility {
 						string fullUri = directoryRoot + images[i].uri;
 						if (!string.IsNullOrEmpty(images[i].uri) && File.Exists(fullUri)) {
 							byte[] bytes = File.ReadAllBytes(fullUri);
-							imageData[i] = new ImageData(bytes, images[i].uri);
+							imageData[i] = new ImageData(bytes, fullUri);
 						} else if (images[i].bufferView.HasValue && !string.IsNullOrEmpty(images[i].mimeType)) {
 							byte[] bytes = bufferViewTask.Result[images[i].bufferView.Value].bytes;
 							imageData[i] = new ImageData(bytes);
