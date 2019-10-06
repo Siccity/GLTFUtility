@@ -44,7 +44,7 @@ namespace Siccity.GLTFUtility {
 
 		public class DracoMeshCompression {
 			public int bufferView = 0;
-			public List<GLTFAttributes> attributes;
+			public GLTFAttributes attributes;
 		}
 	}
 }

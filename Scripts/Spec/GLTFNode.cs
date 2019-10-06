@@ -91,6 +91,8 @@ namespace Siccity.GLTFUtility {
 				for (int i = 0; i < Result.Length; i++) {
 					if (nodes[i].mesh.HasValue) {
 						GLTFMesh.ImportResult meshResult = meshTask.Result[nodes[i].mesh.Value];
+						if (meshResult == null) continue;
+
 						Mesh mesh = meshResult.mesh;
 						Renderer renderer;
 						if (nodes[i].skin.HasValue) {

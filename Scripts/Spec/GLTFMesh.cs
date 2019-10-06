@@ -196,6 +196,11 @@ namespace Siccity.GLTFUtility {
 			protected override void OnMainThreadFinalize() {
 				Result = new ImportResult[meshData.Length];
 				for (int i = 0; i < meshData.Length; i++) {
+					if (meshData[i] == null) {
+						Debug.LogWarning("Draco mesh not supported");
+						continue;
+					}
+
 					Result[i] = new ImportResult();
 					Result[i].mesh = meshData[i].ToMesh();
 					Result[i].materials = new Material[meshes[i].primitives.Count];
