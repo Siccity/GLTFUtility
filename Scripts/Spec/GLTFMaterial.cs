@@ -8,7 +8,7 @@ using UnityEngine.Rendering;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#material
-	public class GLTFMaterial {
+	public class GLTFMaterial : GLTFProperty {
 #if UNITY_EDITOR
 		public static Material defaultMaterial { get { return _defaultMaterial != null ? _defaultMaterial : _defaultMaterial = UnityEditor.AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat"); } }
 		private static Material _defaultMaterial;
@@ -25,7 +25,6 @@ namespace Siccity.GLTFUtility {
 		[JsonConverter(typeof(EnumConverter))] public AlphaMode alphaMode = AlphaMode.OPAQUE;
 		public float alphaCutoff = 0.5f;
 		public bool doubleSided = false;
-		public Extensions extensions;
 
 		public class ImportResult {
 			public Material material;
@@ -38,10 +37,7 @@ namespace Siccity.GLTFUtility {
 			if (pbrMetallicRoughness != null) {
 				mat = pbrMetallicRoughness.CreateMaterial(textures, alphaMode, shaderSettings);
 			}
-			// Load specular-glossiness materials
-			else if (extensions != null && extensions.KHR_materials_pbrSpecularGlossiness != null) {
-				mat = extensions.KHR_materials_pbrSpecularGlossiness.CreateMaterial(textures, alphaMode, shaderSettings);
-			}
+
 			// Load fallback material
 			else mat = new Material(Shader.Find("Standard"));
 
@@ -78,10 +74,6 @@ namespace Siccity.GLTFUtility {
 			}
 			tex = textures[texture.index].image.texture;
 			return true;
-		}
-
-		public class Extensions {
-			public PbrSpecularGlossiness KHR_materials_pbrSpecularGlossiness = null;
 		}
 
 		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#pbrmetallicroughness
@@ -139,61 +131,6 @@ namespace Siccity.GLTFUtility {
 			}
 		}
 
-		public class PbrSpecularGlossiness {
-
-			/// <summary> The reflected diffuse factor of the material </summary>
-			[JsonConverter(typeof(ColorRGBAConverter))] public Color diffuseFactor = Color.white;
-			/// <summary> The diffuse texture </summary>
-			public TextureInfo diffuseTexture;
-			/// <summary> The reflected diffuse factor of the material </summary>
-			[JsonConverter(typeof(ColorRGBConverter))] public Color specularFactor = Color.white;
-			/// <summary> The glossiness or smoothness of the material </summary>
-			public float glossinessFactor = 1f;
-			/// <summary> The specular-glossiness texture </summary>
-			public TextureInfo specularGlossinessTexture;
-
-			public Material CreateMaterial(GLTFTexture.ImportResult[] textures, AlphaMode alphaMode, ShaderSettings shaderSettings) {
-				// Shader
-				Shader sh = null;
-#if UNITY_2019_1_OR_NEWER
-				// LWRP support
-				if (GraphicsSettings.renderPipelineAsset) sh = GraphicsSettings.renderPipelineAsset.defaultShader;
-#endif
-				if (sh == null) {
-					if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.SpecularBlend;
-					else sh = shaderSettings.Specular;
-				}
-
-				// Material
-				Material mat = new Material(sh);
-				mat.color = diffuseFactor;
-				mat.SetColor("_SpecColor", specularFactor);
-				mat.SetFloat("_Glossiness", glossinessFactor);
-
-				// Assign textures
-				if (textures != null) {
-					// Diffuse texture
-					if (diffuseTexture != null) {
-						if (textures.Length <= diffuseTexture.index) {
-							Debug.LogWarning("Attempted to get diffuseTexture texture index " + diffuseTexture.index + " when only " + textures.Length + " exist");
-						} else {
-							mat.SetTexture("_MainTex", textures[diffuseTexture.index].image.texture);
-						}
-					}
-					// Specular texture
-					if (specularGlossinessTexture != null) {
-						if (textures.Length <= specularGlossinessTexture.index) {
-							Debug.LogWarning("Attempted to get specularGlossinessTexture texture index " + specularGlossinessTexture.index + " when only " + textures.Length + " exist");
-						} else {
-							mat.SetTexture("_SpecGlossMap", textures[specularGlossinessTexture.index].image.texture);
-							mat.EnableKeyword("_SPECGLOSSMAP");
-						}
-					}
-				}
-				return mat;
-			}
-		}
-
 		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#normaltextureinfo
 		public class TextureInfo {
 			[JsonProperty(Required = Required.Always)] public int index;
@@ -214,6 +151,13 @@ namespace Siccity.GLTFUtility {
 				task = new Task(() => {
 					if (materials == null) return;
 					Result = new ImportResult[materials.Count];
+					for (int i = 0; i < materials.Count; i++) {
+						if (materials[i].extensions != null) {
+							foreach (var kvp in materials[i].extensions) {
+								kvp.Value.TaskedWork(materials, textureTask, importSettings);
+							}
+						}
+					}
 				});
 			}
 
@@ -224,6 +168,11 @@ namespace Siccity.GLTFUtility {
 					Result[i] = new ImportResult();
 					Result[i].material = materials[i].CreateMaterial(textureTask.Result, importSettings.shaders);
 					if (Result[i].material.name == null) Result[i].material.name = "material" + i;
+					foreach (var kvp in materials[i].extensions) {
+						ImportResult importResult = Result[i];
+						kvp.Value.MainThreadWork(ref importResult);
+						Result[i] = importResult;
+					}
 				}
 			}
 		}

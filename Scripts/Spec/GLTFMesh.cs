@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Siccity.GLTFUtility.Converters;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#mesh
-	public class GLTFMesh {
+	public class GLTFMesh : GLTFProperty {
 
 #region Serialization
 		[JsonProperty(Required = Required.Always)] public List<GLTFPrimitive> primitives;

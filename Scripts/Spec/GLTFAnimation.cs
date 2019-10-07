@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#animation
 	/// <summary> Contains info for a single animation clip </summary>
-	public class GLTFAnimation {
+	public class GLTFAnimation : GLTFProperty {
 
 		/// <summary> Connects the output values of the key frame animation to a specific node in the hierarchy </summary>
 		[JsonProperty(Required = Required.Always)] public Channel[] channels;

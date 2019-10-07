@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#buffer
 	/// <summary> Contains raw binary data </summary>
-	public class GLTFBuffer {
+	public class GLTFBuffer : GLTFProperty {
 
 		[JsonProperty(Required = Required.Always)] public int byteLength;
 		public string uri;

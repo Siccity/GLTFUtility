@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#skin
-	public class GLTFSkin {
+	public class GLTFSkin : GLTFProperty {
 
 		/// <summary> Index of accessor containing inverse bind shape matrices </summary>
 		public int? inverseBindMatrices;

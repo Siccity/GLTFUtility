@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#texture
-	public class GLTFTexture {
+	public class GLTFTexture : GLTFProperty {
 
 		public int? sampler;
 		public int? source;

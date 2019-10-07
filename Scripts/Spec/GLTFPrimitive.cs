@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Siccity.GLTFUtility.Converters;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#primitive
-	public class GLTFPrimitive {
+	public class GLTFPrimitive : GLTFProperty {
 
 		[JsonProperty(Required = Required.Always)] public GLTFAttributes attributes;
 		/// <summary> Rendering mode</summary>
@@ -13,7 +14,6 @@ namespace Siccity.GLTFUtility {
 		public int? material;
 		/// <summary> Morph targets </summary>
 		public List<GLTFAttributes> targets;
-		public Extensions extensions;
 
 		public class GLTFAttributes {
 			public int? POSITION;
@@ -38,13 +38,13 @@ namespace Siccity.GLTFUtility {
 			public int? WEIGHTS_3;
 		}
 
-		public class Extensions {
+		/* public class Extensions {
 			public DracoMeshCompression KHR_draco_mesh_compression;
 		}
 
 		public class DracoMeshCompression {
 			public int bufferView = 0;
 			public GLTFAttributes attributes;
-		}
+		} */
 	}
 }

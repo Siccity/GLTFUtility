@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#node
-	public class GLTFNode {
+	public class GLTFNode : GLTFProperty {
 
 #region Serialization
 		public string name;

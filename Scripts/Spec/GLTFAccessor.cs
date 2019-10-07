@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#accessor
 	/// <summary> Reads data from BufferViews </summary>
-	public class GLTFAccessor {
+	public class GLTFAccessor : GLTFProperty {
 
 #region Serialized fields
 		public int? bufferView;

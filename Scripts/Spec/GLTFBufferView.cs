@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#bufferview
 	/// <summary> Defines sections within the Buffer </summary>
-	public class GLTFBufferView {
+	public class GLTFBufferView : GLTFProperty {
 
 		[JsonProperty(Required = Required.Always)] public int buffer;
 		[JsonProperty(Required = Required.Always)] public int byteLength;

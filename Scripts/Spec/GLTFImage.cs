@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#image
-	public class GLTFImage {
+	public class GLTFImage : GLTFProperty {
 		/// <summary>
 		/// The uri of the image.
 		/// Relative paths are relative to the .gltf file.

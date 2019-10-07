@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
-	public class GLTFObject {
+	public class GLTFObject : GLTFProperty {
 
 		public int? scene;
 		[JsonProperty(Required = Required.Always)] public GLTFAsset asset;
