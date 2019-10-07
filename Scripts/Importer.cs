@@ -77,7 +77,7 @@ namespace Siccity.GLTFUtility {
 			return gltfObject.LoadInternal(filepath, importSettings, out animations);
 		}
 
-		public static void ImportGLTFAsync(string filepath, ImportSettings importSettings, Action onFinished) {
+		public static void ImportGLTFAsync(string filepath, ImportSettings importSettings, Action<GameObject> onFinished) {
 			string json = File.ReadAllText(filepath);
 
 			// Parse json
@@ -149,7 +149,7 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 #region Async
-		private static IEnumerator LoadAsync(string json, string filepath, ImportSettings importSettings, Action onFinished) {
+		private static IEnumerator LoadAsync(string json, string filepath, ImportSettings importSettings, Action<GameObject> onFinished) {
 			// Threaded deserialization 
 			Task<GLTFObject> deserializeTask = new Task<GLTFObject>(() => JsonConvert.DeserializeObject<GLTFObject>(json));
 			deserializeTask.Start();
@@ -192,7 +192,9 @@ namespace Siccity.GLTFUtility {
 			if (onFinished != null) {
 				// Wait for all tasks to finish
 				while (!importTasks.All(x => x.IsCompleted)) yield return null;
-				onFinished();
+
+				GameObject root = nodeTask.Result.GetRoot();
+				onFinished(root);
 			}
 		}
 
