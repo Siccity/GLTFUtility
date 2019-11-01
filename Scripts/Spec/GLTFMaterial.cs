@@ -168,7 +168,7 @@ namespace Siccity.GLTFUtility {
 				Material mat = new Material(sh);
 				mat.color = diffuseFactor;
 				mat.SetColor("_SpecColor", specularFactor);
-				mat.SetFloat("_Glossiness", glossinessFactor);
+				mat.SetFloat("_GlossyReflections", glossinessFactor);
 
 				// Assign textures
 				if (textures != null) {
