@@ -52,6 +52,7 @@ namespace Siccity.GLTFUtility {
 			ImportResult result = new ImportResult();
 			result.clip = new AnimationClip();
 			result.clip.name = name;
+			result.clip.legacy = true;
 
 			for (int i = 0; i < channels.Length; i++) {
 				Channel channel = channels[i];
@@ -71,7 +72,11 @@ namespace Siccity.GLTFUtility {
 					if (node.parent.HasValue) node = nodes[node.parent.Value];
 					else node = null;
 				}
-
+				
+				if(node != null) {
+					relativePath = $"{node.transform.name}/{relativePath}";
+				}
+				
 				float[] keyframeInput = accessors[sampler.input].ReadFloat().ToArray();
 				switch (channel.target.path) {
 					case "translation":
