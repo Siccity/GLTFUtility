@@ -222,7 +222,7 @@ namespace Siccity.GLTFUtility {
 
 				for (int i = 0; i < Result.Length; i++) {
 					Result[i] = new ImportResult();
-					Result[i].material = materials[i].CreateMaterial(textureTask.Result, importSettings.shaders);
+					Result[i].material = materials[i].CreateMaterial(textureTask.Result, importSettings.shaderOverrides);
 					if (Result[i].material.name == null) Result[i].material.name = "material" + i;
 				}
 			}

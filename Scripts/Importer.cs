@@ -150,7 +150,7 @@ namespace Siccity.GLTFUtility {
 
 #region Async
 		private static IEnumerator LoadAsync(string json, string filepath, ImportSettings importSettings, Action<GameObject> onFinished) {
-			// Threaded deserialization 
+			// Threaded deserialization
 			Task<GLTFObject> deserializeTask = new Task<GLTFObject>(() => JsonConvert.DeserializeObject<GLTFObject>(json));
 			deserializeTask.Start();
 			while (!deserializeTask.IsCompleted) yield return null;
@@ -159,7 +159,7 @@ namespace Siccity.GLTFUtility {
 			// directory root is sometimes used for loading buffers from containing file, or local images
 			string directoryRoot = Directory.GetParent(filepath).ToString() + "/";
 
-			importSettings.shaders.CacheDefaultShaders();
+			importSettings.shaderOverrides.CacheDefaultShaders();
 
 			// Setup import tasks
 			List<ImportTask> importTasks = new List<ImportTask>();
