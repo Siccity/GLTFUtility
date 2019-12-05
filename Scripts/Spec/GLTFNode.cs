@@ -52,11 +52,13 @@ namespace Siccity.GLTFUtility {
 			List<GLTFNode> nodes;
 			GLTFMesh.ImportTask meshTask;
 			GLTFSkin.ImportTask skinTask;
+			List<GLTFCamera> cameras;
 
-			public ImportTask(List<GLTFNode> nodes, GLTFMesh.ImportTask meshTask, GLTFSkin.ImportTask skinTask) : base(meshTask, skinTask) {
+			public ImportTask(List<GLTFNode> nodes, GLTFMesh.ImportTask meshTask, GLTFSkin.ImportTask skinTask, List<GLTFCamera> cameras) : base(meshTask, skinTask) {
 				this.nodes = nodes;
 				this.meshTask = meshTask;
 				this.skinTask = skinTask;
+				this.cameras = cameras;
 				task = new Task(() => { });
 			}
 
@@ -89,6 +91,7 @@ namespace Siccity.GLTFUtility {
 				}
 				// Setup components
 				for (int i = 0; i < Result.Length; i++) {
+					// Setup mesh
 					if (nodes[i].mesh.HasValue) {
 						GLTFMesh.ImportResult meshResult = meshTask.Result[nodes[i].mesh.Value];
 						if (meshResult == null) continue;
@@ -109,6 +112,24 @@ namespace Siccity.GLTFUtility {
 						if (string.IsNullOrEmpty(Result[i].transform.name)) Result[i].transform.name = "node" + i;
 					} else {
 						if (string.IsNullOrEmpty(Result[i].transform.name)) Result[i].transform.name = "node" + i;
+					}
+
+					// Setup camera
+					if (nodes[i].camera.HasValue) {
+						GLTFCamera cameraData = cameras[nodes[i].camera.Value];
+						Camera camera = Result[i].transform.gameObject.AddComponent<Camera>();
+						if (cameraData.type == CameraType.orthographic) {
+							camera.orthographic = true;
+							camera.nearClipPlane = cameraData.orthographic.znear;
+							camera.farClipPlane = cameraData.orthographic.zfar;
+							camera.orthographicSize = cameraData.orthographic.ymag;
+						} else {
+							camera.orthographic = false;
+							camera.nearClipPlane = cameraData.perspective.znear;
+							if (cameraData.perspective.zfar.HasValue) camera.farClipPlane = cameraData.perspective.zfar.Value;
+							if (cameraData.perspective.aspectRatio.HasValue) camera.aspect = cameraData.perspective.aspectRatio.Value;
+							camera.fieldOfView = Mathf.Rad2Deg * cameraData.perspective.yfov;
+						}
 					}
 				}
 			}

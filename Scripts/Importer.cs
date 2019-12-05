@@ -140,7 +140,7 @@ namespace Siccity.GLTFUtility {
 			meshTask.RunSynchronously();
 			GLTFSkin.ImportTask skinTask = new GLTFSkin.ImportTask(gltfObject.skins, accessorTask);
 			skinTask.RunSynchronously();
-			GLTFNode.ImportTask nodeTask = new GLTFNode.ImportTask(gltfObject.nodes, meshTask, skinTask);
+			GLTFNode.ImportTask nodeTask = new GLTFNode.ImportTask(gltfObject.nodes, meshTask, skinTask, gltfObject.cameras);
 			nodeTask.RunSynchronously();
 			animations = gltfObject.animations.Import(accessorTask.Result, nodeTask.Result);
 
@@ -180,7 +180,7 @@ namespace Siccity.GLTFUtility {
 			importTasks.Add(meshTask);
 			GLTFSkin.ImportTask skinTask = new GLTFSkin.ImportTask(gltfObject.skins, accessorTask);
 			importTasks.Add(skinTask);
-			GLTFNode.ImportTask nodeTask = new GLTFNode.ImportTask(gltfObject.nodes, meshTask, skinTask);
+			GLTFNode.ImportTask nodeTask = new GLTFNode.ImportTask(gltfObject.nodes, meshTask, skinTask, gltfObject.cameras);
 			importTasks.Add(nodeTask);
 
 			// Ignite
