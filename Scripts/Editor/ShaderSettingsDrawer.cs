@@ -12,32 +12,26 @@ namespace Siccity.GLTFUtility {
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
 			EditorGUI.BeginProperty(position, label, property);
 
-			SerializedProperty[] shaders = new SerializedProperty[] {
-				property.FindPropertyRelative("metallic"),
-					property.FindPropertyRelative("metallicBlend"),
-					property.FindPropertyRelative("specular"),
-					property.FindPropertyRelative("specularBlend")
-			};
-			hasShaders = HasShaders(shaders);
+
+			// Get shader properties
+			SerializedProperty metalicProp = property.FindPropertyRelative("metallic");
+			SerializedProperty metallicBlendProp = property.FindPropertyRelative("metallicBlend");
+			SerializedProperty specularProp = property.FindPropertyRelative("specular");
+			SerializedProperty specularBlendProp = property.FindPropertyRelative("specularBlend");
+
+			hasShaders = HasShaders(metalicProp, metallicBlendProp, specularProp, specularBlendProp);
 			EditorGUI.PropertyField(position, property, true);
 
+			// Show shader warning
 			if (!hasShaders && property.isExpanded) {
 				GUIContent content = new GUIContent("Shaders not found in 'GraphicSettings/Always Included Shaders'.\nShaders might not be available for runtime import.");
 				float baseHeight = EditorGUI.GetPropertyHeight(property, true);
 				Rect warningRect = new Rect(position.x, position.y + baseHeight + 2, position.width, 50);
 				EditorGUI.HelpBox(warningRect, content.text, MessageType.Warning);
-				Rect buttonRect = new Rect(warningRect.xMax - 150, warningRect.yMax + 2, 150, 18);
+				/* Rect buttonRect = new Rect(warningRect.xMax - 150, warningRect.yMax + 2, 150, 18);
 				if (GUI.Button(buttonRect, "Open GraphicsSettings")) {
 
-				}
-				/*int arrayIndex = arrayProp.arraySize;
-				arrayProp.InsertArrayElementAtIndex(arrayIndex);
-				var arrayElem = arrayProp.GetArrayElementAtIndex(arrayIndex);
-				arrayElem.objectReferenceValue = shaders;
-
-				serializedObject.ApplyModifiedProperties();
-
-				AssetDatabase.SaveAssets(); */
+				} */
 			}
 			EditorGUI.EndProperty();
 		}
@@ -48,7 +42,7 @@ namespace Siccity.GLTFUtility {
 			return height;
 		}
 
-		public bool HasShaders(SerializedProperty[] shaders) {
+		public bool HasShaders(params SerializedProperty[] shaders) {
 
 			if (serializedGraphicsSettings == null) {
 				GraphicsSettings graphicsSettings = AssetDatabase.LoadAssetAtPath<GraphicsSettings>("ProjectSettings/GraphicsSettings.asset");
