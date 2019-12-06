@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Shims;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#animation
 	/// <summary> Contains info for a single animation clip </summary>
 	public class GLTFAnimation {
+		[Preserve] public GLTFAnimation() { }
 
 		/// <summary> Connects the output values of the key frame animation to a specific node in the hierarchy </summary>
 		[JsonProperty(Required = Required.Always)] public Channel[] channels;
@@ -17,6 +19,8 @@ namespace Siccity.GLTFUtility {
 #region Classes
 		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#animation-sampler
 		public class Sampler {
+			[Preserve] public Sampler() { }
+
 			/// <summary> The index of an accessor containing keyframe input values, e.g., time. </summary>
 			[JsonProperty(Required = Required.Always)] public int input;
 			/// <summary> The index of an accessor containing keyframe output values. </summary>
@@ -28,6 +32,8 @@ namespace Siccity.GLTFUtility {
 		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#channel
 		/// <summary> Connects the output values of the key frame animation to a specific node in the hierarchy </summary>
 		public class Channel {
+			[Preserve] public Channel() { }
+
 			/// <summary> Target sampler index </summary>
 			[JsonProperty(Required = Required.Always)] public int sampler;
 			/// <summary> Target sampler index </summary>
@@ -37,6 +43,8 @@ namespace Siccity.GLTFUtility {
 		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#target
 		/// <summary> Identifies which node and property to animate </summary>
 		public class Target {
+			[Preserve] public Target() { }
+
 			/// <summary> Target node index.</summary>
 			public int? node;
 			/// <summary> Which property to animate. Valid names are: "translation", "rotation", "scale", "weights" </summary>

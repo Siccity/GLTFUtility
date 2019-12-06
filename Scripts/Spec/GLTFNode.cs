@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Shims;
 using Siccity.GLTFUtility.Converters;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#node
 	public class GLTFNode {
+		[Preserve] public GLTFNode() { }
 
 #region Serialization
 		public string name;

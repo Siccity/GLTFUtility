@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Shims;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#skin
 	public class GLTFSkin {
+		[Preserve] public GLTFSkin() { }
 
 		/// <summary> Index of accessor containing inverse bind shape matrices </summary>
 		public int? inverseBindMatrices;

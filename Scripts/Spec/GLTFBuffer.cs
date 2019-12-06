@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Shims;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#buffer
 	/// <summary> Contains raw binary data </summary>
 	public class GLTFBuffer {
+		[Preserve] public GLTFBuffer() { }
 
 		[JsonProperty(Required = Required.Always)] public int byteLength;
 		public string uri;

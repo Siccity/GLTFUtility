@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Shims;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
@@ -8,6 +9,8 @@ namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/issues/1628
 	/// <summary> Will eventually become the base class of all gltf classes to enable extensions, but this isn't supported yet </summary>
 	public class GLTFProperty {
+		[Preserve] public GLTFProperty() { }
+
 		public object extensions;
 		public object extras;
 	}
