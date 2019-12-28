@@ -2,16 +2,14 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Shims;
 using Siccity.GLTFUtility.Converters;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Scripting;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#material
-	public class GLTFMaterial {
-		[Preserve] public GLTFMaterial() { }
-
+	[Preserve] public class GLTFMaterial {
 #if UNITY_EDITOR
 		public static Material defaultMaterial { get { return _defaultMaterial != null ? _defaultMaterial : _defaultMaterial = UnityEditor.AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat"); } }
 		private static Material _defaultMaterial;
@@ -83,15 +81,12 @@ namespace Siccity.GLTFUtility {
 			return true;
 		}
 
-		public class Extensions {
-			[Preserve] public Extensions() { }
+		[Preserve] public class Extensions {
 			public PbrSpecularGlossiness KHR_materials_pbrSpecularGlossiness = null;
 		}
 
 		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#pbrmetallicroughness
-		public class PbrMetalRoughness {
-			[Preserve] public PbrMetalRoughness() { }
-
+		[Preserve] public class PbrMetalRoughness {
 			[JsonConverter(typeof(ColorRGBAConverter))] public Color baseColorFactor = Color.white;
 			public TextureInfo baseColorTexture;
 			public float metallicFactor = 1f;
@@ -144,9 +139,7 @@ namespace Siccity.GLTFUtility {
 			}
 		}
 
-		public class PbrSpecularGlossiness {
-			[Preserve] public PbrSpecularGlossiness() { }
-
+		[Preserve] public class PbrSpecularGlossiness {
 			/// <summary> The reflected diffuse factor of the material </summary>
 			[JsonConverter(typeof(ColorRGBAConverter))] public Color diffuseFactor = Color.white;
 			/// <summary> The diffuse texture </summary>
@@ -201,9 +194,7 @@ namespace Siccity.GLTFUtility {
 		}
 
 		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#normaltextureinfo
-		public class TextureInfo {
-			[Preserve] public TextureInfo() { }
-
+		[Preserve] public class TextureInfo {
 			[JsonProperty(Required = Required.Always)] public int index;
 			public int texCoord = 0;
 			public float scale = 1;

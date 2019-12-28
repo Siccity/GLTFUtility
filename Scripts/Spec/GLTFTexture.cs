@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Shims;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#texture
-	public class GLTFTexture {
-		[Preserve] public GLTFTexture() { }
-
+	[Preserve] public class GLTFTexture {
 		public int? sampler;
 		public int? source;
 		public string name;

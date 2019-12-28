@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Shims;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace Siccity.GLTFUtility {
-	public class GLTFObject {
-		[Preserve] public GLTFObject() { }
-
+	[Preserve] public class GLTFObject {
 		public int? scene;
 		[JsonProperty(Required = Required.Always)] public GLTFAsset asset;
 		public List<GLTFScene> scenes;

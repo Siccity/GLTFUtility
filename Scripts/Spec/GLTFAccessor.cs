@@ -2,16 +2,14 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Shims;
 using Siccity.GLTFUtility.Converters;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#accessor
 	/// <summary> Reads data from BufferViews </summary>
-	public class GLTFAccessor {
-		[Preserve] public GLTFAccessor() { }
-
+	[Preserve] public class GLTFAccessor {
 #region Serialized fields
 		public int? bufferView;
 		public int byteOffset = 0;
@@ -24,26 +22,19 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#sparse
-		public class Sparse {
-			[Preserve] public Sparse() { }
-
+		[Preserve] public class Sparse {
 			[JsonProperty(Required = Required.Always)] public int count;
 			[JsonProperty(Required = Required.Always)] public Indices indices;
 			[JsonProperty(Required = Required.Always)] public Values values;
 
 			// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#values
-			public class Values {
-				[Preserve] public Values() { }
-
+			[Preserve] public class Values {
 				[JsonProperty(Required = Required.Always)] public int bufferView;
 				public int byteOffset = 0;
-
 			}
 
 			// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#indices
-			public class Indices {
-				[Preserve] public Indices() { }
-
+			[Preserve] public class Indices {
 				[JsonProperty(Required = Required.Always)] public int bufferView;
 				[JsonProperty(Required = Required.Always)] public int componentType;
 				public int byteOffset = 0;

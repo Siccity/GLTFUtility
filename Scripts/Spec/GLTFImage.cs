@@ -4,14 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Shims;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#image
-	public class GLTFImage {
-		[Preserve] public GLTFImage() { }
-
+	[Preserve] public class GLTFImage {
 		/// <summary>
 		/// The uri of the image.
 		/// Relative paths are relative to the .gltf file.
