@@ -16,7 +16,10 @@ glTF is a new opensource 3d model transmission format which supports everything 
 Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-forget solution, keeping consistency with built-in functionality. 
 
 ### Installation
-1. GLTFUtility requires Json.NET to be installed in your project. You can get it for free from the [Asset Store](https://assetstore.unity.com/packages/tools/input-management/json-net-for-unity-11347) 
+1. GLTFUtility requires Newtonsoft Json to be installed in your project.
+    * Official upm package: `"com.unity.nuget.newtonsoft-json": "1.1.2",`
+    * Unofficial Asset Store: [link](https://assetstore.unity.com/packages/tools/input-management/json-net-for-unity-11347)
+    * Unofficial git repo: [link](https://github.com/jilleJr/Newtonsoft.Json-for-Unity)
 
 2. Choose *one* of the following:
     * Download [.zip](https://github.com/Siccity/GLTFUtility/archive/master.zip) and extract to your project assets
