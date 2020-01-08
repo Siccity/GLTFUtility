@@ -101,6 +101,11 @@ namespace Siccity.GLTFUtility {
 						if (nodes[i].skin.HasValue) {
 							GLTFSkin.ImportResult skin = skinTask.Result[nodes[i].skin.Value];
 							renderer = skin.SetupSkinnedRenderer(Result[i].transform.gameObject, mesh, Result);
+						} else if (mesh.blendShapeCount > 0) {
+							// Blend shapes require skinned mesh renderer
+							SkinnedMeshRenderer mr = Result[i].transform.gameObject.AddComponent<SkinnedMeshRenderer>();
+							mr.sharedMesh = mesh;
+							renderer = mr;
 						} else {
 							MeshRenderer mr = Result[i].transform.gameObject.AddComponent<MeshRenderer>();
 							MeshFilter mf = Result[i].transform.gameObject.AddComponent<MeshFilter>();

@@ -39,6 +39,11 @@ namespace Siccity.GLTFUtility {
 				List<Vector2> uv6 = null;
 				List<Vector2> uv7 = null;
 				List<Vector2> uv8 = null;
+				List<BlendShape> blendShapes = new List<BlendShape>();
+
+				private class BlendShape {
+					public Vector3[] pos, norm, tan;
+				}
 
 				public MeshData(GLTFMesh gltfMesh, GLTFAccessor.ImportResult[] accessors) {
 					name = gltfMesh.name;
@@ -111,6 +116,29 @@ namespace Siccity.GLTFUtility {
 							ReadUVs(ref uv6, accessors, primitive.attributes.TEXCOORD_5, vertCount);
 							ReadUVs(ref uv7, accessors, primitive.attributes.TEXCOORD_6, vertCount);
 							ReadUVs(ref uv8, accessors, primitive.attributes.TEXCOORD_7, vertCount);
+
+							// Blend shapes / Morph targets
+							if (primitive.targets != null) {
+								for (int k = 0; k < primitive.targets.Count; k++) {
+									BlendShape blendShape = new BlendShape();
+									// Position
+									if (primitive.targets[k].POSITION.HasValue)
+										blendShape.pos = accessors[primitive.targets[k].POSITION.Value].ReadVec3();
+									else blendShape.pos = new Vector3[vertCount];
+
+									// Normals
+									if (primitive.targets[k].NORMAL.HasValue)
+										blendShape.norm = accessors[primitive.targets[k].NORMAL.Value].ReadVec3();
+									else blendShape.norm = new Vector3[vertCount];
+
+									// Tangent
+									if (primitive.targets[k].TANGENT.HasValue)
+										blendShape.tan = accessors[primitive.targets[k].TANGENT.Value].ReadVec3();
+									else blendShape.tan = new Vector3[vertCount];
+
+									blendShapes.Add(blendShape);
+								}
+							}
 						}
 					}
 				}
@@ -135,6 +163,11 @@ namespace Siccity.GLTFUtility {
 					if (weights != null) mesh.boneWeights = weights.ToArray();
 
 					mesh.RecalculateBounds();
+
+					// Blend shapes
+					for (int i = 0; i < blendShapes.Count; i++) {
+						mesh.AddBlendShapeFrame("morph-" + i, 1f, blendShapes[i].pos, blendShapes[i].norm, blendShapes[i].tan);
+					}
 
 					if (normals.Count == 0) mesh.RecalculateNormals();
 					else mesh.normals = normals.ToArray();

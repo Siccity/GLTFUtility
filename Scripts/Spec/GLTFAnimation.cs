@@ -120,7 +120,7 @@ namespace Siccity.GLTFUtility {
 						result.clip.SetCurve(relativePath, typeof(Transform), "localScale.z", scaleZ);
 						break;
 					case "weights":
-						Debug.LogWarning("morph weights not supported");
+						Debug.LogWarning("morph weights in animation is not supported");
 						break;
 				}
 			}
