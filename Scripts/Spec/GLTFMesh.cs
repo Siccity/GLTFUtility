@@ -40,6 +40,7 @@ namespace Siccity.GLTFUtility {
 				List<Vector2> uv7 = null;
 				List<Vector2> uv8 = null;
 				List<BlendShape> blendShapes = new List<BlendShape>();
+				List<int> submeshVertexStart = new List<int>();
 
 				private class BlendShape {
 					public Vector3[] pos, norm, tan;
@@ -54,6 +55,7 @@ namespace Siccity.GLTFUtility {
 							GLTFPrimitive primitive = gltfMesh.primitives[i];
 
 							int vertStartIndex = verts.Count;
+							submeshVertexStart.Add(vertStartIndex);
 
 							// Verts - (Z points backwards in GLTF)
 							if (primitive.attributes.POSITION.HasValue) {
@@ -116,31 +118,33 @@ namespace Siccity.GLTFUtility {
 							ReadUVs(ref uv6, accessors, primitive.attributes.TEXCOORD_5, vertCount);
 							ReadUVs(ref uv7, accessors, primitive.attributes.TEXCOORD_6, vertCount);
 							ReadUVs(ref uv8, accessors, primitive.attributes.TEXCOORD_7, vertCount);
-
-							// Blend shapes / Morph targets
+						}
+						// Read blend shapes after knowing final vertex count
+						int finalVertCount = verts.Count;
+						for (int i = 0; i < gltfMesh.primitives.Count; i++) {
+							GLTFPrimitive primitive = gltfMesh.primitives[i];
 							if (primitive.targets != null) {
 								for (int k = 0; k < primitive.targets.Count; k++) {
 									BlendShape blendShape = new BlendShape();
-									// Position
-									if (primitive.targets[k].POSITION.HasValue)
-										blendShape.pos = accessors[primitive.targets[k].POSITION.Value].ReadVec3();
-									else blendShape.pos = new Vector3[vertCount];
-
-									// Normals
-									if (primitive.targets[k].NORMAL.HasValue)
-										blendShape.norm = accessors[primitive.targets[k].NORMAL.Value].ReadVec3();
-									else blendShape.norm = new Vector3[vertCount];
-
-									// Tangent
-									if (primitive.targets[k].TANGENT.HasValue)
-										blendShape.tan = accessors[primitive.targets[k].TANGENT.Value].ReadVec3();
-									else blendShape.tan = new Vector3[vertCount];
-
+									blendShape.pos = GetMorphWeights(primitive.targets[k].POSITION, submeshVertexStart[i], finalVertCount, accessors);
+									blendShape.norm = GetMorphWeights(primitive.targets[k].NORMAL, submeshVertexStart[i], finalVertCount, accessors);
+									blendShape.tan = GetMorphWeights(primitive.targets[k].TANGENT, submeshVertexStart[i], finalVertCount, accessors);
 									blendShapes.Add(blendShape);
 								}
 							}
 						}
 					}
+				}
+
+				private Vector3[] GetMorphWeights(int? accessor, int vertStartIndex, int vertCount, GLTFAccessor.ImportResult[] accessors) {
+					if (accessor.HasValue) {
+						Vector3[] accessorData = accessors[accessor.Value].ReadVec3();
+						if (accessorData.Length != vertCount) {
+							Vector3[] resized = new Vector3[vertCount];
+							Array.Copy(accessorData, 0, resized, vertStartIndex, accessorData.Length);
+							return resized;
+						} else return accessorData;
+					} else return new Vector3[vertCount];
 				}
 
 				public Mesh ToMesh() {
