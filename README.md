@@ -46,7 +46,7 @@ Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-for
 - [ ] Remote textures
 - [x] Rig
 - [x] Animations (multiple)
-- [ ] Morph targets
+- [x] Morph targets
 - [x] Cameras
 - [ ] Lights
 - [ ] Draco compression
