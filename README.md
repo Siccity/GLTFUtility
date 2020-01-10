@@ -68,7 +68,7 @@ void ImportGLTF(string filepath) {
 using Siccity.GLTFUtility;
 
 void ImportGLTFAsync(string filepath) {
-   Importer.ImportGLTFAsync(filepath, ImportSettings(), OnFinishAsync);
+   Importer.ImportGLTFAsync(filepath, new ImportSettings(), OnFinishAsync);
 }
 
 void OnFinishAsync(GameObject result) {
