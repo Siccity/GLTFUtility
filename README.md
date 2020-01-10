@@ -13,7 +13,7 @@ glTF is a new opensource 3d model transmission format which supports everything 
 
 
 ### What makes GLTFUtility different?
-Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-forget solution, keeping consistency with built-in functionality. 
+Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-forget solution, keeping consistency with built-in functionality.
 
 ### Installation
 1. GLTFUtility requires Newtonsoft Json to be installed in your project.
@@ -31,7 +31,7 @@ Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-for
 
 **NOTICE** This is a work in progress. Expect bugs. Current features can be tracked below:
 
-**Features**
+### Features
 - [x] Editor import
 - [ ] Editor export
 - [x] Runtime import API
@@ -53,3 +53,25 @@ Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-for
 - [x] Multithreading
 - [x] GLTF format
 - [x] GLB format
+
+### Runtime import API
+```cs
+// Single thread
+using Siccity.GLTFUtility;
+
+void ImportGLTF(string filepath) {
+   GameObject result = Importer.LoadFromFile(filepath);
+}
+```
+```cs
+// Multithreaded
+using Siccity.GLTFUtility;
+
+void ImportGLTFAsync(string filepath) {
+   Importer.ImportGLTFAsync(filepath, new Siccity.GLTFUtility.ImportSettings(), OnFinishAsync);
+}
+
+void OnFinishAsync(GameObject result) {
+   Debug.Log("Finished importing " + result.name);
+}
+```
