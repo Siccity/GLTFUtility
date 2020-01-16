@@ -48,10 +48,15 @@ namespace Siccity.GLTFUtility {
 		}
 #endregion
 
-		public ImportResult Import(GLTFAccessor.ImportResult[] accessors, GLTFNode.ImportResult[] nodes) {
+		public ImportResult Import(GLTFAccessor.ImportResult[] accessors, GLTFNode.ImportResult[] nodes, ImportSettings importSettings) {
 			ImportResult result = new ImportResult();
 			result.clip = new AnimationClip();
 			result.clip.name = name;
+
+			if (importSettings.useLegacyClips)
+			{
+				result.clip.legacy = true;
+			}
 
 			for (int i = 0; i < channels.Length; i++) {
 				Channel channel = channels[i];
@@ -129,12 +134,12 @@ namespace Siccity.GLTFUtility {
 	}
 
 	public static class GLTFAnimationExtensions {
-		public static GLTFAnimation.ImportResult[] Import(this List<GLTFAnimation> animations, GLTFAccessor.ImportResult[] accessors, GLTFNode.ImportResult[] nodes) {
+		public static GLTFAnimation.ImportResult[] Import(this List<GLTFAnimation> animations, GLTFAccessor.ImportResult[] accessors, GLTFNode.ImportResult[] nodes, ImportSettings importSettings) {
 			if (animations == null) return null;
 
 			GLTFAnimation.ImportResult[] results = new GLTFAnimation.ImportResult[animations.Count];
 			for (int i = 0; i < results.Length; i++) {
-				results[i] = animations[i].Import(accessors, nodes);
+				results[i] = animations[i].Import(accessors, nodes, importSettings);
 				if (string.IsNullOrEmpty(results[i].clip.name)) results[i].clip.name = "animation" + i;
 			}
 			return results;

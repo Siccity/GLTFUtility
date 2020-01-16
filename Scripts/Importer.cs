@@ -142,7 +142,7 @@ namespace Siccity.GLTFUtility {
 			skinTask.RunSynchronously();
 			GLTFNode.ImportTask nodeTask = new GLTFNode.ImportTask(gltfObject.nodes, meshTask, skinTask, gltfObject.cameras);
 			nodeTask.RunSynchronously();
-			animations = gltfObject.animations.Import(accessorTask.Result, nodeTask.Result);
+			animations = gltfObject.animations.Import(accessorTask.Result, nodeTask.Result, importSettings);
 
 			return nodeTask.Result.GetRoot();
 		}
