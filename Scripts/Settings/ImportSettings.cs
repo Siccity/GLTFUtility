@@ -10,5 +10,6 @@ namespace Siccity.GLTFUtility {
 		public bool materials = true;
 		[FormerlySerializedAs("shaders")]
 		public ShaderSettings shaderOverrides = new ShaderSettings();
+		public bool useLegacyClips;
 	}
 }
