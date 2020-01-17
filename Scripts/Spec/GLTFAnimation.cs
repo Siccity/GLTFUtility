@@ -53,8 +53,7 @@ namespace Siccity.GLTFUtility {
 			result.clip = new AnimationClip();
 			result.clip.name = name;
 
-			if (importSettings.useLegacyClips)
-			{
+			if (importSettings.useLegacyClips) {
 				result.clip.legacy = true;
 			}
 
