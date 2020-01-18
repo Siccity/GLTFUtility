@@ -14,6 +14,15 @@ namespace Siccity.GLTFUtility {
 		/// <summary> Morph target weights </summary>
 		public List<float> weights;
 		public string name;
+		public Extras extras;
+
+		public class Extras {
+			/// <summary>
+			/// Morph target names. Not part of the official spec, but pretty much a standard.
+			/// Discussed here https://github.com/KhronosGroup/glTF/issues/1036
+			/// </summary>
+			public string[] targetNames;
+		}
 #endregion
 
 #region Import
@@ -43,6 +52,7 @@ namespace Siccity.GLTFUtility {
 				List<int> submeshVertexStart = new List<int>();
 
 				private class BlendShape {
+					public string name;
 					public Vector3[] pos, norm, tan;
 				}
 
@@ -119,8 +129,17 @@ namespace Siccity.GLTFUtility {
 							ReadUVs(ref uv7, accessors, primitive.attributes.TEXCOORD_6, vertCount);
 							ReadUVs(ref uv8, accessors, primitive.attributes.TEXCOORD_7, vertCount);
 						}
+
+						bool hasTargetNames = gltfMesh.extras != null && gltfMesh.extras.targetNames != null;
+						if (hasTargetNames) {
+							if (gltfMesh.primitives.All(x => x.targets.Count != gltfMesh.extras.targetNames.Length)) {
+								Debug.LogWarning("Morph target names found in mesh " + name + " but array length does not match primitive morph target array length");
+								hasTargetNames = false;
+							}
+						}
 						// Read blend shapes after knowing final vertex count
 						int finalVertCount = verts.Count;
+
 						for (int i = 0; i < gltfMesh.primitives.Count; i++) {
 							GLTFPrimitive primitive = gltfMesh.primitives[i];
 							if (primitive.targets != null) {
@@ -129,6 +148,8 @@ namespace Siccity.GLTFUtility {
 									blendShape.pos = GetMorphWeights(primitive.targets[k].POSITION, submeshVertexStart[i], finalVertCount, accessors);
 									blendShape.norm = GetMorphWeights(primitive.targets[k].NORMAL, submeshVertexStart[i], finalVertCount, accessors);
 									blendShape.tan = GetMorphWeights(primitive.targets[k].TANGENT, submeshVertexStart[i], finalVertCount, accessors);
+									if (hasTargetNames) blendShape.name = gltfMesh.extras.targetNames[k];
+									else blendShape.name = "morph-" + blendShapes.Count;
 									blendShapes.Add(blendShape);
 								}
 							}
@@ -170,7 +191,7 @@ namespace Siccity.GLTFUtility {
 
 					// Blend shapes
 					for (int i = 0; i < blendShapes.Count; i++) {
-						mesh.AddBlendShapeFrame("morph-" + i, 1f, blendShapes[i].pos, blendShapes[i].norm, blendShapes[i].tan);
+						mesh.AddBlendShapeFrame(blendShapes[i].name, 1f, blendShapes[i].pos, blendShapes[i].norm, blendShapes[i].tan);
 					}
 
 					if (normals.Count == 0) mesh.RecalculateNormals();
