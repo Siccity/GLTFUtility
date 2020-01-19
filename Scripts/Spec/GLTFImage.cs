@@ -61,9 +61,17 @@ namespace Siccity.GLTFUtility {
 					imageData = new ImageData[images.Count];
 					for (int i = 0; i < imageData.Length; i++) {
 						string fullUri = directoryRoot + images[i].uri;
-						if (!string.IsNullOrEmpty(images[i].uri) && File.Exists(fullUri)) {
-							byte[] bytes = File.ReadAllBytes(fullUri);
-							imageData[i] = new ImageData(bytes, fullUri);
+						if (!string.IsNullOrEmpty(images[i].uri)) {
+							if (File.Exists(fullUri)) {
+								// If the file is found at fullUri, read it
+								byte[] bytes = File.ReadAllBytes(fullUri);
+								imageData[i] = new ImageData(bytes, fullUri);
+							} else if(images[i].uri.StartsWith("data:")) {
+								// If the image is embedded, find its Base64 content and save as byte array
+								string content = images[i].uri.Split(',').Last();
+								byte[] imageBytes = Convert.FromBase64String(content);
+								imageData[i] = new ImageData(imageBytes);
+							}
 						} else if (images[i].bufferView.HasValue && !string.IsNullOrEmpty(images[i].mimeType)) {
 							byte[] bytes = bufferViewTask.Result[images[i].bufferView.Value].bytes;
 							imageData[i] = new ImageData(bytes);
