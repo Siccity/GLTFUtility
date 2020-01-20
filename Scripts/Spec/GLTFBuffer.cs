@@ -14,6 +14,7 @@ namespace Siccity.GLTFUtility {
 		public string name;
 
 		[JsonIgnore] private const string embeddedPrefix = "data:application/octet-stream;base64,";
+		[JsonIgnore] private const string embeddedPrefix2 = "data:application/gltf-buffer;base64,";
 
 		public class ImportResult {
 			public byte[] bytes;
@@ -29,6 +30,10 @@ namespace Siccity.GLTFUtility {
 			} else if (uri.StartsWith(embeddedPrefix)) {
 				// Load embedded
 				string b64 = uri.Substring(embeddedPrefix.Length, uri.Length - embeddedPrefix.Length);
+				result.bytes = Convert.FromBase64String(b64);
+			} else if (uri.StartsWith(embeddedPrefix2)) {
+				// Load embedded
+				string b64 = uri.Substring(embeddedPrefix2.Length, uri.Length - embeddedPrefix2.Length);
 				result.bytes = Convert.FromBase64String(b64);
 			} else {
 				// Load URI
