@@ -339,25 +339,33 @@ namespace Siccity.GLTFUtility {
 
 		public ImportResult Import(GLTFBufferView.ImportResult[] bufferViews) {
 			ImportResult result = new ImportResult();
-			try {
-				GLTFBufferView.ImportResult bufferView = bufferViews[this.bufferView.Value];
 
+			if (this.bufferView.HasValue) {
+				// Load bytes from buffer if there is one
+				GLTFBufferView.ImportResult bufferView = bufferViews[this.bufferView.Value];
 				result.bytes = bufferView.bytes.SubArray(byteOffset, bufferView.bytes.Length - byteOffset);
-				result.componentType = componentType;
-				result.type = type;
-				result.count = count;
-			} catch (Exception e) {
-				Debug.Log(e.Message);
+			} else {
+				// Initialize all-zero byte array if no buffer is defined. Get values from sparse accessor later.
+				int componentSize = GetComponentSize(componentType, type);
+				result.bytes = new byte[componentSize * count];
 			}
-			// Sparse
+			result.componentType = componentType;
+			result.type = type;
+			result.count = count;
+
+			// Sparse accessor works by overwriting specified indices instead of defining a full data set. This can save space, especially for morph targets
 			if (sparse != null) {
+				// Read from buffer which indices we want to overwrite
 				GLTFBufferView.ImportResult indicesBufferView = bufferViews[sparse.indices.bufferView];
 				byte[] indicesBytes = indicesBufferView.bytes.SubArray(sparse.indices.byteOffset, indicesBufferView.bytes.Length - sparse.indices.byteOffset);
 				int[] indices = ReadInt(sparse.count, indicesBytes, sparse.indices.componentType, AccessorType.SCALAR);
 				int componentSize = GetComponentSize(componentType, type);
 
+				// Read from buffer which values we want to write at the indices. This buffer has to have the same length as the previous
 				GLTFBufferView.ImportResult valuesBufferView = bufferViews[sparse.values.bufferView];
 				byte[] valuesBytes = valuesBufferView.bytes.SubArray(sparse.values.byteOffset, valuesBufferView.bytes.Length - sparse.values.byteOffset);
+
+				// Overwrite values
 				for (int i = 0; i < sparse.count; i++) {
 					for (int c = 0; c < componentSize; c++) {
 						int resultByteIndex = ((indices[i] * componentSize) + c);
