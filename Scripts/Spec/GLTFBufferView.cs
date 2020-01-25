@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -35,7 +36,9 @@ namespace Siccity.GLTFUtility {
 						int byteLength = bufferViews[i].byteLength;
 						GLTFBuffer.ImportResult buffer = bufferTask.Result[bufferViews[i].buffer];
 						ImportResult result = new ImportResult();
-						result.bytes = buffer.bytes.SubArray(byteOffset, byteLength);
+						result.bytes = new byte[byteLength];
+						buffer.reader.BaseStream.Seek(byteOffset, System.IO.SeekOrigin.Begin);
+						buffer.reader.Read(result.bytes, 0, byteLength);
 						Result[i] = result;
 					}
 				});

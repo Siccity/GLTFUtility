@@ -17,7 +17,12 @@ namespace Siccity.GLTFUtility {
 		[JsonIgnore] private const string embeddedPrefix2 = "data:application/gltf-buffer;base64,";
 
 		public class ImportResult {
-			public byte[] bytes;
+			public BinaryReader reader;
+			public long startOffset;
+
+			public void Dispose() {
+				reader.Dispose();
+			}
 		}
 
 #region Import
@@ -26,25 +31,24 @@ namespace Siccity.GLTFUtility {
 
 			if (uri == null) {
 				// Load entire file
-				result.bytes = File.ReadAllBytes(filepath);
+				result.reader = new BinaryReader(File.Open(filepath, FileMode.Open));
 			} else if (uri.StartsWith(embeddedPrefix)) {
 				// Load embedded
 				string b64 = uri.Substring(embeddedPrefix.Length, uri.Length - embeddedPrefix.Length);
-				result.bytes = Convert.FromBase64String(b64);
+				byte[] bytes = Convert.FromBase64String(b64);
+				result.reader = new BinaryReader(new MemoryStream(bytes));
 			} else if (uri.StartsWith(embeddedPrefix2)) {
 				// Load embedded
 				string b64 = uri.Substring(embeddedPrefix2.Length, uri.Length - embeddedPrefix2.Length);
-				result.bytes = Convert.FromBase64String(b64);
+				byte[] bytes = Convert.FromBase64String(b64);
+				result.reader = new BinaryReader(new MemoryStream(bytes));
 			} else {
 				// Load URI
 				string directoryRoot = Directory.GetParent(filepath).ToString() + "/";
-				result.bytes = File.ReadAllBytes(directoryRoot + uri);
+				result.reader = new BinaryReader(File.Open(directoryRoot + uri, FileMode.Open));
+				result.startOffset = result.reader.BaseStream.Length - byteLength;
 			}
 
-			// Sometimes the buffer is part of a larger file. Since we dont have a byteOffset we have to assume it's at the end of the file.
-			// In case you're trying to load a gltf with more than one buffers this might cause issues, but it'll work for now.
-			int startIndex = result.bytes.Length - byteLength;
-			if (startIndex != 0) result.bytes = result.bytes.SubArray(startIndex, byteLength);
 			return result;
 		}
 

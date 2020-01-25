@@ -144,6 +144,10 @@ namespace Siccity.GLTFUtility {
 			nodeTask.RunSynchronously();
 			animations = gltfObject.animations.Import(accessorTask.Result, nodeTask.Result, importSettings);
 
+			foreach (var item in bufferTask.Result) {
+				item.Dispose();
+			}
+
 			return nodeTask.Result.GetRoot();
 		}
 #endregion
