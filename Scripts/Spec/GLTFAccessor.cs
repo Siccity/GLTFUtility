@@ -260,17 +260,17 @@ namespace Siccity.GLTFUtility {
 			public int GetComponentTypeSize() {
 				switch (componentType) {
 					case GLType.BYTE:
-						return 1;
+						return sizeof(sbyte);
 					case GLType.UNSIGNED_BYTE:
-						return 1;
+						return sizeof(byte);
 					case GLType.SHORT:
-						return 2;
+						return sizeof(short);
 					case GLType.UNSIGNED_SHORT:
-						return 2;
+						return sizeof(ushort);
 					case GLType.FLOAT:
-						return 4;
+						return sizeof(Single);
 					case GLType.UNSIGNED_INT:
-						return 4;
+						return sizeof(uint);
 					default:
 						Debug.LogError("componentType " + (int) componentType + " not supported!");
 						return 0;
