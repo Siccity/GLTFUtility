@@ -211,47 +211,7 @@ namespace Siccity.GLTFUtility {
 						return readMethod = x => x.ReadSingle();
 				}
 			}
-			/* 
-						public Func<byte[], int, float> GetFloatConverter() {
-							switch (componentType) {
-								case GLType.BYTE:
-									return (x, y) => (float) (sbyte) x[y];
-								case GLType.UNSIGNED_BYTE:
-									return (x, y) => (float) x[y];
-								case GLType.FLOAT:
-									return System.BitConverter.ToSingle;
-								case GLType.SHORT:
-									return (x, y) => (float) System.BitConverter.ToInt16(x, y);
-								case GLType.UNSIGNED_SHORT:
-									return (x, y) => (float) System.BitConverter.ToUInt16(x, y);
-								case GLType.UNSIGNED_INT:
-									return (x, y) => (float) System.BitConverter.ToUInt16(x, y);
-								default:
-									Debug.LogWarning("No componentType defined");
-									return System.BitConverter.ToSingle;
-							}
-						}
 
-						public Func<byte[], int, int> GetIntConverter() {
-							switch (componentType) {
-								case GLType.BYTE:
-									return (x, y) => (int) (sbyte) x[y];
-								case GLType.UNSIGNED_BYTE:
-									return (x, y) => (int) x[y];
-								case GLType.FLOAT:
-									return (x, y) => (int) System.BitConverter.ToSingle(x, y);
-								case GLType.SHORT:
-									return (x, y) => (int) System.BitConverter.ToInt16(x, y);
-								case GLType.UNSIGNED_SHORT:
-									return (x, y) => (int) System.BitConverter.ToUInt16(x, y);
-								case GLType.UNSIGNED_INT:
-									return (x, y) => (int) System.BitConverter.ToUInt16(x, y);
-								default:
-									Debug.LogWarning("No componentType defined");
-									return (x, y) => (int) System.BitConverter.ToUInt16(x, y);
-							}
-						}
-			 */
 			/// <summary> Get the size of the attribute type, in bytes </summary>
 			public int GetComponentSize() {
 				return GetComponentNumber() * GetComponentTypeSize();
