@@ -32,6 +32,7 @@ namespace Siccity.GLTFUtility {
 			if (uri == null) {
 				// Load entire file
 				result.stream = File.Open(filepath, FileMode.Open);
+				result.startOffset = result.stream.Length - byteLength;
 			} else if (uri.StartsWith(embeddedPrefix)) {
 				// Load embedded
 				string b64 = uri.Substring(embeddedPrefix.Length, uri.Length - embeddedPrefix.Length);

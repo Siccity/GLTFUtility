@@ -35,6 +35,7 @@ namespace Siccity.GLTFUtility {
 						ImportResult result = new ImportResult();
 						result.stream = buffer.stream;
 						result.byteOffset = bufferViews[i].byteOffset;
+						result.byteOffset += (int)buffer.startOffset;
 						result.byteLength = bufferViews[i].byteLength;
 						result.stride = bufferViews[i].byteStride;
 						Result[i] = result;
