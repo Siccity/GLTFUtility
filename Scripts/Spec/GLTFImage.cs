@@ -75,6 +75,7 @@ namespace Siccity.GLTFUtility {
 						} else if (images[i].bufferView.HasValue && !string.IsNullOrEmpty(images[i].mimeType)) {
 							GLTFBufferView.ImportResult view = bufferViewTask.Result[images[i].bufferView.Value];
 							byte[] bytes = new byte[view.byteLength];
+							view.stream.Position = view.byteOffset;
 							view.stream.Read(bytes, 0, view.byteLength);
 							imageData[i] = new ImageData(bytes);
 						} else {
