@@ -17,11 +17,11 @@ namespace Siccity.GLTFUtility {
 		[JsonIgnore] private const string embeddedPrefix2 = "data:application/gltf-buffer;base64,";
 
 		public class ImportResult {
-			public BinaryReader reader;
+			public Stream stream;
 			public long startOffset;
 
 			public void Dispose() {
-				reader.Dispose();
+				stream.Dispose();
 			}
 		}
 
@@ -31,22 +31,22 @@ namespace Siccity.GLTFUtility {
 
 			if (uri == null) {
 				// Load entire file
-				result.reader = new BinaryReader(File.Open(filepath, FileMode.Open));
+				result.stream = File.Open(filepath, FileMode.Open);
 			} else if (uri.StartsWith(embeddedPrefix)) {
 				// Load embedded
 				string b64 = uri.Substring(embeddedPrefix.Length, uri.Length - embeddedPrefix.Length);
 				byte[] bytes = Convert.FromBase64String(b64);
-				result.reader = new BinaryReader(new MemoryStream(bytes));
+				result.stream = new MemoryStream(bytes);
 			} else if (uri.StartsWith(embeddedPrefix2)) {
 				// Load embedded
 				string b64 = uri.Substring(embeddedPrefix2.Length, uri.Length - embeddedPrefix2.Length);
 				byte[] bytes = Convert.FromBase64String(b64);
-				result.reader = new BinaryReader(new MemoryStream(bytes));
+				result.stream = new MemoryStream(bytes);
 			} else {
 				// Load URI
 				string directoryRoot = Directory.GetParent(filepath).ToString() + "/";
-				result.reader = new BinaryReader(File.Open(directoryRoot + uri, FileMode.Open));
-				result.startOffset = result.reader.BaseStream.Length - byteLength;
+				result.stream = File.Open(directoryRoot + uri, FileMode.Open);
+				result.startOffset = result.stream.Length - byteLength;
 			}
 
 			return result;

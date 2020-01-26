@@ -74,7 +74,8 @@ namespace Siccity.GLTFUtility {
 							}
 						} else if (images[i].bufferView.HasValue && !string.IsNullOrEmpty(images[i].mimeType)) {
 							GLTFBufferView.ImportResult view = bufferViewTask.Result[images[i].bufferView.Value];
-							byte[] bytes = view.ReadBytes(0, view.length);
+							byte[] bytes = new byte[view.byteLength];
+							view.stream.Read(bytes, 0, view.byteLength);
 							imageData[i] = new ImageData(bytes);
 						} else {
 							Debug.Log("Couldn't find texture at " + fullUri);

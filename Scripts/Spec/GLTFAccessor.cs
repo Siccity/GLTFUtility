@@ -53,26 +53,27 @@ namespace Siccity.GLTFUtility {
 			public Matrix4x4[] ReadMatrix4x4() {
 				if (!ValidateAccessorType(type, AccessorType.MAT4)) return new Matrix4x4[count];
 
-				Func<BinaryReader, float> floatReader = GetFloatReader(componentType);
+				Func<BufferedBinaryReader, float> floatReader = GetFloatReader(componentType);
+				BufferedBinaryReader reader = new BufferedBinaryReader(bufferView.stream, 1024);
 				Matrix4x4[] m = new Matrix4x4[count];
-				bufferView.reader.BaseStream.Seek(bufferView.byteOffset + byteOffset, SeekOrigin.Begin);
+				bufferView.stream.Position = bufferView.byteOffset + byteOffset;
 				for (int i = 0; i < count; i++) {
-					m[i].m00 = floatReader(bufferView.reader);
-					m[i].m01 = floatReader(bufferView.reader);
-					m[i].m02 = floatReader(bufferView.reader);
-					m[i].m03 = floatReader(bufferView.reader);
-					m[i].m10 = floatReader(bufferView.reader);
-					m[i].m11 = floatReader(bufferView.reader);
-					m[i].m12 = floatReader(bufferView.reader);
-					m[i].m13 = floatReader(bufferView.reader);
-					m[i].m20 = floatReader(bufferView.reader);
-					m[i].m21 = floatReader(bufferView.reader);
-					m[i].m22 = floatReader(bufferView.reader);
-					m[i].m23 = floatReader(bufferView.reader);
-					m[i].m30 = floatReader(bufferView.reader);
-					m[i].m31 = floatReader(bufferView.reader);
-					m[i].m32 = floatReader(bufferView.reader);
-					m[i].m33 = floatReader(bufferView.reader);
+					m[i].m00 = floatReader(reader);
+					m[i].m01 = floatReader(reader);
+					m[i].m02 = floatReader(reader);
+					m[i].m03 = floatReader(reader);
+					m[i].m10 = floatReader(reader);
+					m[i].m11 = floatReader(reader);
+					m[i].m12 = floatReader(reader);
+					m[i].m13 = floatReader(reader);
+					m[i].m20 = floatReader(reader);
+					m[i].m21 = floatReader(reader);
+					m[i].m22 = floatReader(reader);
+					m[i].m23 = floatReader(reader);
+					m[i].m30 = floatReader(reader);
+					m[i].m31 = floatReader(reader);
+					m[i].m32 = floatReader(reader);
+					m[i].m33 = floatReader(reader);
 				}
 				return m;
 			}
@@ -80,14 +81,15 @@ namespace Siccity.GLTFUtility {
 			public Vector4[] ReadVec4() {
 				if (!ValidateAccessorType(type, AccessorType.VEC4)) return new Vector4[count];
 
-				Func<BinaryReader, float> floatReader = GetFloatReader(componentType);
+				Func<BufferedBinaryReader, float> floatReader = GetFloatReader(componentType);
+				BufferedBinaryReader reader = new BufferedBinaryReader(bufferView.stream, 1024);
 				Vector4[] verts = new Vector4[count];
-				bufferView.reader.BaseStream.Seek(bufferView.byteOffset + byteOffset, SeekOrigin.Begin);
+				bufferView.stream.Position = bufferView.byteOffset + byteOffset;
 				for (int i = 0; i < count; i++) {
-					verts[i].x = floatReader(bufferView.reader);
-					verts[i].y = floatReader(bufferView.reader);
-					verts[i].z = floatReader(bufferView.reader);
-					verts[i].w = floatReader(bufferView.reader);
+					verts[i].x = floatReader(reader);
+					verts[i].y = floatReader(reader);
+					verts[i].z = floatReader(reader);
+					verts[i].w = floatReader(reader);
 				}
 				return verts;
 			}
@@ -95,21 +97,22 @@ namespace Siccity.GLTFUtility {
 			public Color[] ReadColor() {
 				if (!ValidateAccessorTypeAny(type, AccessorType.VEC3, AccessorType.VEC4)) return new Color[count];
 
-				Func<BinaryReader, float> floatReader = GetFloatReader(componentType);
+				Func<BufferedBinaryReader, float> floatReader = GetFloatReader(componentType);
+				BufferedBinaryReader reader = new BufferedBinaryReader(bufferView.stream, 1024);
 				Color[] cols = new Color[count];
-				bufferView.reader.BaseStream.Seek(bufferView.byteOffset + byteOffset, SeekOrigin.Begin);
+				bufferView.stream.Position = bufferView.byteOffset + byteOffset;
 				if (type == AccessorType.VEC3) {
 					for (int i = 0; i < count; i++) {
-						cols[i].r = floatReader(bufferView.reader);
-						cols[i].g = floatReader(bufferView.reader);
-						cols[i].b = floatReader(bufferView.reader);
+						cols[i].r = floatReader(reader);
+						cols[i].g = floatReader(reader);
+						cols[i].b = floatReader(reader);
 					}
 				} else if (type == AccessorType.VEC4) {
 					for (int i = 0; i < count; i++) {
-						cols[i].r = floatReader(bufferView.reader);
-						cols[i].g = floatReader(bufferView.reader);
-						cols[i].b = floatReader(bufferView.reader);
-						cols[i].a = floatReader(bufferView.reader);
+						cols[i].r = floatReader(reader);
+						cols[i].g = floatReader(reader);
+						cols[i].b = floatReader(reader);
+						cols[i].a = floatReader(reader);
 					}
 				}
 				return cols;
@@ -118,13 +121,19 @@ namespace Siccity.GLTFUtility {
 			public Vector3[] ReadVec3() {
 				if (!ValidateAccessorType(type, AccessorType.VEC3)) return new Vector3[count];
 
-				Func<BinaryReader, float> floatReader = GetFloatReader(componentType);
+				Func<BufferedBinaryReader, float> floatReader = GetFloatReader(componentType);
+				BufferedBinaryReader reader = new BufferedBinaryReader(bufferView.stream, 1024);
 				Vector3[] verts = new Vector3[count];
-				bufferView.reader.BaseStream.Seek(bufferView.byteOffset + byteOffset, SeekOrigin.Begin);
+				bufferView.stream.Position = bufferView.byteOffset + byteOffset;
 				for (int i = 0; i < count; i++) {
-					verts[i].x = floatReader(bufferView.reader);
-					verts[i].y = floatReader(bufferView.reader);
-					verts[i].z = floatReader(bufferView.reader);
+					try {
+						verts[i].x = floatReader(reader);
+						verts[i].y = floatReader(reader);
+						verts[i].z = floatReader(reader);
+					} catch (Exception e) {
+						Debug.Log(e);
+
+					}
 				}
 				return verts;
 			}
@@ -136,12 +145,13 @@ namespace Siccity.GLTFUtility {
 					return new Vector2[count];
 				}
 
-				Func<BinaryReader, float> floatReader = GetFloatReader(componentType);
+				Func<BufferedBinaryReader, float> floatReader = GetFloatReader(componentType);
+				BufferedBinaryReader reader = new BufferedBinaryReader(bufferView.stream, 1024);
 				Vector2[] verts = new Vector2[count];
-				bufferView.reader.BaseStream.Seek(bufferView.byteOffset + byteOffset, SeekOrigin.Begin);
+				bufferView.stream.Position = bufferView.byteOffset + byteOffset;
 				for (int i = 0; i < count; i++) {
-					verts[i].x = floatReader(bufferView.reader);
-					verts[i].y = floatReader(bufferView.reader);
+					verts[i].x = floatReader(reader);
+					verts[i].y = floatReader(reader);
 				}
 				return verts;
 			}
@@ -149,11 +159,12 @@ namespace Siccity.GLTFUtility {
 			public float[] ReadFloat() {
 				if (!ValidateAccessorType(type, AccessorType.SCALAR)) return new float[count];
 
-				Func<BinaryReader, float> floatReader = GetFloatReader(componentType);
+				Func<BufferedBinaryReader, float> floatReader = GetFloatReader(componentType);
+				BufferedBinaryReader reader = new BufferedBinaryReader(bufferView.stream, 1024);
 				float[] result = new float[count];
-				bufferView.reader.BaseStream.Seek(bufferView.byteOffset + byteOffset, SeekOrigin.Begin);
+				bufferView.stream.Position = bufferView.byteOffset + byteOffset;
 				for (int i = 0; i < count; i++) {
-					result[i] = floatReader(bufferView.reader);
+					result[i] = floatReader(reader);
 				}
 				return result;
 			}
@@ -161,17 +172,18 @@ namespace Siccity.GLTFUtility {
 			public int[] ReadInt() {
 				if (!ValidateAccessorType(type, AccessorType.SCALAR)) return new int[count];
 
-				Func<BinaryReader, int> intReader = GetIntReader(componentType);
+				Func<BufferedBinaryReader, int> intReader = GetIntReader(componentType);
+				BufferedBinaryReader reader = new BufferedBinaryReader(bufferView.stream, 1024);
 				int[] result = new int[count];
-				bufferView.reader.BaseStream.Seek(bufferView.byteOffset + byteOffset, SeekOrigin.Begin);
+				bufferView.stream.Position = bufferView.byteOffset + byteOffset;
 				for (int i = 0; i < count; i++) {
-					result[i] = intReader(bufferView.reader);
+					result[i] = intReader(reader);
 				}
 				return result;
 			}
 
-			public Func<BinaryReader, int> GetIntReader(GLType componentType) {
-				Func<BinaryReader, int> readMethod;
+			public Func<BufferedBinaryReader, int> GetIntReader(GLType componentType) {
+				Func<BufferedBinaryReader, int> readMethod;
 				switch (componentType) {
 					case GLType.BYTE:
 						return x => x.ReadSByte();
@@ -191,8 +203,8 @@ namespace Siccity.GLTFUtility {
 				}
 			}
 
-			public Func<BinaryReader, float> GetFloatReader(GLType componentType) {
-				Func<BinaryReader, float> readMethod;
+			public Func<BufferedBinaryReader, float> GetFloatReader(GLType componentType) {
+				Func<BufferedBinaryReader, float> readMethod;
 				switch (componentType) {
 					case GLType.BYTE:
 						return x => x.ReadSByte();
