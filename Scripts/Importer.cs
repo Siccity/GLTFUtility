@@ -192,14 +192,17 @@ namespace Siccity.GLTFUtility {
 				TaskSupervisor(importTasks[i]).RunCoroutine();
 			}
 
-			// Fire onFinished when all tasks have completed
-			if (onFinished != null) {
-				// Wait for all tasks to finish
-				while (!importTasks.All(x => x.IsCompleted)) yield return null;
+			// Wait for all tasks to finish
+			while (!importTasks.All(x => x.IsCompleted)) yield return null;
 
-				GameObject root = nodeTask.Result.GetRoot();
-				onFinished(root);
+			// Close file streams
+			foreach (var item in bufferTask.Result) {
+				item.Dispose();
 			}
+
+			// Fire onFinished when all tasks have completed
+			GameObject root = nodeTask.Result.GetRoot();
+			onFinished(root);
 		}
 
 		/// <summary> Keeps track of which threads to start when </summary>
