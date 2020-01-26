@@ -66,14 +66,15 @@ namespace Siccity.GLTFUtility {
 								// If the file is found at fullUri, read it
 								byte[] bytes = File.ReadAllBytes(fullUri);
 								imageData[i] = new ImageData(bytes, fullUri);
-							} else if(images[i].uri.StartsWith("data:")) {
+							} else if (images[i].uri.StartsWith("data:")) {
 								// If the image is embedded, find its Base64 content and save as byte array
 								string content = images[i].uri.Split(',').Last();
 								byte[] imageBytes = Convert.FromBase64String(content);
 								imageData[i] = new ImageData(imageBytes);
 							}
 						} else if (images[i].bufferView.HasValue && !string.IsNullOrEmpty(images[i].mimeType)) {
-							byte[] bytes = bufferViewTask.Result[images[i].bufferView.Value].bytes;
+							GLTFBufferView.ImportResult view = bufferViewTask.Result[images[i].bufferView.Value];
+							byte[] bytes = view.ReadBytes(0, view.length);
 							imageData[i] = new ImageData(bytes);
 						} else {
 							Debug.Log("Couldn't find texture at " + fullUri);

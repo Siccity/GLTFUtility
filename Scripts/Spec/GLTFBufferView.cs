@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -19,11 +20,16 @@ namespace Siccity.GLTFUtility {
 		public string name;
 
 		public class ImportResult {
-			public byte[] bytes;
+			public BinaryReader reader;
+			public int byteOffset;
+			public int length;
+			public int? stride;
 
-			public byte[] GetBytes(int byteOffset = 0) {
-				if (byteOffset != 0) return bytes.SubArray(byteOffset, bytes.Length - byteOffset);
-				else return bytes;
+			public byte[] ReadBytes(int offset, int count) {
+				byte[] result = new byte[count];
+				reader.BaseStream.Seek(this.byteOffset + offset, SeekOrigin.Begin);
+				reader.Read(result, 0, count);
+				return result;
 			}
 		}
 
@@ -32,13 +38,15 @@ namespace Siccity.GLTFUtility {
 				task = new Task(() => {
 					Result = new ImportResult[bufferViews.Count];
 					for (int i = 0; i < Result.Length; i++) {
-						int byteOffset = bufferViews[i].byteOffset;
-						int byteLength = bufferViews[i].byteLength;
 						GLTFBuffer.ImportResult buffer = bufferTask.Result[bufferViews[i].buffer];
 						ImportResult result = new ImportResult();
-						result.bytes = new byte[byteLength];
-						buffer.reader.BaseStream.Seek(byteOffset, System.IO.SeekOrigin.Begin);
-						buffer.reader.Read(result.bytes, 0, byteLength);
+						result.reader = buffer.reader;
+						result.byteOffset = bufferViews[i].byteOffset;
+						result.length = bufferViews[i].byteLength;
+						result.stride = bufferViews[i].byteStride;
+						//result.bytes = new byte[byteLength];
+						//buffer.reader.BaseStream.Seek(byteOffset, System.IO.SeekOrigin.Begin);
+						//buffer.reader.Read(result.bytes, 0, byteLength);
 						Result[i] = result;
 					}
 				});
