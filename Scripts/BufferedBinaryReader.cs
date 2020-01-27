@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 // This is a modified version of the script from: https://jacksondunstan.com/articles/3568
@@ -10,6 +12,9 @@ public class BufferedBinaryReader : IDisposable {
 	private readonly int bufferSize;
 	private int bufferOffset;
 	private int bufferedBytes;
+
+	private Bit2Converter bit2Converter;
+	private Bit4Converter bit4Converter;
 
 	public long Position { get { return stream.Position + bufferOffset; } set { stream.Position = value; bufferedBytes = 0; bufferOffset = 0; } }
 
@@ -47,37 +52,62 @@ public class BufferedBinaryReader : IDisposable {
 
 	public ushort ReadUInt16() {
 		FillBuffer(sizeof(ushort));
-		var val = BitConverter.ToUInt16(buffer, bufferOffset);
-		bufferOffset += sizeof(ushort);
-		return val;
+		return bit2Converter.Read(buffer, ref bufferOffset).@ushort;
 	}
 
 	public short ReadInt16() {
 		FillBuffer(sizeof(short));
-		var val = BitConverter.ToInt16(buffer, bufferOffset);
-		bufferOffset += sizeof(short);
-		return val;
+		return bit2Converter.Read(buffer, ref bufferOffset).@short;
 	}
 
 	public uint ReadUInt32() {
 		FillBuffer(sizeof(uint));
-		var val = BitConverter.ToUInt32(buffer, bufferOffset);
-		bufferOffset += sizeof(uint);
-		return val;
+		return bit4Converter.Read(buffer, ref bufferOffset).@uint;
 	}
 
 	public int ReadInt32() {
 		FillBuffer(sizeof(int));
-		var val = BitConverter.ToInt32(buffer, bufferOffset);
-		bufferOffset += sizeof(int);
-		return val;
+		return bit4Converter.Read(buffer, ref bufferOffset).@int;
 	}
 
 	public float ReadSingle() {
 		FillBuffer(sizeof(float));
-		var val = BitConverter.ToSingle(buffer, bufferOffset);
-		bufferOffset += sizeof(float);
-		return val;
+		return bit4Converter.Read(buffer, ref bufferOffset).@float;
+	}
+
+	[StructLayout(LayoutKind.Explicit)]
+	public struct Bit2Converter {
+		[FieldOffset(0)] public byte b0;
+		[FieldOffset(1)] public byte b1;
+		[FieldOffset(0)] public short @short;
+		[FieldOffset(0)] public ushort @ushort;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Bit2Converter Read(byte[] buffer, ref int bufferOffset) {
+			b0 = buffer[bufferOffset++];
+			b1 = buffer[bufferOffset++];
+			return this;
+		}
+	}
+
+	[StructLayout(LayoutKind.Explicit)]
+	public struct Bit4Converter {
+		[FieldOffset(0)] public byte b0;
+		[FieldOffset(1)] public byte b1;
+		[FieldOffset(2)] public byte b2;
+		[FieldOffset(3)] public byte b3;
+		[FieldOffset(0)] public float @float;
+		[FieldOffset(0)] public int @int;
+		[FieldOffset(0)] public uint @uint;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Bit4Converter Read(byte[] buffer, ref int bufferOffset) {
+			b0 = buffer[bufferOffset++];
+			b1 = buffer[bufferOffset++];
+			b2 = buffer[bufferOffset++];
+			b3 = buffer[bufferOffset++];
+			return this;
+		}
 	}
 
 	public void Dispose() {
