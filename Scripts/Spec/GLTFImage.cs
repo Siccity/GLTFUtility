@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.Scripting;
 
 namespace Siccity.GLTFUtility {
@@ -37,20 +39,6 @@ namespace Siccity.GLTFUtility {
 					this.bytes = bytes;
 					this.path = path;
 				}
-
-				public Texture2D ToTexture2D() {
-#if UNITY_EDITOR
-					Texture2D assetTexture = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(Texture2D)) as Texture2D;
-					if (assetTexture != null) return assetTexture;
-#endif
-
-					Texture2D tex = new Texture2D(2, 2);
-					if (!tex.LoadImage(bytes)) {
-						Debug.Log("mimeType not supported");
-						return null;
-					}
-					return tex;
-				}
 			}
 
 			public ImportTask(List<GLTFImage> images, string directoryRoot, GLTFBufferView.ImportTask bufferViewTask) : base(bufferViewTask) {
@@ -66,7 +54,7 @@ namespace Siccity.GLTFUtility {
 								// If the file is found at fullUri, read it
 								byte[] bytes = File.ReadAllBytes(fullUri);
 								imageData[i] = new ImageData(bytes, fullUri);
-							} else if(images[i].uri.StartsWith("data:")) {
+							} else if (images[i].uri.StartsWith("data:")) {
 								// If the image is embedded, find its Base64 content and save as byte array
 								string content = images[i].uri.Split(',').Last();
 								byte[] imageBytes = Convert.FromBase64String(content);
@@ -82,18 +70,70 @@ namespace Siccity.GLTFUtility {
 				});
 			}
 
-			protected override void OnMainThreadFinalize() {
+			public override IEnumerator OnCoroutine(Action<float> onProgress = null) {
 				// No images
-				if (imageData == null) return;
+				if (imageData == null) {
+					if (onProgress != null) onProgress.Invoke(1f);
+					IsCompleted = true;
+					yield break;
+				}
 
 				Result = new ImportResult[imageData.Length];
+
 				for (int i = 0; i < imageData.Length; i++) {
 					if (imageData[i] == null) {
 						Debug.LogWarning("imageData[" + i + "] is null");
 						continue;
 					}
-					Result[i] = new ImportResult() { texture = imageData[i].ToTexture2D() };
+
+					if (!string.IsNullOrEmpty(imageData[i].path)) {
+						string path = imageData[i].path;
+#if UNITY_EDITOR
+						// Load textures from asset database if we can
+						Texture2D assetTexture = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(Texture2D)) as Texture2D;
+						if (assetTexture != null) {
+							Result[i] = new ImportResult() { texture = assetTexture };
+							if (onProgress != null) onProgress(((float) (i + 1) / (float) imageData.Length));
+							continue;
+						}
+#endif
+
+#if !UNITY_EDITOR && ( UNITY_ANDROID || UNITY_IOS )
+						path = "File://" + path;
+#endif
+						using(UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(path, true)) {
+							UnityWebRequestAsyncOperation operation = uwr.SendWebRequest();
+							float progress = 0;
+							while (!operation.isDone) {
+								if (progress != uwr.downloadProgress) {
+									progress = uwr.downloadProgress;
+									float totalprogress = ((float) i / (float) imageData.Length) + progress;
+									if (onProgress != null) onProgress(totalprogress);
+								}
+								yield return null;
+							}
+
+							if (onProgress != null) onProgress(((float) (i + 1) / (float) imageData.Length));
+
+							if (uwr.isNetworkError || uwr.isHttpError) {
+								Debug.LogError("GLTFImage.cs ToTexture2D() ERROR: " + uwr.error);
+							} else {
+								Texture2D tex = DownloadHandlerTexture.GetContent(uwr);
+								tex.name = Path.GetFileNameWithoutExtension(path);
+								Result[i] = new ImportResult() { texture = tex };
+							}
+							uwr.Dispose();
+						}
+					} else {
+						Texture2D tex = new Texture2D(2, 2);
+						if (!tex.LoadImage(imageData[i].bytes)) {
+							Debug.Log("mimeType not supported");
+							continue;
+						} else Result[i] = new ImportResult() { texture = tex };
+					}
 				}
+				IsCompleted = true;
+				yield break;
 			}
 		}
 	}

@@ -77,11 +77,11 @@ namespace Siccity.GLTFUtility {
 			return gltfObject.LoadInternal(filepath, importSettings, out animations);
 		}
 
-		public static void ImportGLTFAsync(string filepath, ImportSettings importSettings, Action<GameObject> onFinished) {
+		public static void ImportGLTFAsync(string filepath, ImportSettings importSettings, Action<GameObject, GLTFAnimation.ImportResult[]> onFinished, Action<float> onProgress = null) {
 			string json = File.ReadAllText(filepath);
 
 			// Parse json
-			LoadAsync(json, filepath, importSettings, onFinished).RunCoroutine();
+			LoadAsync(json, filepath, importSettings, onFinished, onProgress).RunCoroutine();
 		}
 
 		public abstract class ImportTask<TReturn> : ImportTask {
@@ -93,7 +93,8 @@ namespace Siccity.GLTFUtility {
 			/// <summary> Runs task followed by OnCompleted </summary>
 			public TReturn RunSynchronously() {
 				task.RunSynchronously();
-				OnMainThreadFinalize();
+				IEnumerator en = OnCoroutine();
+				while (en.MoveNext()) { };
 				return Result;
 			}
 		}
@@ -110,12 +111,10 @@ namespace Siccity.GLTFUtility {
 				this.waitFor = waitFor;
 			}
 
-			public void MainThreadFinalize() {
-				OnMainThreadFinalize();
+			public virtual IEnumerator OnCoroutine(Action<float> onProgress = null) {
 				IsCompleted = true;
+				yield break;
 			}
-
-			protected virtual void OnMainThreadFinalize() { }
 		}
 
 #region Sync
@@ -149,7 +148,7 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 #region Async
-		private static IEnumerator LoadAsync(string json, string filepath, ImportSettings importSettings, Action<GameObject> onFinished) {
+		private static IEnumerator LoadAsync(string json, string filepath, ImportSettings importSettings, Action<GameObject, GLTFAnimation.ImportResult[]> onFinished, Action<float> onProgress = null) {
 			// Threaded deserialization
 			Task<GLTFObject> deserializeTask = new Task<GLTFObject>(() => JsonConvert.DeserializeObject<GLTFObject>(json));
 			deserializeTask.Start();
@@ -185,7 +184,7 @@ namespace Siccity.GLTFUtility {
 
 			// Ignite
 			for (int i = 0; i < importTasks.Count; i++) {
-				TaskSupervisor(importTasks[i]).RunCoroutine();
+				TaskSupervisor(importTasks[i], onProgress).RunCoroutine();
 			}
 
 			// Fire onFinished when all tasks have completed
@@ -193,13 +192,13 @@ namespace Siccity.GLTFUtility {
 				// Wait for all tasks to finish
 				while (!importTasks.All(x => x.IsCompleted)) yield return null;
 
-				GameObject root = nodeTask.Result.GetRoot();
-				onFinished(root);
+				GLTFAnimation.ImportResult[] animations = gltfObject.animations.Import(accessorTask.Result, nodeTask.Result, importSettings);
+				onFinished(nodeTask.Result.GetRoot(), animations);
 			}
 		}
 
 		/// <summary> Keeps track of which threads to start when </summary>
-		private static IEnumerator TaskSupervisor(ImportTask importTask) {
+		private static IEnumerator TaskSupervisor(ImportTask importTask, Action<float> onProgress = null) {
 			// Wait for required results to complete before starting
 			while (!importTask.IsReady) yield return null;
 			// Start threaded task
@@ -207,7 +206,9 @@ namespace Siccity.GLTFUtility {
 			// Wait for task to complete
 			while (!importTask.task.IsCompleted) yield return null;
 			// Run additional unity code on main thread
-			importTask.MainThreadFinalize();
+			importTask.OnCoroutine(onProgress).RunCoroutine();
+			//Wait for additional coroutines to complete
+			while (!importTask.IsCompleted) { yield return null; }
 		}
 #endregion
 	}
