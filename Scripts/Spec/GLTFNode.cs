@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -62,8 +63,13 @@ namespace Siccity.GLTFUtility {
 				task = new Task(() => { });
 			}
 
-			protected override void OnMainThreadFinalize() {
-				if (nodes == null) return;
+			public override IEnumerator OnCoroutine(Action<float> onProgress = null) {
+				// No nodes
+				if (nodes == null) {
+					if (onProgress != null) onProgress.Invoke(1f);
+					IsCompleted = true;
+					yield break;
+				}
 
 				Result = new ImportResult[nodes.Count];
 
@@ -137,6 +143,7 @@ namespace Siccity.GLTFUtility {
 						}
 					}
 				}
+				IsCompleted = true;
 			}
 		}
 #endregion

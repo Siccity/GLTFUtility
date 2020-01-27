@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -251,7 +252,14 @@ namespace Siccity.GLTFUtility {
 				});
 			}
 
-			protected override void OnMainThreadFinalize() {
+			public override IEnumerator OnCoroutine(Action<float> onProgress = null) {
+				// No mesh
+				if (meshData == null) {
+					if (onProgress != null) onProgress.Invoke(1f);
+					IsCompleted = true;
+					yield break;
+				}
+
 				Result = new ImportResult[meshData.Length];
 				for (int i = 0; i < meshData.Length; i++) {
 					if (meshData[i] == null) {
@@ -276,7 +284,10 @@ namespace Siccity.GLTFUtility {
 						}
 					}
 					if (string.IsNullOrEmpty(Result[i].mesh.name)) Result[i].mesh.name = "mesh" + i;
+					if (onProgress != null) onProgress.Invoke((float) (i + 1) / (float) meshData.Length);
+					yield return null;
 				}
+				IsCompleted = true;
 			}
 		}
 #endregion
