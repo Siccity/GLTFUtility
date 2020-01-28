@@ -75,11 +75,7 @@ namespace Siccity.GLTFUtility {
 					if (node.parent.HasValue) node = nodes[node.parent.Value];
 					else node = null;
 				}
-				
-				if(node != null) {
-					relativePath = $"{node.transform.name}/{relativePath}";
-				}
-				
+
 				float[] keyframeInput = accessors[sampler.input].ReadFloat().ToArray();
 				switch (channel.target.path) {
 					case "translation":
