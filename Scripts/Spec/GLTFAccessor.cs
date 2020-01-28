@@ -124,6 +124,7 @@ namespace Siccity.GLTFUtility {
 					Color32 color = Color.black;
 					for (int i = 0; i < count; i++) {
 						int startIndex = i * componentSize;
+						if (byteStride > 0) startIndex = i * byteStride;
 						color.r = bytes[startIndex];
 						startIndex += componentTypeSize;
 						color.g = bytes[startIndex];
@@ -141,6 +142,7 @@ namespace Siccity.GLTFUtility {
 					Func<byte[], int, float> converter = GetFloatConverter();
 					for (int i = 0; i < count; i++) {
 						int startIndex = i * componentSize;
+						if (byteStride > 0) startIndex = i * byteStride;
 						colors[i].r = converter(bytes, startIndex);
 						startIndex += componentTypeSize;
 						colors[i].g = converter(bytes, startIndex);
@@ -209,6 +211,7 @@ namespace Siccity.GLTFUtility {
 				Func<byte[], int, float> converter = GetFloatConverter();
 				for (int i = 0; i < count; i++) {
 					int startIndex = i * componentSize;
+					if (byteStride > 0) startIndex = i * byteStride;
 					floats[i] = converter(bytes, startIndex);
 				}
 				return floats;
@@ -222,6 +225,7 @@ namespace Siccity.GLTFUtility {
 				Func<byte[], int, int> converter = GetIntConverter();
 				for (int i = 0; i < count; i++) {
 					int startIndex = i * componentSize;
+					if (byteStride > 0) startIndex = i * byteStride;
 					ints[i] = converter(bytes, startIndex);
 				}
 				return ints;
