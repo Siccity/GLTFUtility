@@ -23,7 +23,7 @@ namespace Siccity.GLTFUtility {
 			public Stream stream;
 			public int byteOffset;
 			public int byteLength;
-			public int? stride;
+			public int? byteStride;
 		}
 
 		public class ImportTask : Importer.ImportTask<ImportResult[]> {
@@ -37,7 +37,7 @@ namespace Siccity.GLTFUtility {
 						result.byteOffset = bufferViews[i].byteOffset;
 						result.byteOffset += (int)buffer.startOffset;
 						result.byteLength = bufferViews[i].byteLength;
-						result.stride = bufferViews[i].byteStride;
+						result.byteStride = bufferViews[i].byteStride;
 						Result[i] = result;
 					}
 				});

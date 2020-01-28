@@ -12,6 +12,7 @@ public class BufferedBinaryReader : IDisposable {
 	private readonly int bufferSize;
 	private int bufferOffset;
 	private int bufferedBytes;
+	private int byteStride;
 
 	private Bit2Converter bit2Converter;
 	private Bit4Converter bit4Converter;
@@ -73,6 +74,11 @@ public class BufferedBinaryReader : IDisposable {
 	public float ReadSingle() {
 		FillBuffer(sizeof(float));
 		return bit4Converter.Read(buffer, ref bufferOffset).@float;
+	}
+
+	public void Skip(int bytes) {
+		FillBuffer(bytes);
+		bufferOffset += bytes;
 	}
 
 	[StructLayout(LayoutKind.Explicit)]

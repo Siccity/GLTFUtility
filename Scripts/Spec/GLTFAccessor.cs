@@ -45,6 +45,7 @@ namespace Siccity.GLTFUtility {
 #region Import
 		public class ImportResult {
 			public GLTFBufferView.ImportResult bufferView;
+			public int? byteStride;
 			public int count;
 			public GLType componentType;
 			public AccessorType type;
@@ -57,6 +58,7 @@ namespace Siccity.GLTFUtility {
 				BufferedBinaryReader reader = new BufferedBinaryReader(bufferView.stream, 1024);
 				Matrix4x4[] m = new Matrix4x4[count];
 				reader.Position = bufferView.byteOffset + byteOffset;
+				int byteSkip = byteStride.HasValue ? byteStride.Value - GetComponentSize() : 0;
 				for (int i = 0; i < count; i++) {
 					m[i].m00 = floatReader(reader);
 					m[i].m01 = floatReader(reader);
@@ -74,6 +76,7 @@ namespace Siccity.GLTFUtility {
 					m[i].m31 = floatReader(reader);
 					m[i].m32 = floatReader(reader);
 					m[i].m33 = floatReader(reader);
+					reader.Skip(byteSkip);
 				}
 				return m;
 			}
@@ -85,11 +88,13 @@ namespace Siccity.GLTFUtility {
 				BufferedBinaryReader reader = new BufferedBinaryReader(bufferView.stream, 1024);
 				Vector4[] verts = new Vector4[count];
 				reader.Position = bufferView.byteOffset + byteOffset;
+				int byteSkip = byteStride.HasValue ? byteStride.Value - GetComponentSize() : 0;
 				for (int i = 0; i < count; i++) {
 					verts[i].x = floatReader(reader);
 					verts[i].y = floatReader(reader);
 					verts[i].z = floatReader(reader);
 					verts[i].w = floatReader(reader);
+					reader.Skip(byteSkip);
 				}
 				return verts;
 			}
@@ -101,11 +106,13 @@ namespace Siccity.GLTFUtility {
 				BufferedBinaryReader reader = new BufferedBinaryReader(bufferView.stream, 1024);
 				Color[] cols = new Color[count];
 				reader.Position = bufferView.byteOffset + byteOffset;
+				int byteSkip = byteStride.HasValue ? byteStride.Value - GetComponentSize() : 0;
 				if (type == AccessorType.VEC3) {
 					for (int i = 0; i < count; i++) {
 						cols[i].r = floatReader(reader);
 						cols[i].g = floatReader(reader);
 						cols[i].b = floatReader(reader);
+						reader.Skip(byteSkip);
 					}
 				} else if (type == AccessorType.VEC4) {
 					for (int i = 0; i < count; i++) {
@@ -113,6 +120,7 @@ namespace Siccity.GLTFUtility {
 						cols[i].g = floatReader(reader);
 						cols[i].b = floatReader(reader);
 						cols[i].a = floatReader(reader);
+						reader.Skip(byteSkip);
 					}
 				}
 				return cols;
@@ -125,10 +133,12 @@ namespace Siccity.GLTFUtility {
 				BufferedBinaryReader reader = new BufferedBinaryReader(bufferView.stream, 1024);
 				Vector3[] verts = new Vector3[count];
 				reader.Position = bufferView.byteOffset + byteOffset;
+				int byteSkip = byteStride.HasValue ? byteStride.Value - GetComponentSize() : 0;
 				for (int i = 0; i < count; i++) {
 					verts[i].x = floatReader(reader);
 					verts[i].y = floatReader(reader);
 					verts[i].z = floatReader(reader);
+					reader.Skip(byteSkip);
 				}
 				return verts;
 			}
@@ -144,9 +154,11 @@ namespace Siccity.GLTFUtility {
 				BufferedBinaryReader reader = new BufferedBinaryReader(bufferView.stream, 1024);
 				Vector2[] verts = new Vector2[count];
 				reader.Position = bufferView.byteOffset + byteOffset;
+				int byteSkip = byteStride.HasValue ? byteStride.Value - GetComponentSize() : 0;
 				for (int i = 0; i < count; i++) {
 					verts[i].x = floatReader(reader);
 					verts[i].y = floatReader(reader);
+					reader.Skip(byteSkip);
 				}
 				return verts;
 			}
@@ -158,8 +170,10 @@ namespace Siccity.GLTFUtility {
 				BufferedBinaryReader reader = new BufferedBinaryReader(bufferView.stream, 1024);
 				float[] result = new float[count];
 				reader.Position = bufferView.byteOffset + byteOffset;
+				int byteSkip = byteStride.HasValue ? byteStride.Value - GetComponentSize() : 0;
 				for (int i = 0; i < count; i++) {
 					result[i] = floatReader(reader);
+					reader.Skip(byteSkip);
 				}
 				return result;
 			}
@@ -171,8 +185,10 @@ namespace Siccity.GLTFUtility {
 				BufferedBinaryReader reader = new BufferedBinaryReader(bufferView.stream, 1024);
 				int[] result = new int[count];
 				reader.Position = bufferView.byteOffset + byteOffset;
+				int byteSkip = byteStride.HasValue ? byteStride.Value - GetComponentSize() : 0;
 				for (int i = 0; i < count; i++) {
 					result[i] = intReader(reader);
+					reader.Skip(byteSkip);
 				}
 				return result;
 			}
@@ -266,6 +282,12 @@ namespace Siccity.GLTFUtility {
 				}
 			}
 
+			public static bool ValidateByteStride(int byteStride) {
+				if (byteStride >= 4 && byteStride <= 252 && byteStride % 4 == 0) return true;
+				Debug.Log("ByteStride of " + byteStride + " is invalid. Ignoring.");
+				return false;
+			}
+
 			private static bool ValidateAccessorType(AccessorType type, AccessorType expected) {
 				if (type == expected) return true;
 				else {
@@ -291,6 +313,10 @@ namespace Siccity.GLTFUtility {
 			result.type = type;
 			result.count = count;
 			result.byteOffset = byteOffset;
+			// If an optional byteStride was added on bufferView in file, and it matches spec requirements
+			if (result.bufferView.byteStride.HasValue && ImportResult.ValidateByteStride((int) result.bufferView.byteStride)) {
+				result.byteStride = result.bufferView.byteStride;
+			}
 			return result;
 		}
 
