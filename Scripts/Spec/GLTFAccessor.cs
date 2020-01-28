@@ -44,6 +44,7 @@ namespace Siccity.GLTFUtility {
 #region Import
 		public class ImportResult {
 			public byte[] bytes;
+			public int byteStride;
 			public int count;
 			public GLType componentType;
 			public AccessorType type;
@@ -101,6 +102,7 @@ namespace Siccity.GLTFUtility {
 				Func<byte[], int, float> converter = GetFloatConverter();
 				for (int i = 0; i < count; i++) {
 					int startIndex = i * componentSize;
+					if (byteStride > 0) startIndex = i * byteStride;
 					verts[i].x = converter(bytes, startIndex);
 					startIndex += componentTypeSize;
 					verts[i].y = converter(bytes, startIndex);
@@ -122,6 +124,7 @@ namespace Siccity.GLTFUtility {
 					Color32 color = Color.black;
 					for (int i = 0; i < count; i++) {
 						int startIndex = i * componentSize;
+						if (byteStride > 0) startIndex = i * byteStride;
 						color.r = bytes[startIndex];
 						startIndex += componentTypeSize;
 						color.g = bytes[startIndex];
@@ -139,6 +142,7 @@ namespace Siccity.GLTFUtility {
 					Func<byte[], int, float> converter = GetFloatConverter();
 					for (int i = 0; i < count; i++) {
 						int startIndex = i * componentSize;
+						if (byteStride > 0) startIndex = i * byteStride;
 						colors[i].r = converter(bytes, startIndex);
 						startIndex += componentTypeSize;
 						colors[i].g = converter(bytes, startIndex);
@@ -167,6 +171,7 @@ namespace Siccity.GLTFUtility {
 				Func<byte[], int, float> converter = GetFloatConverter();
 				for (int i = 0; i < count; i++) {
 					int startIndex = i * componentSize;
+					if (byteStride > 0) startIndex = i * byteStride;
 					verts[i].x = converter(bytes, startIndex);
 					startIndex += componentTypeSize;
 					verts[i].y = converter(bytes, startIndex);
@@ -189,6 +194,7 @@ namespace Siccity.GLTFUtility {
 				Func<byte[], int, float> converter = GetFloatConverter();
 				for (int i = 0; i < count; i++) {
 					int startIndex = i * componentSize;
+					if (byteStride > 0) startIndex = i * byteStride;
 					verts[i].x = converter(bytes, startIndex);
 					startIndex += componentTypeSize;
 					verts[i].y = converter(bytes, startIndex);
@@ -205,6 +211,7 @@ namespace Siccity.GLTFUtility {
 				Func<byte[], int, float> converter = GetFloatConverter();
 				for (int i = 0; i < count; i++) {
 					int startIndex = i * componentSize;
+					if (byteStride > 0) startIndex = i * byteStride;
 					floats[i] = converter(bytes, startIndex);
 				}
 				return floats;
@@ -218,6 +225,7 @@ namespace Siccity.GLTFUtility {
 				Func<byte[], int, int> converter = GetIntConverter();
 				for (int i = 0; i < count; i++) {
 					int startIndex = i * componentSize;
+					if (byteStride > 0) startIndex = i * byteStride;
 					ints[i] = converter(bytes, startIndex);
 				}
 				return ints;
@@ -310,6 +318,12 @@ namespace Siccity.GLTFUtility {
 				}
 			}
 
+			public static bool ValidateByteStride(int byteStride) {
+				if (byteStride >= 4 && byteStride <= 252 && byteStride % 4 == 0) return true;
+				Debug.Log("ByteStride of " + byteStride + " is invalid. Ignoring.");
+				return false;
+			}
+
 			private static bool ValidateAccessorType(AccessorType type, AccessorType expected) {
 				if (type == expected) return true;
 				else {
@@ -335,6 +349,10 @@ namespace Siccity.GLTFUtility {
 			result.componentType = componentType;
 			result.type = type;
 			result.count = count;
+			// If an optional byteStride was added on bufferView in file, and it matches spec requirements
+			if (bufferView.byteStride.HasValue && ImportResult.ValidateByteStride((int)bufferView.byteStride)) {
+				result.byteStride = (int)bufferView.byteStride;
+			}
 			return result;
 		}
 

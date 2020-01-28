@@ -19,6 +19,7 @@ namespace Siccity.GLTFUtility {
 
 		public class ImportResult {
 			public byte[] bytes;
+			public int? byteStride;
 
 			public byte[] GetBytes(int byteOffset = 0) {
 				if (byteOffset != 0) return bytes.SubArray(byteOffset, bytes.Length - byteOffset);
@@ -36,6 +37,9 @@ namespace Siccity.GLTFUtility {
 						GLTFBuffer.ImportResult buffer = bufferTask.Result[bufferViews[i].buffer];
 						ImportResult result = new ImportResult();
 						result.bytes = buffer.bytes.SubArray(byteOffset, byteLength);
+						if (bufferViews[i].byteStride.HasValue) {
+							result.byteStride = bufferViews[i].byteStride;
+						}
 						Result[i] = result;
 					}
 				});
