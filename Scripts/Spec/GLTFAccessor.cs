@@ -243,16 +243,21 @@ namespace Siccity.GLTFUtility {
 				try {
 
 					if (sparse != null) {
-						Debug.Log("Sparse V3");
+						Debug.Log("Sparse V3 of length: " + v.Length);
 						Func<BufferedBinaryReader, int> indexIntReader = GetIntReader(sparse.indices.componentType);
 						BufferedBinaryReader indexReader = new BufferedBinaryReader(sparse.indices.bufferView.stream, 1024);
 						indexReader.Position = sparse.indices.bufferView.byteOffset + sparse.indices.byteOffset;
 						BufferedBinaryReader valueReader = new BufferedBinaryReader(sparse.values.bufferView.stream, 1024);
 						indexReader.Position = sparse.values.bufferView.byteOffset + sparse.values.byteOffset;
-						Debug.Log(v.Length);
+						Debug.Log("Indices offset: " + sparse.indices.byteOffset + " Indices.bufferView offset: " + sparse.indices.bufferView.byteOffset);
 						for (int i = 0; i < sparse.count; i++) {
 							int index = indexIntReader(indexReader);
-							if (v.Length <= index) Debug.Log(index + " out of bounds");
+							if (v.Length >= 0 && v.Length <= index) {
+								Debug.Log("i:" + i + " index: " + index + " out of bounds");
+								Debug.Log("Sparse indices componentType: " + sparse.indices.componentType);
+
+								return v;
+							}
 
 							v[index].x = floatReader(valueReader);
 							v[index].y = floatReader(valueReader);
