@@ -100,14 +100,17 @@ namespace Siccity.GLTFUtility {
 					}
 				}
 				if (sparse != null) {
-					Debug.Log("Sparse M");
 					Func<BufferedBinaryReader, int> indexIntReader = GetIntReader(sparse.indices.componentType);
 					BufferedBinaryReader indexReader = new BufferedBinaryReader(sparse.indices.bufferView.stream, 1024);
 					indexReader.Position = sparse.indices.bufferView.byteOffset + sparse.indices.byteOffset;
+					int[] indices = new int[sparse.count];
+					for (int i = 0; i < sparse.count; i++) {
+						indices[i] = indexIntReader(indexReader);
+					}
 					BufferedBinaryReader valueReader = new BufferedBinaryReader(sparse.values.bufferView.stream, 1024);
 					indexReader.Position = sparse.values.bufferView.byteOffset + sparse.values.byteOffset;
 					for (int i = 0; i < sparse.count; i++) {
-						int index = indexIntReader(indexReader);
+						int index = indices[i];
 						m[index].m00 = floatReader(valueReader);
 						m[index].m01 = floatReader(valueReader);
 						m[index].m02 = floatReader(valueReader);
@@ -148,14 +151,17 @@ namespace Siccity.GLTFUtility {
 					}
 				}
 				if (sparse != null) {
-					Debug.Log("Sparse V4");
 					Func<BufferedBinaryReader, int> indexIntReader = GetIntReader(sparse.indices.componentType);
 					BufferedBinaryReader indexReader = new BufferedBinaryReader(sparse.indices.bufferView.stream, 1024);
 					indexReader.Position = sparse.indices.bufferView.byteOffset + sparse.indices.byteOffset;
+					int[] indices = new int[sparse.count];
+					for (int i = 0; i < sparse.count; i++) {
+						indices[i] = indexIntReader(indexReader);
+					}
 					BufferedBinaryReader valueReader = new BufferedBinaryReader(sparse.values.bufferView.stream, 1024);
 					indexReader.Position = sparse.values.bufferView.byteOffset + sparse.values.byteOffset;
 					for (int i = 0; i < sparse.count; i++) {
-						int index = indexIntReader(indexReader);
+						int index = indices[i];
 						v[index].x = floatReader(valueReader);
 						v[index].y = floatReader(valueReader);
 						v[index].z = floatReader(valueReader);
@@ -193,22 +199,25 @@ namespace Siccity.GLTFUtility {
 					}
 				}
 				if (sparse != null) {
-					Debug.Log("Sparse C");
 					Func<BufferedBinaryReader, int> indexIntReader = GetIntReader(sparse.indices.componentType);
 					BufferedBinaryReader indexReader = new BufferedBinaryReader(sparse.indices.bufferView.stream, 1024);
 					indexReader.Position = sparse.indices.bufferView.byteOffset + sparse.indices.byteOffset;
+					int[] indices = new int[sparse.count];
+					for (int i = 0; i < sparse.count; i++) {
+						indices[i] = indexIntReader(indexReader);
+					}
 					BufferedBinaryReader valueReader = new BufferedBinaryReader(sparse.values.bufferView.stream, 1024);
 					indexReader.Position = sparse.values.bufferView.byteOffset + sparse.values.byteOffset;
 					if (type == AccessorType.VEC3) {
 						for (int i = 0; i < sparse.count; i++) {
-							int index = indexIntReader(indexReader);
+							int index = indices[i];
 							c[index].r = floatReader(valueReader);
 							c[index].g = floatReader(valueReader);
 							c[index].b = floatReader(valueReader);
 						}
 					} else if (type == AccessorType.VEC4) {
 						for (int i = 0; i < sparse.count; i++) {
-							int index = indexIntReader(indexReader);
+							int index = indices[i];
 							c[index].r = floatReader(valueReader);
 							c[index].g = floatReader(valueReader);
 							c[index].b = floatReader(valueReader);
@@ -225,49 +234,34 @@ namespace Siccity.GLTFUtility {
 				Func<BufferedBinaryReader, float> floatReader = GetFloatReader(componentType);
 
 				Vector3[] v = new Vector3[count];
-				try {
-					if (bufferView != null) {
-						BufferedBinaryReader reader = new BufferedBinaryReader(bufferView.stream, 1024);
-						reader.Position = bufferView.byteOffset + byteOffset;
-						int byteSkip = byteStride.HasValue ? byteStride.Value - GetComponentSize() : 0;
-						for (int i = 0; i < count; i++) {
-							v[i].x = floatReader(reader);
-							v[i].y = floatReader(reader);
-							v[i].z = floatReader(reader);
-							reader.Skip(byteSkip);
-						}
+				if (bufferView != null) {
+					BufferedBinaryReader reader = new BufferedBinaryReader(bufferView.stream, 1024);
+					reader.Position = bufferView.byteOffset + byteOffset;
+					int byteSkip = byteStride.HasValue ? byteStride.Value - GetComponentSize() : 0;
+					for (int i = 0; i < count; i++) {
+						v[i].x = floatReader(reader);
+						v[i].y = floatReader(reader);
+						v[i].z = floatReader(reader);
+						reader.Skip(byteSkip);
 					}
-				} catch (Exception e) {
-					Debug.Log(e);
 				}
-				try {
-
-					if (sparse != null) {
-						Debug.Log("Sparse V3 of length: " + v.Length);
-						Func<BufferedBinaryReader, int> indexIntReader = GetIntReader(sparse.indices.componentType);
-						BufferedBinaryReader indexReader = new BufferedBinaryReader(sparse.indices.bufferView.stream, 1024);
-						indexReader.Position = sparse.indices.bufferView.byteOffset + sparse.indices.byteOffset;
-						BufferedBinaryReader valueReader = new BufferedBinaryReader(sparse.values.bufferView.stream, 1024);
-						indexReader.Position = sparse.values.bufferView.byteOffset + sparse.values.byteOffset;
-						Debug.Log("Indices offset: " + sparse.indices.byteOffset + " Indices.bufferView offset: " + sparse.indices.bufferView.byteOffset);
-						for (int i = 0; i < sparse.count; i++) {
-							int index = indexIntReader(indexReader);
-							if (v.Length >= 0 && v.Length <= index) {
-								Debug.Log("i:" + i + " index: " + index + " out of bounds");
-								Debug.Log("Sparse indices componentType: " + sparse.indices.componentType);
-
-								return v;
-							}
-
-							v[index].x = floatReader(valueReader);
-							v[index].y = floatReader(valueReader);
-							v[index].z = floatReader(valueReader);
-						}
+				if (sparse != null) {
+					Func<BufferedBinaryReader, int> indexIntReader = GetIntReader(sparse.indices.componentType);
+					BufferedBinaryReader indexReader = new BufferedBinaryReader(sparse.indices.bufferView.stream, 1024);
+					indexReader.Position = sparse.indices.bufferView.byteOffset + sparse.indices.byteOffset;
+					int[] indices = new int[sparse.count];
+					for (int i = 0; i < sparse.count; i++) {
+						indices[i] = indexIntReader(indexReader);
 					}
-				} catch (Exception e) {
-					Debug.Log(e);
+					BufferedBinaryReader valueReader = new BufferedBinaryReader(sparse.values.bufferView.stream, 1024);
+					valueReader.Position = sparse.values.bufferView.byteOffset + sparse.values.byteOffset;
+					for (int i = 0; i < sparse.count; i++) {
+						int index = indices[i];
+						v[index].x = floatReader(valueReader);
+						v[index].y = floatReader(valueReader);
+						v[index].z = floatReader(valueReader);
+					}
 				}
-
 				return v;
 			}
 
@@ -288,14 +282,17 @@ namespace Siccity.GLTFUtility {
 					}
 				}
 				if (sparse != null) {
-					Debug.Log("Sparse V2");
 					Func<BufferedBinaryReader, int> indexIntReader = GetIntReader(sparse.indices.componentType);
 					BufferedBinaryReader indexReader = new BufferedBinaryReader(sparse.indices.bufferView.stream, 1024);
 					indexReader.Position = sparse.indices.bufferView.byteOffset + sparse.indices.byteOffset;
+					int[] indices = new int[sparse.count];
+					for (int i = 0; i < sparse.count; i++) {
+						indices[i] = indexIntReader(indexReader);
+					}
 					BufferedBinaryReader valueReader = new BufferedBinaryReader(sparse.values.bufferView.stream, 1024);
 					indexReader.Position = sparse.values.bufferView.byteOffset + sparse.values.byteOffset;
 					for (int i = 0; i < sparse.count; i++) {
-						int index = indexIntReader(indexReader);
+						int index = indices[i];
 						v[index].x = floatReader(valueReader);
 						v[index].y = floatReader(valueReader);
 					}
@@ -322,10 +319,14 @@ namespace Siccity.GLTFUtility {
 					Func<BufferedBinaryReader, int> indexIntReader = GetIntReader(sparse.indices.componentType);
 					BufferedBinaryReader indexReader = new BufferedBinaryReader(sparse.indices.bufferView.stream, 1024);
 					indexReader.Position = sparse.indices.bufferView.byteOffset + sparse.indices.byteOffset;
+					int[] indices = new int[sparse.count];
+					for (int i = 0; i < sparse.count; i++) {
+						indices[i] = indexIntReader(indexReader);
+					}
 					BufferedBinaryReader valueReader = new BufferedBinaryReader(sparse.values.bufferView.stream, 1024);
 					indexReader.Position = sparse.values.bufferView.byteOffset + sparse.values.byteOffset;
 					for (int i = 0; i < sparse.count; i++) {
-						int index = indexIntReader(indexReader);
+						int index = indices[i];
 						f[index] = floatReader(valueReader);
 					}
 				}
@@ -351,10 +352,14 @@ namespace Siccity.GLTFUtility {
 					Func<BufferedBinaryReader, int> indexIntReader = GetIntReader(sparse.indices.componentType);
 					BufferedBinaryReader indexReader = new BufferedBinaryReader(sparse.indices.bufferView.stream, 1024);
 					indexReader.Position = sparse.indices.bufferView.byteOffset + sparse.indices.byteOffset;
+					int[] indices = new int[sparse.count];
+					for (int i = 0; i < sparse.count; i++) {
+						indices[i] = indexIntReader(indexReader);
+					}
 					BufferedBinaryReader valueReader = new BufferedBinaryReader(sparse.values.bufferView.stream, 1024);
 					indexReader.Position = sparse.values.bufferView.byteOffset + sparse.values.byteOffset;
 					for (int i = 0; i < sparse.count; i++) {
-						int index = indexIntReader(indexReader);
+						int index = indices[i];
 						v[index] = intReader(valueReader);
 					}
 				}
@@ -434,28 +439,24 @@ namespace Siccity.GLTFUtility {
 		public ImportResult Import(GLTFBufferView.ImportResult[] bufferViews) {
 
 			ImportResult result = new ImportResult();
-			try {
-				result.bufferView = bufferView.HasValue ? bufferViews[bufferView.Value] : null;
-				result.componentType = componentType;
-				result.type = type;
-				result.count = count;
-				// Sparse accessor works by overwriting specified indices instead of defining a full data set. This can save space, especially for morph targets
-				if (sparse != null) {
-					result.sparse = new ImportResult.Sparse() {
-						count = sparse.count,
-							indices = new ImportResult.Sparse.Indices() {
-								bufferView = bufferViews[sparse.indices.bufferView],
-									componentType = sparse.indices.componentType,
-									byteOffset = sparse.indices.byteOffset
-							},
-							values = new ImportResult.Sparse.Values() {
-								bufferView = bufferViews[sparse.values.bufferView],
-									byteOffset = sparse.values.byteOffset
-							}
-					};
-				}
-			} catch (Exception e) {
-				Debug.Log(e);
+			result.bufferView = bufferView.HasValue ? bufferViews[bufferView.Value] : null;
+			result.componentType = componentType;
+			result.type = type;
+			result.count = count;
+			// Sparse accessor works by overwriting specified indices instead of defining a full data set. This can save space, especially for morph targets
+			if (sparse != null) {
+				result.sparse = new ImportResult.Sparse() {
+					count = sparse.count,
+						indices = new ImportResult.Sparse.Indices() {
+							bufferView = bufferViews[sparse.indices.bufferView],
+								componentType = sparse.indices.componentType,
+								byteOffset = sparse.indices.byteOffset
+						},
+						values = new ImportResult.Sparse.Values() {
+							bufferView = bufferViews[sparse.values.bufferView],
+								byteOffset = sparse.values.byteOffset
+						}
+				};
 			}
 			return result;
 		}
