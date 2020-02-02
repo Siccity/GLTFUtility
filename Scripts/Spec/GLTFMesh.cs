@@ -58,111 +58,103 @@ namespace Siccity.GLTFUtility {
 				}
 
 				public MeshData(GLTFMesh gltfMesh, GLTFAccessor.ImportResult[] accessors) {
-					try {
-						name = gltfMesh.name;
-						if (gltfMesh.primitives.Count == 0) {
-							Debug.LogWarning("0 primitives in mesh");
-						} else {
-							for (int i = 0; i < gltfMesh.primitives.Count; i++) {
-								GLTFPrimitive primitive = gltfMesh.primitives[i];
+					name = gltfMesh.name;
+					if (gltfMesh.primitives.Count == 0) {
+						Debug.LogWarning("0 primitives in mesh");
+					} else {
+						for (int i = 0; i < gltfMesh.primitives.Count; i++) {
+							GLTFPrimitive primitive = gltfMesh.primitives[i];
 
-								int vertStartIndex = verts.Count;
-								submeshVertexStart.Add(vertStartIndex);
+							int vertStartIndex = verts.Count;
+							submeshVertexStart.Add(vertStartIndex);
 
-								// Verts - (Z points backwards in GLTF)
-								if (primitive.attributes.POSITION.HasValue) {
-									if (accessors[primitive.attributes.POSITION.Value] == null) {
-										Debug.LogWarning("Accessor is null");
-									} else {
-										IEnumerable<Vector3> newVerts = accessors[primitive.attributes.POSITION.Value].ReadVec3().Select(v => { v.z = -v.z; return v; });
-										verts.AddRange(newVerts);
-									}
-								}
-
-								int vertCount = verts.Count;
-
-								// Tris - (Invert all triangles. Instead of flipping each triangle, just flip the entire array. Much easier)
-								if (primitive.indices.HasValue) {
-									submeshTris.Add(new List<int>(accessors[primitive.indices.Value].ReadInt().Reverse().Select(x => x + vertStartIndex)));
-								}
-
-								/// Normals - (Z points backwards in GLTF)
-								if (primitive.attributes.NORMAL.HasValue) {
-									normals.AddRange(accessors[primitive.attributes.NORMAL.Value].ReadVec3().Select(v => { v.z = -v.z; return v; }));
-								}
-
-								// Tangents - (Z points backwards in GLTF)
-								if (primitive.attributes.TANGENT.HasValue) {
-									tangents.AddRange(accessors[primitive.attributes.TANGENT.Value].ReadVec4().Select(v => { v.z = -v.z; v.w = -v.w; return v; }));
-								}
-
-								// Vertex colors
-								if (primitive.attributes.COLOR_0.HasValue) {
-									colors.AddRange(accessors[primitive.attributes.COLOR_0.Value].ReadColor());
-								}
-
-								// Weights
-								if (primitive.attributes.WEIGHTS_0.HasValue && primitive.attributes.JOINTS_0.HasValue) {
-									Vector4[] weights0 = accessors[primitive.attributes.WEIGHTS_0.Value].ReadVec4();
-									Vector4[] joints0 = accessors[primitive.attributes.JOINTS_0.Value].ReadVec4();
-									if (joints0.Length == weights0.Length) {
-										BoneWeight[] boneWeights = new BoneWeight[weights0.Length];
-										for (int k = 0; k < boneWeights.Length; k++) {
-											NormalizeWeights(ref weights0[k]);
-											boneWeights[k].weight0 = weights0[k].x;
-											boneWeights[k].weight1 = weights0[k].y;
-											boneWeights[k].weight2 = weights0[k].z;
-											boneWeights[k].weight3 = weights0[k].w;
-											boneWeights[k].boneIndex0 = Mathf.RoundToInt(joints0[k].x);
-											boneWeights[k].boneIndex1 = Mathf.RoundToInt(joints0[k].y);
-											boneWeights[k].boneIndex2 = Mathf.RoundToInt(joints0[k].z);
-											boneWeights[k].boneIndex3 = Mathf.RoundToInt(joints0[k].w);
-										}
-										if (weights == null) weights = new List<BoneWeight>(new BoneWeight[vertCount - boneWeights.Length]);
-										weights.AddRange(boneWeights);
-									} else Debug.LogWarning("WEIGHTS_0 and JOINTS_0 not same length. Skipped");
-								} else {
-									if (weights != null) weights.AddRange(new BoneWeight[vertCount - weights.Count]);
-								}
-
-								// UVs
-								ReadUVs(ref uv1, accessors, primitive.attributes.TEXCOORD_0, vertCount);
-								ReadUVs(ref uv2, accessors, primitive.attributes.TEXCOORD_1, vertCount);
-								ReadUVs(ref uv3, accessors, primitive.attributes.TEXCOORD_2, vertCount);
-								ReadUVs(ref uv4, accessors, primitive.attributes.TEXCOORD_3, vertCount);
-								ReadUVs(ref uv5, accessors, primitive.attributes.TEXCOORD_4, vertCount);
-								ReadUVs(ref uv6, accessors, primitive.attributes.TEXCOORD_5, vertCount);
-								ReadUVs(ref uv7, accessors, primitive.attributes.TEXCOORD_6, vertCount);
-								ReadUVs(ref uv8, accessors, primitive.attributes.TEXCOORD_7, vertCount);
+							// Verts - (Z points backwards in GLTF)
+							if (primitive.attributes.POSITION.HasValue) {
+								IEnumerable<Vector3> newVerts = accessors[primitive.attributes.POSITION.Value].ReadVec3().Select(v => { v.z = -v.z; return v; });
+								verts.AddRange(newVerts);
 							}
 
-							bool hasTargetNames = gltfMesh.extras != null && gltfMesh.extras.targetNames != null;
-							if (hasTargetNames) {
-								if (gltfMesh.primitives.All(x => x.targets.Count != gltfMesh.extras.targetNames.Length)) {
-									Debug.LogWarning("Morph target names found in mesh " + name + " but array length does not match primitive morph target array length");
-									hasTargetNames = false;
-								}
-							}
-							// Read blend shapes after knowing final vertex count
-							int finalVertCount = verts.Count;
+							int vertCount = verts.Count;
 
-							for (int i = 0; i < gltfMesh.primitives.Count; i++) {
-								GLTFPrimitive primitive = gltfMesh.primitives[i];
-								if (primitive.targets != null) {
-									for (int k = 0; k < primitive.targets.Count; k++) {
-										BlendShape blendShape = new BlendShape();
-										blendShape.pos = GetMorphWeights(primitive.targets[k].POSITION, submeshVertexStart[i], finalVertCount, accessors);
-										blendShape.norm = GetMorphWeights(primitive.targets[k].NORMAL, submeshVertexStart[i], finalVertCount, accessors);
-										blendShape.tan = GetMorphWeights(primitive.targets[k].TANGENT, submeshVertexStart[i], finalVertCount, accessors);
-										if (hasTargetNames) blendShape.name = gltfMesh.extras.targetNames[k];
-										else blendShape.name = "morph-" + blendShapes.Count;
-										blendShapes.Add(blendShape);
+							// Tris - (Invert all triangles. Instead of flipping each triangle, just flip the entire array. Much easier)
+							if (primitive.indices.HasValue) {
+								submeshTris.Add(new List<int>(accessors[primitive.indices.Value].ReadInt().Reverse().Select(x => x + vertStartIndex)));
+							}
+
+							/// Normals - (Z points backwards in GLTF)
+							if (primitive.attributes.NORMAL.HasValue) {
+								normals.AddRange(accessors[primitive.attributes.NORMAL.Value].ReadVec3().Select(v => { v.z = -v.z; return v; }));
+							}
+
+							// Tangents - (Z points backwards in GLTF)
+							if (primitive.attributes.TANGENT.HasValue) {
+								tangents.AddRange(accessors[primitive.attributes.TANGENT.Value].ReadVec4().Select(v => { v.z = -v.z; v.w = -v.w; return v; }));
+							}
+
+							// Vertex colors
+							if (primitive.attributes.COLOR_0.HasValue) {
+								colors.AddRange(accessors[primitive.attributes.COLOR_0.Value].ReadColor());
+							}
+
+							// Weights
+							if (primitive.attributes.WEIGHTS_0.HasValue && primitive.attributes.JOINTS_0.HasValue) {
+								Vector4[] weights0 = accessors[primitive.attributes.WEIGHTS_0.Value].ReadVec4();
+								Vector4[] joints0 = accessors[primitive.attributes.JOINTS_0.Value].ReadVec4();
+								if (joints0.Length == weights0.Length) {
+									BoneWeight[] boneWeights = new BoneWeight[weights0.Length];
+									for (int k = 0; k < boneWeights.Length; k++) {
+										NormalizeWeights(ref weights0[k]);
+										boneWeights[k].weight0 = weights0[k].x;
+										boneWeights[k].weight1 = weights0[k].y;
+										boneWeights[k].weight2 = weights0[k].z;
+										boneWeights[k].weight3 = weights0[k].w;
+										boneWeights[k].boneIndex0 = Mathf.RoundToInt(joints0[k].x);
+										boneWeights[k].boneIndex1 = Mathf.RoundToInt(joints0[k].y);
+										boneWeights[k].boneIndex2 = Mathf.RoundToInt(joints0[k].z);
+										boneWeights[k].boneIndex3 = Mathf.RoundToInt(joints0[k].w);
 									}
+									if (weights == null) weights = new List<BoneWeight>(new BoneWeight[vertCount - boneWeights.Length]);
+									weights.AddRange(boneWeights);
+								} else Debug.LogWarning("WEIGHTS_0 and JOINTS_0 not same length. Skipped");
+							} else {
+								if (weights != null) weights.AddRange(new BoneWeight[vertCount - weights.Count]);
+							}
+
+							// UVs
+							ReadUVs(ref uv1, accessors, primitive.attributes.TEXCOORD_0, vertCount);
+							ReadUVs(ref uv2, accessors, primitive.attributes.TEXCOORD_1, vertCount);
+							ReadUVs(ref uv3, accessors, primitive.attributes.TEXCOORD_2, vertCount);
+							ReadUVs(ref uv4, accessors, primitive.attributes.TEXCOORD_3, vertCount);
+							ReadUVs(ref uv5, accessors, primitive.attributes.TEXCOORD_4, vertCount);
+							ReadUVs(ref uv6, accessors, primitive.attributes.TEXCOORD_5, vertCount);
+							ReadUVs(ref uv7, accessors, primitive.attributes.TEXCOORD_6, vertCount);
+							ReadUVs(ref uv8, accessors, primitive.attributes.TEXCOORD_7, vertCount);
+						}
+
+						bool hasTargetNames = gltfMesh.extras != null && gltfMesh.extras.targetNames != null;
+						if (hasTargetNames) {
+							if (gltfMesh.primitives.All(x => x.targets.Count != gltfMesh.extras.targetNames.Length)) {
+								Debug.LogWarning("Morph target names found in mesh " + name + " but array length does not match primitive morph target array length");
+								hasTargetNames = false;
+							}
+						}
+						// Read blend shapes after knowing final vertex count
+						int finalVertCount = verts.Count;
+
+						for (int i = 0; i < gltfMesh.primitives.Count; i++) {
+							GLTFPrimitive primitive = gltfMesh.primitives[i];
+							if (primitive.targets != null) {
+								for (int k = 0; k < primitive.targets.Count; k++) {
+									BlendShape blendShape = new BlendShape();
+									blendShape.pos = GetMorphWeights(primitive.targets[k].POSITION, submeshVertexStart[i], finalVertCount, accessors);
+									blendShape.norm = GetMorphWeights(primitive.targets[k].NORMAL, submeshVertexStart[i], finalVertCount, accessors);
+									blendShape.tan = GetMorphWeights(primitive.targets[k].TANGENT, submeshVertexStart[i], finalVertCount, accessors);
+									if (hasTargetNames) blendShape.name = gltfMesh.extras.targetNames[k];
+									else blendShape.name = "morph-" + blendShapes.Count;
+									blendShapes.Add(blendShape);
 								}
 							}
 						}
-					} catch (Exception e) {
-						Debug.Log(e);
 					}
 				}
 
