@@ -1,13 +1,14 @@
 ﻿using System;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace Siccity.GLTFUtility.Converters {
-	/// <summary> 
+	/// <summary>
 	/// Converts from float array to Quaternion during deserialization, and back.
 	/// Compensates for differing coordinate systems as well.
 	/// </summary>
-	public class QuaternionConverter : JsonConverter {
+	[Preserve] public class QuaternionConverter : JsonConverter {
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
 			Quaternion q = (Quaternion) value;
 			writer.WriteStartArray();
