@@ -1,9 +1,11 @@
 ﻿using System;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace Siccity.GLTFUtility.Converters {
 	/// <summary> Converts from float array to Vector3 during deserialization, and back </summary>
+	[Preserve]
 	public class Vector3Converter : JsonConverter {
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
 			Vector3 pos = (Vector3) value;
