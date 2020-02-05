@@ -25,8 +25,7 @@ namespace Siccity.GLTFUtility.Converters {
 		}
 	}
 
-	[Preserve]
-	public class ColorRGBAConverter : JsonConverter {
+	[Preserve] public class ColorRGBAConverter : JsonConverter {
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
 			Color c = (Color) value;
 			writer.WriteStartArray();
