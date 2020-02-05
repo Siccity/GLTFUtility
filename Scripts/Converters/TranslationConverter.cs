@@ -8,8 +8,7 @@ namespace Siccity.GLTFUtility.Converters {
 	/// Converts from float array to Vector3 during deserialization, and back.
 	/// Compensates for differing coordinate systems as well.
 	/// </summary>
-	[Preserve]
-	public class TranslationConverter : JsonConverter {
+	[Preserve] public class TranslationConverter : JsonConverter {
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
 			Vector3 pos = (Vector3) value;
 			writer.WriteStartArray();

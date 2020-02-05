@@ -8,8 +8,7 @@ namespace Siccity.GLTFUtility.Converters {
 	/// Converts from float array to Quaternion during deserialization, and back.
 	/// Compensates for differing coordinate systems as well.
 	/// </summary>
-	[Preserve]
-	public class QuaternionConverter : JsonConverter {
+	[Preserve] public class QuaternionConverter : JsonConverter {
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
 			Quaternion q = (Quaternion) value;
 			writer.WriteStartArray();
