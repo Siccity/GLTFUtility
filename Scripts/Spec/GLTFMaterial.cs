@@ -33,53 +33,79 @@ namespace Siccity.GLTFUtility {
 			public Material material;
 		}
 
-		public Material CreateMaterial(GLTFTexture.ImportResult[] textures, ShaderSettings shaderSettings) {
-			Material mat;
-
+		public IEnumerator CreateMaterial(GLTFTexture.ImportResult[] textures, ShaderSettings shaderSettings, Action<Material> onFinish) {
+			Material mat = null;
+			IEnumerator en = null;
 			// Load metallic-roughness materials
 			if (pbrMetallicRoughness != null) {
-				mat = pbrMetallicRoughness.CreateMaterial(textures, alphaMode, shaderSettings);
+				en = pbrMetallicRoughness.CreateMaterial(textures, alphaMode, shaderSettings, x => mat = x);
+				while (en.MoveNext()) { yield return null; };
 			}
 			// Load specular-glossiness materials
 			else if (extensions != null && extensions.KHR_materials_pbrSpecularGlossiness != null) {
-				mat = extensions.KHR_materials_pbrSpecularGlossiness.CreateMaterial(textures, alphaMode, shaderSettings);
+				en = extensions.KHR_materials_pbrSpecularGlossiness.CreateMaterial(textures, alphaMode, shaderSettings, x => mat = x);
+				while (en.MoveNext()) { yield return null; };
 			}
 			// Load fallback material
 			else mat = new Material(Shader.Find("Standard"));
-
-			Texture2D tex;
-			if (TryGetTexture(textures, normalTexture, out tex)) {
-				mat.SetTexture("_BumpMap", tex);
-				mat.EnableKeyword("_NORMALMAP");
+			// Normal texture
+			if (normalTexture != null) {
+				en = TryGetTexture(textures, normalTexture, true, tex => {
+					if (tex != null) {
+						mat.SetTexture("_BumpMap", tex);
+						mat.EnableKeyword("_NORMALMAP");
+					}
+				});
+				while (en.MoveNext()) { yield return null; };
 			}
-			if (TryGetTexture(textures, occlusionTexture, out tex)) {
-				mat.SetTexture("_OcclusionMap", tex);
+			// Occlusion texture
+			if (occlusionTexture != null) {
+				en = TryGetTexture(textures, occlusionTexture, true, tex => {
+					if (tex != null) {
+						mat.SetTexture("_OcclusionMap", tex);
+					}
+				});
+				while (en.MoveNext()) { yield return null; };
 			}
+			// Emissive factor
 			if (emissiveFactor != Color.black) {
 				mat.SetColor("_EmissionColor", emissiveFactor);
 				mat.EnableKeyword("_EMISSION");
 			}
-			if (TryGetTexture(textures, emissiveTexture, out tex)) {
-				mat.SetTexture("_EmissionMap", tex);
-				mat.EnableKeyword("_EMISSION");
+			// Emissive texture
+			if (emissiveTexture != null) {
+				en = TryGetTexture(textures, emissiveTexture, false, tex => {
+					if (tex != null) {
+						mat.SetTexture("_EmissionMap", tex);
+						mat.EnableKeyword("_EMISSION");
+					}
+				});
+				while (en.MoveNext()) { yield return null; };
 			}
+
 			if (alphaMode == AlphaMode.MASK) {
 				mat.SetFloat("_AlphaCutoff", alphaCutoff);
 			}
 			mat.name = name;
-			return mat;
+			onFinish(mat);
 		}
 
-		public static bool TryGetTexture(GLTFTexture.ImportResult[] textures, TextureInfo texture, out Texture2D tex) {
-			tex = null;
-			if (texture == null || texture.index < 0) return false;
-			if (textures == null) return false;
+		public static IEnumerator TryGetTexture(GLTFTexture.ImportResult[] textures, TextureInfo texture, bool linear, Action<Texture2D> onFinish, Action<float> onProgress = null) {
+			if (texture == null || texture.index < 0) {
+				if (onProgress != null) onProgress(1f);
+				onFinish(null);
+			}
+			if (textures == null) {
+				if (onProgress != null) onProgress(1f);
+				onFinish(null);
+			}
 			if (textures.Length <= texture.index) {
 				Debug.LogWarning("Attempted to get texture index " + texture.index + " when only " + textures.Length + " exist");
-				return false;
+				if (onProgress != null) onProgress(1f);
+				onFinish(null);
 			}
-			tex = textures[texture.index].image.texture;
-			return true;
+			IEnumerator en = textures[texture.index].GetTextureCached(linear, onFinish, onProgress);
+			while (en.MoveNext()) { yield return null; };
 		}
 
 		[Preserve] public class Extensions {
@@ -94,7 +120,7 @@ namespace Siccity.GLTFUtility {
 			public float roughnessFactor = 1f;
 			public TextureInfo metallicRoughnessTexture;
 
-			public Material CreateMaterial(GLTFTexture.ImportResult[] textures, AlphaMode alphaMode, ShaderSettings shaderSettings) {
+			public IEnumerator CreateMaterial(GLTFTexture.ImportResult[] textures, AlphaMode alphaMode, ShaderSettings shaderSettings, Action<Material> onFinish) {
 				// Shader
 				Shader sh = null;
 #if UNITY_2019_1_OR_NEWER
@@ -119,7 +145,12 @@ namespace Siccity.GLTFUtility {
 						if (textures.Length <= baseColorTexture.index) {
 							Debug.LogWarning("Attempted to get basecolor texture index " + baseColorTexture.index + " when only " + textures.Length + " exist");
 						} else {
-							mat.SetTexture("_MainTex", textures[baseColorTexture.index].image.texture);
+							IEnumerator en = textures[baseColorTexture.index].GetTextureCached(false, tex => {
+								if (tex != null) {
+									mat.SetTexture("_MainTex", tex);
+								}
+							});
+							while (en.MoveNext()) { yield return null; };
 						}
 					}
 					// Metallic roughness texture
@@ -127,8 +158,13 @@ namespace Siccity.GLTFUtility {
 						if (textures.Length <= metallicRoughnessTexture.index) {
 							Debug.LogWarning("Attempted to get metallicRoughness texture index " + metallicRoughnessTexture.index + " when only " + textures.Length + " exist");
 						} else {
-							mat.SetTexture("_MetallicGlossMap", textures[metallicRoughnessTexture.index].image.texture);
-							mat.EnableKeyword("_METALLICGLOSSMAP");
+							IEnumerator en = TryGetTexture(textures, metallicRoughnessTexture, true, tex => {
+								if (tex != null) {
+									mat.SetTexture("_MetallicGlossMap", tex);
+									mat.EnableKeyword("_METALLICGLOSSMAP");
+								}
+							});
+							while (en.MoveNext()) { yield return null; };
 						}
 					}
 				}
@@ -136,7 +172,7 @@ namespace Siccity.GLTFUtility {
 				// After the texture and color is extracted from the glTFObject
 				if (mat.HasProperty("_BaseMap")) mat.SetTexture("_BaseMap", mat.mainTexture);
 				if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", baseColorFactor);
-				return mat;
+				onFinish(mat);
 			}
 		}
 
@@ -152,7 +188,7 @@ namespace Siccity.GLTFUtility {
 			/// <summary> The specular-glossiness texture </summary>
 			public TextureInfo specularGlossinessTexture;
 
-			public Material CreateMaterial(GLTFTexture.ImportResult[] textures, AlphaMode alphaMode, ShaderSettings shaderSettings) {
+			public IEnumerator CreateMaterial(GLTFTexture.ImportResult[] textures, AlphaMode alphaMode, ShaderSettings shaderSettings, Action<Material> onFinish) {
 				// Shader
 				Shader sh = null;
 #if UNITY_2019_1_OR_NEWER
@@ -177,7 +213,12 @@ namespace Siccity.GLTFUtility {
 						if (textures.Length <= diffuseTexture.index) {
 							Debug.LogWarning("Attempted to get diffuseTexture texture index " + diffuseTexture.index + " when only " + textures.Length + " exist");
 						} else {
-							mat.SetTexture("_MainTex", textures[diffuseTexture.index].image.texture);
+							IEnumerator en = textures[diffuseTexture.index].GetTextureCached(false, tex => {
+								if (tex != null) {
+									mat.SetTexture("_MainTex", tex);
+								}
+							});
+							while (en.MoveNext()) { yield return null; };
 						}
 					}
 					// Specular texture
@@ -185,12 +226,18 @@ namespace Siccity.GLTFUtility {
 						if (textures.Length <= specularGlossinessTexture.index) {
 							Debug.LogWarning("Attempted to get specularGlossinessTexture texture index " + specularGlossinessTexture.index + " when only " + textures.Length + " exist");
 						} else {
-							mat.SetTexture("_SpecGlossMap", textures[specularGlossinessTexture.index].image.texture);
 							mat.EnableKeyword("_SPECGLOSSMAP");
+							IEnumerator en = textures[specularGlossinessTexture.index].GetTextureCached(false, tex => {
+								if (tex != null) {
+									mat.SetTexture("_SpecGlossMap", tex);
+									mat.EnableKeyword("_SPECGLOSSMAP");
+								}
+							});
+							while (en.MoveNext()) { yield return null; };
 						}
 					}
 				}
-				return mat;
+				onFinish(mat);
 			}
 		}
 
@@ -227,7 +274,10 @@ namespace Siccity.GLTFUtility {
 
 				for (int i = 0; i < Result.Length; i++) {
 					Result[i] = new ImportResult();
-					Result[i].material = materials[i].CreateMaterial(textureTask.Result, importSettings.shaderOverrides);
+
+					IEnumerator en = materials[i].CreateMaterial(textureTask.Result, importSettings.shaderOverrides, x => Result[i].material = x);
+					while (en.MoveNext()) { yield return null; };
+
 					if (Result[i].material.name == null) Result[i].material.name = "material" + i;
 					if (onProgress != null) onProgress.Invoke((float) (i + 1) / (float) Result.Length);
 					yield return null;

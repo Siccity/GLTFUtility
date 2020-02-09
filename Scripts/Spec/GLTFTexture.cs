@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -13,13 +14,27 @@ namespace Siccity.GLTFUtility {
 		public string name;
 
 		public class ImportResult {
-			public GLTFImage.ImportResult image;
+			private GLTFImage.ImportResult image;
+			private Texture2D cache;
+
+			/// <summary> Constructor </summary>
+			public ImportResult(GLTFImage.ImportResult image) {
+				this.image = image;
+			}
+
+			/// <summary> Create or return cached texture </summary>
+			public IEnumerator GetTextureCached(bool linear, Action<Texture2D> onFinish, Action<float> onProgress = null) {
+				if (cache == null) {
+					IEnumerator en = image.CreateTextureAsync(linear, x => cache = x, onProgress);
+					while (en.MoveNext()) { yield return null; };
+				}
+				onFinish(cache);
+			}
 		}
 
 		public ImportResult Import(GLTFImage.ImportResult[] images) {
 			if (source.HasValue) {
-				ImportResult result = new ImportResult();
-				result.image = images[source.Value];
+				ImportResult result = new ImportResult(images[source.Value]);
 				return result;
 			}
 			return null;
