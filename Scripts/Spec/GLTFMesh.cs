@@ -37,6 +37,7 @@ namespace Siccity.GLTFUtility {
 				string name;
 				List<Vector3> normals = new List<Vector3>();
 				List<List<int>> submeshTris = new List<List<int>>();
+				List<RenderingMode> submeshTrisMode = new List<RenderingMode>();
 				List<Vector3> verts = new List<Vector3>();
 				List<Vector4> tangents = new List<Vector4>();
 				List<Color> colors = new List<Color>();
@@ -79,6 +80,7 @@ namespace Siccity.GLTFUtility {
 							// Tris - (Invert all triangles. Instead of flipping each triangle, just flip the entire array. Much easier)
 							if (primitive.indices.HasValue) {
 								submeshTris.Add(new List<int>(accessors[primitive.indices.Value].ReadInt().Reverse().Select(x => x + vertStartIndex)));
+								submeshTrisMode.Add(primitive.mode);
 							}
 
 							/// Normals - (Z points backwards in GLTF)
@@ -169,30 +171,34 @@ namespace Siccity.GLTFUtility {
 					} else return new Vector3[vertCount];
 				}
 
-				public Mesh ToMesh(RenderingMode mode) {
+				public Mesh ToMesh() {
 					Mesh mesh = new Mesh();
 					mesh.vertices = verts.ToArray();
 					mesh.subMeshCount = submeshTris.Count;
-					for (int i = 0; i < submeshTris.Count; i++) {
-						if(mode == RenderingMode.POINTS)
+					var onlyTriangles = true;
+					for (int i = 0; i < submeshTris.Count; i++)
+					{
+						switch (submeshTrisMode[i])
 						{
-							mesh.SetIndices(submeshTris[i].ToArray(), MeshTopology.Points, 0);
+							case RenderingMode.POINTS:
+								mesh.SetIndices(submeshTris[i].ToArray(), MeshTopology.Points, i);
+								onlyTriangles = false;
+								break;
+							case RenderingMode.LINES:
+								mesh.SetIndices(submeshTris[i].ToArray(), MeshTopology.Lines, i);
+								onlyTriangles = false;
+								break;
+							case RenderingMode.LINE_STRIP:
+								mesh.SetIndices(submeshTris[i].ToArray(), MeshTopology.LineStrip, i);
+								onlyTriangles = false;
+								break;
+							case RenderingMode.TRIANGLES:
+								mesh.SetTriangles(submeshTris[i].ToArray(), i);
+								break;
+							default:
+								Debug.LogWarning("GLTF rendering mode " + submeshTrisMode[i] + " not supported.");
+								return null;
 						}
-						else if(mode == RenderingMode.LINES)
-						{
-							mesh.SetIndices(submeshTris[i].ToArray(), MeshTopology.Lines, 0);
-						}
-						else if (mode == RenderingMode.LINE_LOOP)
-						{
-							mesh.SetIndices(submeshTris[i].ToArray(), MeshTopology.LineStrip, 0);
-						}
-						else if(mode == RenderingMode.LINE_STRIP)
-						{
-							mesh.SetIndices(submeshTris[i].ToArray(), MeshTopology.LineStrip, 0);
-						}
-						else
-							mesh.SetTriangles(submeshTris[i].ToArray(), i);
-
 					}
 
 					mesh.colors = colors.ToArray();
@@ -213,18 +219,12 @@ namespace Siccity.GLTFUtility {
 						mesh.AddBlendShapeFrame(blendShapes[i].name, 1f, blendShapes[i].pos, blendShapes[i].norm, blendShapes[i].tan);
 					}
 
-					if ((normals.Count == 0) &&
-						(mode == RenderingMode.TRIANGLES ||
-						 mode == RenderingMode.TRIANGLE_FAN ||
-						 mode == RenderingMode.TRIANGLE_STRIP))
+					if (normals.Count == 0 && onlyTriangles)
 						mesh.RecalculateNormals();
 					else
 						mesh.normals = normals.ToArray();
 
-					if ((tangents.Count == 0) &&
-						(mode == RenderingMode.TRIANGLES ||
-						 mode == RenderingMode.TRIANGLE_FAN ||
-						 mode == RenderingMode.TRIANGLE_STRIP))
+					if (tangents.Count == 0 && onlyTriangles)
 						 mesh.RecalculateTangents();
 					else
 						mesh.tangents = tangents.ToArray();
@@ -295,12 +295,8 @@ namespace Siccity.GLTFUtility {
 						continue;
 					}
 
-					RenderingMode mode = RenderingMode.TRIANGLES;
-					for (int k = 0; k < meshes[i].primitives.Count; k++)
-						mode = meshes[i].primitives[k].mode;
-
 					Result[i] = new ImportResult();
-					Result[i].mesh = meshData[i].ToMesh(mode);
+					Result[i].mesh = meshData[i].ToMesh();
 					Result[i].materials = new Material[meshes[i].primitives.Count];
 					for (int k = 0; k < meshes[i].primitives.Count; k++) {
 						int? matIndex = meshes[i].primitives[k].material;
