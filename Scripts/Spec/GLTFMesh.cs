@@ -169,12 +169,30 @@ namespace Siccity.GLTFUtility {
 					} else return new Vector3[vertCount];
 				}
 
-				public Mesh ToMesh() {
-					Mesh mesh = new Mesh();;
+				public Mesh ToMesh(RenderingMode mode) {
+					Mesh mesh = new Mesh();
 					mesh.vertices = verts.ToArray();
 					mesh.subMeshCount = submeshTris.Count;
 					for (int i = 0; i < submeshTris.Count; i++) {
-						mesh.SetTriangles(submeshTris[i].ToArray(), i);
+						if(mode == RenderingMode.POINTS)
+						{
+							mesh.SetIndices(submeshTris[i].ToArray(), MeshTopology.Points, 0);
+						}
+						else if(mode == RenderingMode.LINES)
+						{
+							mesh.SetIndices(submeshTris[i].ToArray(), MeshTopology.Lines, 0);
+						}
+						else if (mode == RenderingMode.LINE_LOOP)
+						{
+							mesh.SetIndices(submeshTris[i].ToArray(), MeshTopology.LineStrip, 0);
+						}
+						else if(mode == RenderingMode.LINE_STRIP)
+						{
+							mesh.SetIndices(submeshTris[i].ToArray(), MeshTopology.LineStrip, 0);
+						}
+						else
+							mesh.SetTriangles(submeshTris[i].ToArray(), i);
+
 					}
 
 					mesh.colors = colors.ToArray();
@@ -195,11 +213,21 @@ namespace Siccity.GLTFUtility {
 						mesh.AddBlendShapeFrame(blendShapes[i].name, 1f, blendShapes[i].pos, blendShapes[i].norm, blendShapes[i].tan);
 					}
 
-					if (normals.Count == 0) mesh.RecalculateNormals();
-					else mesh.normals = normals.ToArray();
+					if ((normals.Count == 0) &&
+						(mode == RenderingMode.TRIANGLES ||
+						 mode == RenderingMode.TRIANGLE_FAN ||
+						 mode == RenderingMode.TRIANGLE_STRIP))
+						mesh.RecalculateNormals();
+					else
+						mesh.normals = normals.ToArray();
 
-					if (tangents.Count == 0) mesh.RecalculateTangents();
-					else mesh.tangents = tangents.ToArray();
+					if ((tangents.Count == 0) &&
+						(mode == RenderingMode.TRIANGLES ||
+						 mode == RenderingMode.TRIANGLE_FAN ||
+						 mode == RenderingMode.TRIANGLE_STRIP))
+						 mesh.RecalculateTangents();
+					else
+						mesh.tangents = tangents.ToArray();
 
 					mesh.name = name;
 					return mesh;
@@ -267,8 +295,12 @@ namespace Siccity.GLTFUtility {
 						continue;
 					}
 
+					RenderingMode mode = RenderingMode.TRIANGLES;
+					for (int k = 0; k < meshes[i].primitives.Count; k++)
+						mode = meshes[i].primitives[k].mode;
+
 					Result[i] = new ImportResult();
-					Result[i].mesh = meshData[i].ToMesh();
+					Result[i].mesh = meshData[i].ToMesh(mode);
 					Result[i].materials = new Material[meshes[i].primitives.Count];
 					for (int k = 0; k < meshes[i].primitives.Count; k++) {
 						int? matIndex = meshes[i].primitives[k].material;
