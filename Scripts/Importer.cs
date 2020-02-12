@@ -38,6 +38,16 @@ namespace Siccity.GLTFUtility {
 			}
 		}
 
+		public static void LoadFromFileAsync(string filepath, ImportSettings importSettings, Action<GameObject, GLTFAnimation.ImportResult[]> onFinished, Action<float> onProgress = null) {
+			string extension = Path.GetExtension(filepath).ToLower();
+			if (extension == ".glb") ImportGLBAsync(filepath, importSettings, onFinished, onProgress);
+			else if (extension == ".gltf") ImportGLTFAsync(filepath, importSettings, onFinished, onProgress);
+			else {
+				Debug.Log("Extension '" + extension + "' not recognized in " + filepath);
+				onFinished(null, null);
+			}
+		}
+
 		private static GameObject ImportGLB(string filepath, ImportSettings importSettings, out GLTFAnimation.ImportResult[] animations) {
 			byte[] bytes = File.ReadAllBytes(filepath);
 			animations = null;
@@ -82,6 +92,41 @@ namespace Siccity.GLTFUtility {
 
 			// Parse json
 			LoadAsync(json, filepath, importSettings, onFinished, onProgress).RunCoroutine();
+		}
+
+		public static void ImportGLBAsync(string filepath, ImportSettings importSettings, Action<GameObject, GLTFAnimation.ImportResult[]> onFinished, Action<float> onProgress = null) {
+			FileStream stream = File.OpenRead(filepath);
+
+			byte[] buffer = new byte[12];
+			stream.Read(buffer, 0, 12);
+			// 12 byte header
+			// 0-4  - magic = "glTF"
+			// 4-8  - version = 2
+			// 8-12 - length = total length of glb, including Header and all Chunks, in bytes.
+			string magic = Encoding.Default.GetString(buffer, 0, 4);
+			if (magic != "glTF") {
+				Debug.LogWarning("File at " + filepath + " does not look like a .glb file");
+				if (onFinished != null) onFinished(null, null);
+			}
+			uint version = System.BitConverter.ToUInt32(buffer, 4);
+			if (version != 2) {
+				Debug.LogWarning("Importer does not support gltf version " + version);
+				if (onFinished != null) onFinished(null, null);
+			}
+
+			// Chunk 0 (json)
+			// 0-4  - chunkLength = total length of the chunkData
+			// 4-8  - chunkType = "JSON"
+			// 8-[chunkLength+8] - chunkData = json data.
+			stream.Read(buffer, 0, 8);
+			uint chunkLength = System.BitConverter.ToUInt32(buffer, 0);
+			TextReader reader = new StreamReader(stream);
+			char[] jsonChars = new char[chunkLength];
+			reader.Read(jsonChars, 0, (int) chunkLength);
+			string json = new string(jsonChars);
+
+			// Parse json
+			LoadAsync(json, filepath, importSettings, onFinished, onProgress);
 		}
 
 		public abstract class ImportTask<TReturn> : ImportTask {
