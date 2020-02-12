@@ -164,8 +164,7 @@ namespace Siccity.GLTFUtility {
 							Debug.LogWarning("Accessor is null");
 							return new Vector3[vertCount];
 						}
-
-						Vector3[] accessorData = accessors[accessor.Value].ReadVec3();
+						Vector3[] accessorData = accessors[accessor.Value].ReadVec3().Select(v => { v.z = -v.z; return v; }).ToArray();
 						if (accessorData.Length != vertCount) {
 							Vector3[] resized = new Vector3[vertCount];
 							Array.Copy(accessorData, 0, resized, vertStartIndex, accessorData.Length);
