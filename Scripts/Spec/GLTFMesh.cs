@@ -268,7 +268,7 @@ namespace Siccity.GLTFUtility {
 				Result = new ImportResult[meshData.Length];
 				for (int i = 0; i < meshData.Length; i++) {
 					if (meshData[i] == null) {
-						Debug.LogWarning("Mesh " + i + "  import error");
+						Debug.LogWarning("Mesh " + i + " import error");
 						continue;
 					}
 
