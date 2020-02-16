@@ -49,34 +49,47 @@ namespace Siccity.GLTFUtility {
 		}
 
 		private static GameObject ImportGLB(string filepath, ImportSettings importSettings, out GLTFAnimation.ImportResult[] animations) {
-			byte[] bytes = File.ReadAllBytes(filepath);
-			animations = null;
+			FileStream stream = File.OpenRead(filepath);
 
+			byte[] buffer = new byte[12];
+			stream.Read(buffer, 0, 12);
 			// 12 byte header
 			// 0-4  - magic = "glTF"
 			// 4-8  - version = 2
 			// 8-12 - length = total length of glb, including Header and all Chunks, in bytes.
-			string magic = Encoding.ASCII.GetString(bytes.SubArray(0, 4));
+			string magic = Encoding.Default.GetString(buffer, 0, 4);
 			if (magic != "glTF") {
 				Debug.LogWarning("File at " + filepath + " does not look like a .glb file");
+				animations = null;
 				return null;
 			}
-			uint version = System.BitConverter.ToUInt32(bytes, 4);
+			uint version = System.BitConverter.ToUInt32(buffer, 4);
 			if (version != 2) {
 				Debug.LogWarning("Importer does not support gltf version " + version);
+				animations = null;
 				return null;
 			}
 			// What do we even need the length for.
 			//uint length = System.BitConverter.ToUInt32(bytes, 8);
 
 			// Chunk 0 (json)
-			uint chunkLength = System.BitConverter.ToUInt32(bytes, 12);
-			// This prints out JSON. So predictable.
-			//string chunkType = Encoding.ASCII.GetString(bytes.SubArray(16, 4));
-			string json = Encoding.ASCII.GetString(bytes.SubArray(20, (int) chunkLength));
+			// 0-4  - chunkLength = total length of the chunkData
+			// 4-8  - chunkType = "JSON"
+			// 8-[chunkLength+8] - chunkData = json data.
+			stream.Read(buffer, 0, 8);
+			uint chunkLength = System.BitConverter.ToUInt32(buffer, 0);
+			TextReader reader = new StreamReader(stream);
+			char[] jsonChars = new char[chunkLength];
+			reader.Read(jsonChars, 0, (int) chunkLength);
+			string json = new string(jsonChars);
+			
+			// Chunk
+			long binChunkStart = chunkLength + 20;
+			stream.Close();
+
 			// Parse json
 			GLTFObject gltfObject = JsonConvert.DeserializeObject<GLTFObject>(json);
-			return gltfObject.LoadInternal(filepath, importSettings, out animations);
+			return gltfObject.LoadInternal(filepath, binChunkStart, importSettings, out animations);
 		}
 
 		private static GameObject ImportGLTF(string filepath, ImportSettings importSettings, out GLTFAnimation.ImportResult[] animations) {
@@ -84,14 +97,14 @@ namespace Siccity.GLTFUtility {
 
 			// Parse json
 			GLTFObject gltfObject = JsonConvert.DeserializeObject<GLTFObject>(json);
-			return gltfObject.LoadInternal(filepath, importSettings, out animations);
+			return gltfObject.LoadInternal(filepath, 0, importSettings, out animations);
 		}
 
 		public static void ImportGLTFAsync(string filepath, ImportSettings importSettings, Action<GameObject, GLTFAnimation.ImportResult[]> onFinished, Action<float> onProgress = null) {
 			string json = File.ReadAllText(filepath);
 
 			// Parse json
-			LoadAsync(json, filepath, importSettings, onFinished, onProgress).RunCoroutine();
+			LoadAsync(json, filepath, 0, importSettings, onFinished, onProgress).RunCoroutine();
 		}
 
 		public static void ImportGLBAsync(string filepath, ImportSettings importSettings, Action<GameObject, GLTFAnimation.ImportResult[]> onFinished, Action<float> onProgress = null) {
@@ -124,9 +137,10 @@ namespace Siccity.GLTFUtility {
 			char[] jsonChars = new char[chunkLength];
 			reader.Read(jsonChars, 0, (int) chunkLength);
 			string json = new string(jsonChars);
+			long binChunkStart = 20 + chunkLength;
 
 			// Parse json
-			LoadAsync(json, filepath, importSettings, onFinished, onProgress);
+			LoadAsync(json, filepath, binChunkStart, importSettings, onFinished, onProgress);
 		}
 
 		public abstract class ImportTask<TReturn> : ImportTask {
@@ -163,12 +177,12 @@ namespace Siccity.GLTFUtility {
 		}
 
 #region Sync
-		private static GameObject LoadInternal(this GLTFObject gltfObject, string filepath, ImportSettings importSettings, out GLTFAnimation.ImportResult[] animations) {
+		private static GameObject LoadInternal(this GLTFObject gltfObject, string filepath, long binChunkStart, ImportSettings importSettings, out GLTFAnimation.ImportResult[] animations) {
 			// directory root is sometimes used for loading buffers from containing file, or local images
 			string directoryRoot = Directory.GetParent(filepath).ToString() + "/";
 
 			// Import tasks synchronously
-			GLTFBuffer.ImportTask bufferTask = new GLTFBuffer.ImportTask(gltfObject.buffers, filepath);
+			GLTFBuffer.ImportTask bufferTask = new GLTFBuffer.ImportTask(gltfObject.buffers, filepath, binChunkStart);
 			bufferTask.RunSynchronously();
 			GLTFBufferView.ImportTask bufferViewTask = new GLTFBufferView.ImportTask(gltfObject.bufferViews, bufferTask);
 			bufferViewTask.RunSynchronously();
@@ -197,7 +211,7 @@ namespace Siccity.GLTFUtility {
 #endregion
 
 #region Async
-		private static IEnumerator LoadAsync(string json, string filepath, ImportSettings importSettings, Action<GameObject, GLTFAnimation.ImportResult[]> onFinished, Action<float> onProgress = null) {
+		private static IEnumerator LoadAsync(string json, string filepath, long binChunkStart, ImportSettings importSettings, Action<GameObject, GLTFAnimation.ImportResult[]> onFinished, Action<float> onProgress = null) {
 			// Threaded deserialization
 			Task<GLTFObject> deserializeTask = new Task<GLTFObject>(() => JsonConvert.DeserializeObject<GLTFObject>(json));
 			deserializeTask.Start();
@@ -212,7 +226,7 @@ namespace Siccity.GLTFUtility {
 			// Setup import tasks
 			List<ImportTask> importTasks = new List<ImportTask>();
 
-			GLTFBuffer.ImportTask bufferTask = new GLTFBuffer.ImportTask(gltfObject.buffers, filepath);
+			GLTFBuffer.ImportTask bufferTask = new GLTFBuffer.ImportTask(gltfObject.buffers, filepath, binChunkStart);
 			importTasks.Add(bufferTask);
 			GLTFBufferView.ImportTask bufferViewTask = new GLTFBufferView.ImportTask(gltfObject.bufferViews, bufferTask);
 			importTasks.Add(bufferViewTask);
