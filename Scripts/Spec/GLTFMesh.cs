@@ -180,10 +180,8 @@ namespace Siccity.GLTFUtility {
 					mesh.vertices = verts.ToArray();
 					mesh.subMeshCount = submeshTris.Count;
 					var onlyTriangles = true;
-					for (int i = 0; i < submeshTris.Count; i++)
-					{
-						switch (submeshTrisMode[i])
-						{
+					for (int i = 0; i < submeshTris.Count; i++) {
+						switch (submeshTrisMode[i]) {
 							case RenderingMode.POINTS:
 								mesh.SetIndices(submeshTris[i].ToArray(), MeshTopology.Points, i);
 								onlyTriangles = false;
@@ -229,7 +227,7 @@ namespace Siccity.GLTFUtility {
 						mesh.normals = normals.ToArray();
 
 					if (tangents.Count == 0 && onlyTriangles)
-						 mesh.RecalculateTangents();
+						mesh.RecalculateTangents();
 					else
 						mesh.tangents = tangents.ToArray();
 
