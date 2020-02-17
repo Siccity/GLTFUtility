@@ -17,7 +17,7 @@ Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-for
 
 ### Installation
 1. GLTFUtility requires Newtonsoft Json to be installed in your project.
-    * Official upm package: `"com.unity.nuget.newtonsoft-json": "1.1.2",`
+    * Official upm package: `"com.unity.nuget.newtonsoft-json": "2.0.0-preview",`
     * Unofficial Asset Store: [link](https://assetstore.unity.com/packages/tools/input-management/json-net-for-unity-11347)
     * Unofficial git repo: [link](https://github.com/jilleJr/Newtonsoft.Json-for-Unity)
 
