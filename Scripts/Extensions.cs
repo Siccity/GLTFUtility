@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -23,6 +23,10 @@ namespace Siccity.GLTFUtility {
 		}
 
 		public static void UnpackTRS(this Matrix4x4 trs, ref Vector3 position, ref Quaternion rotation, ref Vector3 scale) {
+			// TODO: We may need to apply a left-handed to right-handed axis flip
+			//       here as we're doing in other 'import' methods and functions.
+			//       Right now we have no way to test this, so for now, we'll leave
+			//       these older conversions as-is.
 			position = trs.GetColumn(3);
 			position.z = -position.z;
 			rotation = trs.rotation;

@@ -53,6 +53,14 @@ namespace Siccity.GLTFUtility {
 				List<BlendShape> blendShapes = new List<BlendShape>();
 				List<int> submeshVertexStart = new List<int>();
 
+				// We need to convert the system from a right-handed system
+				// that GLTF supports into a left-handed system that Unity
+				// supports.  These 'flip' values will enable an X-axis flip.
+				static float xFlip = -1.0f;
+				static float yFlip =  1.0f;
+				static float zFlip =  1.0f;
+				static float wFlip =  1.0f;
+
 				private class BlendShape {
 					public string name;
 					public Vector3[] pos, norm, tan;
@@ -71,7 +79,11 @@ namespace Siccity.GLTFUtility {
 
 							// Verts - (Z points backwards in GLTF)
 							if (primitive.attributes.POSITION.HasValue) {
-								IEnumerable<Vector3> newVerts = accessors[primitive.attributes.POSITION.Value].ReadVec3().Select(v => { v.z = -v.z; return v; });
+								IEnumerable<Vector3> newVerts = accessors[primitive.attributes.POSITION.Value].ReadVec3().Select(v => {
+									v.x *= xFlip;
+									v.y *= yFlip;
+									v.z *= zFlip;
+									return v; });
 								verts.AddRange(newVerts);
 							}
 
@@ -85,12 +97,21 @@ namespace Siccity.GLTFUtility {
 
 							/// Normals - (Z points backwards in GLTF)
 							if (primitive.attributes.NORMAL.HasValue) {
-								normals.AddRange(accessors[primitive.attributes.NORMAL.Value].ReadVec3().Select(v => { v.z = -v.z; return v; }));
+								normals.AddRange(accessors[primitive.attributes.NORMAL.Value].ReadVec3().Select(v => {
+								v.x *= xFlip;
+								v.y *= yFlip;
+								v.z *= zFlip;
+								return v; }));
 							}
 
 							// Tangents - (Z points backwards in GLTF)
 							if (primitive.attributes.TANGENT.HasValue) {
-								tangents.AddRange(accessors[primitive.attributes.TANGENT.Value].ReadVec4().Select(v => { v.z = -v.z; v.w = -v.w; return v; }));
+								tangents.AddRange(accessors[primitive.attributes.TANGENT.Value].ReadVec4().Select(v => {
+								v.x *= xFlip;
+								v.y *= yFlip;
+								v.z *= zFlip;
+								v.w *= wFlip; 
+								return v; }));
 							}
 
 							// Vertex colors
@@ -148,6 +169,10 @@ namespace Siccity.GLTFUtility {
 							if (primitive.targets != null) {
 								for (int k = 0; k < primitive.targets.Count; k++) {
 									BlendShape blendShape = new BlendShape();
+									// TODO: Do these blendshape
+									//       'norm' and 'tan'
+									//       vectors need to
+									//       be flipped too?
 									blendShape.pos = GetMorphWeights(primitive.targets[k].POSITION, submeshVertexStart[i], finalVertCount, accessors);
 									blendShape.norm = GetMorphWeights(primitive.targets[k].NORMAL, submeshVertexStart[i], finalVertCount, accessors);
 									blendShape.tan = GetMorphWeights(primitive.targets[k].TANGENT, submeshVertexStart[i], finalVertCount, accessors);
@@ -160,13 +185,28 @@ namespace Siccity.GLTFUtility {
 					}
 				}
 
+				// We need to convert the range of blendshapes because GLTF
+				// uses blendshape ranges beteen 0.0 and 1.0, while Unity 
+				// generally supports a percentage range between 0.0 and 100.0.
+				// So to support the Unity blendshape ranges, we'll scale the
+				// blendshapes here.
+				//
+				// TODO: Are there actual blendshape weights being brought-in
+				//       that need to be modified to account for the new
+				//       blendshape scale?
+				static float bsScale= 0.01f;
+
 				private Vector3[] GetMorphWeights(int? accessor, int vertStartIndex, int vertCount, GLTFAccessor.ImportResult[] accessors) {
 					if (accessor.HasValue) {
 						if (accessors[accessor.Value] == null) {
 							Debug.LogWarning("Accessor is null");
 							return new Vector3[vertCount];
 						}
-						Vector3[] accessorData = accessors[accessor.Value].ReadVec3().Select(v => { v.z = -v.z; return v; }).ToArray();
+						Vector3[] accessorData = accessors[accessor.Value].ReadVec3().Select(v => {
+							v.x *= bsScale * xFlip;
+							v.y *= bsScale * yFlip;
+							v.z *= bsScale * zFlip;
+							return v; }).ToArray();
 						if (accessorData.Length != vertCount) {
 							Vector3[] resized = new Vector3[vertCount];
 							Array.Copy(accessorData, 0, resized, vertStartIndex, accessorData.Length);

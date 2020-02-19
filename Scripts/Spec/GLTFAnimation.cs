@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
@@ -84,6 +84,13 @@ namespace Siccity.GLTFUtility {
 						AnimationCurve posY = new AnimationCurve();
 						AnimationCurve posZ = new AnimationCurve();
 						for (int k = 0; k < keyframeInput.Length; k++) {
+							// NOTE: We may need to apply a left-handed
+							//       to right-handed axis flip here
+							//       to account for the coordinate
+							//       differences between GLTF and 
+							//       Unity.  But right now we have
+							//       no way to test this, so we'll
+							//       leave it as-is.
 							posX.AddKey(keyframeInput[k], pos[k].x);
 							posY.AddKey(keyframeInput[k], pos[k].y);
 							posZ.AddKey(keyframeInput[k], -pos[k].z);
@@ -99,6 +106,13 @@ namespace Siccity.GLTFUtility {
 						AnimationCurve rotZ = new AnimationCurve();
 						AnimationCurve rotW = new AnimationCurve();
 						for (int k = 0; k < keyframeInput.Length; k++) {
+							// NOTE: We may need to apply a left-handed
+							//       to right-handed axis flip here
+							//       to account for the coordinate
+							//       differences between GLTF and 
+							//       Unity.  But right now we have
+							//       no way to test this, so we'll
+							//       leave it as-is.
 							rotX.AddKey(keyframeInput[k], rot[k].x);
 							rotY.AddKey(keyframeInput[k], rot[k].y);
 							rotZ.AddKey(keyframeInput[k], -rot[k].z);
