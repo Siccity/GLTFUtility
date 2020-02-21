@@ -27,12 +27,15 @@ namespace Siccity.GLTFUtility {
 		}
 
 #region Import
-		public ImportResult Import(string filepath, long binChunkStart) {
+		/// <param name="filepath">Filepath if loading from a file</param>
+		/// <param name="bytefile">bytes if loading from raw bytes</param>
+		public ImportResult Import(string filepath, byte[] bytefile, long binChunkStart) {
 			ImportResult result = new ImportResult();
 
 			if (uri == null) {
 				// Load entire file
-				result.stream = File.Open(filepath, FileMode.Open);
+				if (string.IsNullOrEmpty(filepath)) result.stream = new MemoryStream(bytefile);
+				else result.stream = File.Open(filepath, FileMode.Open);
 				result.startOffset = binChunkStart + 8;
 				result.stream.Position = result.startOffset;
 			} else if (uri.StartsWith(embeddedPrefix)) {
@@ -56,11 +59,13 @@ namespace Siccity.GLTFUtility {
 		}
 
 		public class ImportTask : Importer.ImportTask<ImportResult[]> {
-			public ImportTask(List<GLTFBuffer> buffers, string filepath, long binChunkStart) : base() {
+			/// <param name="filepath">Filepath if loading from a file</param>
+			/// <param name="bytefile">bytes if loading from raw bytes</param>
+			public ImportTask(List<GLTFBuffer> buffers, string filepath, byte[] bytefile, long binChunkStart) : base() {
 				task = new Task(() => {
 					Result = new ImportResult[buffers.Count];
 					for (int i = 0; i < Result.Length; i++) {
-						Result[i] = buffers[i].Import(filepath, binChunkStart);
+						Result[i] = buffers[i].Import(filepath, bytefile, binChunkStart);
 					}
 				});
 			}
