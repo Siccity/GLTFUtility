@@ -194,7 +194,41 @@ namespace Siccity.GLTFUtility {
 						result.clip.SetCurve(relativePath, typeof(Transform), "localScale.z", scaleZ);
 						break;
 					case "weights":
-						Debug.LogWarning("morph weights in animation is not supported");
+						GLTFNode.ImportResult skinnedMeshNode = nodes[ channel.target.node.Value ];
+						SkinnedMeshRenderer skinnedMeshRenderer = skinnedMeshNode.transform.GetComponent<SkinnedMeshRenderer>();
+
+						int numberOfBlendShapes = skinnedMeshRenderer.sharedMesh.blendShapeCount;
+						AnimationCurve[] blendShapeCurves = new AnimationCurve[ numberOfBlendShapes ];
+						for( int j = 0; j < numberOfBlendShapes; ++j ) {
+							blendShapeCurves[ j ] = new AnimationCurve();
+						}
+
+						float[] weights = accessors[ sampler.output ].ReadFloat().ToArray();
+
+						// Reference for my future self:
+						// keyframeInput.Length = number of keyframes
+						// keyframeInput[ k ] = timestamp of keyframe
+						// weights.Length = number of keyframes * number of blendshapes
+						// weights[ j ] = actual animated weight of a specific blend shape
+						// (index into weights[] array accounts for keyframe index and blend shape index)
+
+						for( int k = 0; k < keyframeInput.Length; ++k ) {
+							for( int j = 0; j < numberOfBlendShapes; ++j ) {
+								int weightIndex = ( k * numberOfBlendShapes ) + j;
+								float weightValue = weights[ weightIndex ];
+
+								bool addKey = true;
+								if( addKey ) {
+									blendShapeCurves[ j ].AddKey( CreateKeyframe( keyframeInput[ k ], weightValue, interpolationMode ) );
+								}
+							}
+						}
+
+						for( int j = 0; j < numberOfBlendShapes; ++j ) {
+							string propertyName = "blendShape." + skinnedMeshRenderer.sharedMesh.GetBlendShapeName( j );
+							result.clip.SetCurve( relativePath, typeof( SkinnedMeshRenderer ), propertyName, blendShapeCurves[ j ] );
+						}
+
 						break;
 				}
 			}
