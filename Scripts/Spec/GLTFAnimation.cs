@@ -205,6 +205,8 @@ namespace Siccity.GLTFUtility {
 
 						float[] weights = accessors[ sampler.output ].ReadFloat().ToArray();
 
+						float[] previouslyKeyedValues = new float[ numberOfBlendShapes ];
+
 						// Reference for my future self:
 						// keyframeInput.Length = number of keyframes
 						// keyframeInput[ k ] = timestamp of keyframe
@@ -218,6 +220,15 @@ namespace Siccity.GLTFUtility {
 								float weightValue = weights[ weightIndex ];
 
 								bool addKey = true;
+								if( importSettings.compressBlendShapeKeyFrames ) {
+									if( k == 0 || !Mathf.Approximately( weightValue, previouslyKeyedValues[ j ] ) ) {
+										previouslyKeyedValues[ j ] = weightValue;
+										addKey = true;
+									} else {
+										addKey = false;
+									}
+								}
+
 								if( addKey ) {
 									blendShapeCurves[ j ].AddKey( CreateKeyframe( keyframeInput[ k ], weightValue, interpolationMode ) );
 								}
