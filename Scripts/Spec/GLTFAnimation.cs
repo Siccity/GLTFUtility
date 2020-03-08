@@ -52,6 +52,7 @@ namespace Siccity.GLTFUtility {
 			ImportResult result = new ImportResult();
 			result.clip = new AnimationClip();
 			result.clip.name = name;
+			result.clip.frameRate = importSettings.frameRate;
 
 			if (importSettings.useLegacyClips) {
 				result.clip.legacy = true;

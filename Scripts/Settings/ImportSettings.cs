@@ -11,5 +11,9 @@ namespace Siccity.GLTFUtility {
 		[FormerlySerializedAs("shaders")]
 		public ShaderSettings shaderOverrides = new ShaderSettings();
 		public bool useLegacyClips;
+
+		[Header("Custom Animation Settings")]
+		[Tooltip("Sample rate set on all imported animation clips.")]
+		public float frameRate = 24;
 	}
 }
