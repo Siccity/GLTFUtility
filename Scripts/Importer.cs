@@ -183,6 +183,8 @@ namespace Siccity.GLTFUtility {
 
 #region Sync
 		private static GameObject LoadInternal(this GLTFObject gltfObject, string filepath, byte[] bytefile, long binChunkStart, ImportSettings importSettings, out GLTFAnimation.ImportResult[] animations) {
+			CheckExtensions(gltfObject);
+
 			// directory root is sometimes used for loading buffers from containing file, or local images
 			string directoryRoot = filepath != null ? Directory.GetParent(filepath).ToString() + "/" : null;
 
@@ -224,6 +226,7 @@ namespace Siccity.GLTFUtility {
 			deserializeTask.Start();
 			while (!deserializeTask.IsCompleted) yield return null;
 			GLTFObject gltfObject = deserializeTask.Result;
+			CheckExtensions(gltfObject);
 
 			// directory root is sometimes used for loading buffers from containing file, or local images
 			string directoryRoot = filepath != null ? Directory.GetParent(filepath).ToString() + "/" : null;
@@ -285,5 +288,19 @@ namespace Siccity.GLTFUtility {
 			while (!importTask.IsCompleted) { yield return null; }
 		}
 #endregion
+
+		private static void CheckExtensions(GLTFObject gLTFObject) {
+			if (gLTFObject.extensionsRequired != null) {
+				for (int i = 0; i < gLTFObject.extensionsRequired.Count; i++) {
+					switch (gLTFObject.extensionsRequired[i]) {
+						case "KHR_materials_pbrSpecularGlossiness":
+							break;
+						default:
+							Debug.LogWarning($"GLTFUtility: Required extension '{gLTFObject.extensionsRequired[i]}' not supported. Import process will proceed but results may vary.");
+							break;
+					}
+				}
+			}
+		}
 	}
 }
