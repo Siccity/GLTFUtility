@@ -260,15 +260,15 @@ namespace Siccity.GLTFUtility {
 			// Wait for all tasks to finish
 			while (!importTasks.All(x => x.IsCompleted)) yield return null;
 
-			// Close file streams
-			foreach (var item in bufferTask.Result) {
-				item.Dispose();
-			}
-
 			// Fire onFinished when all tasks have completed
 			GameObject root = nodeTask.Result.GetRoot();
 			GLTFAnimation.ImportResult[] animations = gltfObject.animations.Import(accessorTask.Result, nodeTask.Result, importSettings);
 			if (onFinished != null) onFinished(nodeTask.Result.GetRoot(), animations);
+
+			// Close file streams
+			foreach (var item in bufferTask.Result) {
+				item.Dispose();
+			}
 		}
 
 		/// <summary> Keeps track of which threads to start when </summary>
