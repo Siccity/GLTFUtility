@@ -4,6 +4,9 @@ using System.Linq;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Scripting;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#animation
@@ -66,6 +69,24 @@ namespace Siccity.GLTFUtility {
 				}
 				Sampler sampler = samplers[channel.sampler];
 
+				ImportSettings.InterpolationMode GetInterpolationMode( string samplerInterpolationMode ) {
+					if( importSettings.interpolationMode == ImportSettings.InterpolationMode.ImportFromFile ) {
+						if( samplerInterpolationMode == "STEP" ) {
+							return ImportSettings.InterpolationMode.Step;
+						} else if( samplerInterpolationMode == "LINEAR" ) {
+							return ImportSettings.InterpolationMode.Linear;
+						} else if( samplerInterpolationMode == "CUBICSPLINE" ) {
+							return ImportSettings.InterpolationMode.CubicSpline;
+						} else {
+							Debug.LogWarning( $"Unsupported interpolation mode: {samplerInterpolationMode}. Defaulting to STEP." );
+							return ImportSettings.InterpolationMode.Step;
+						}
+					} else {
+						return importSettings.interpolationMode;
+					}
+				}
+				var interpolationMode = GetInterpolationMode( sampler.interpolation );
+
 				string relativePath = "";
 
 				GLTFNode.ImportResult node = nodes[channel.target.node.Value];
@@ -85,9 +106,9 @@ namespace Siccity.GLTFUtility {
 						AnimationCurve posY = new AnimationCurve();
 						AnimationCurve posZ = new AnimationCurve();
 						for (int k = 0; k < keyframeInput.Length; k++) {
-							posX.AddKey(keyframeInput[k], pos[k].x);
-							posY.AddKey(keyframeInput[k], pos[k].y);
-							posZ.AddKey(keyframeInput[k], -pos[k].z);
+							posX.AddKey( CreateKeyframe( keyframeInput[k], pos[k].x, interpolationMode ) );
+							posY.AddKey( CreateKeyframe( keyframeInput[k], pos[k].y, interpolationMode ) );
+							posZ.AddKey( CreateKeyframe( keyframeInput[k], -pos[k].z, interpolationMode ) );
 						}
 						result.clip.SetCurve(relativePath, typeof(Transform), "localPosition.x", posX);
 						result.clip.SetCurve(relativePath, typeof(Transform), "localPosition.y", posY);
@@ -95,20 +116,68 @@ namespace Siccity.GLTFUtility {
 						break;
 					case "rotation":
 						Vector4[] rot = accessors[sampler.output].ReadVec4().ToArray();
-						AnimationCurve rotX = new AnimationCurve();
-						AnimationCurve rotY = new AnimationCurve();
-						AnimationCurve rotZ = new AnimationCurve();
-						AnimationCurve rotW = new AnimationCurve();
-						for (int k = 0; k < keyframeInput.Length; k++) {
-							rotX.AddKey(keyframeInput[k], rot[k].x);
-							rotY.AddKey(keyframeInput[k], rot[k].y);
-							rotZ.AddKey(keyframeInput[k], -rot[k].z);
-							rotW.AddKey(keyframeInput[k], -rot[k].w);
+
+						bool willProcessSteppedKeyframes = interpolationMode == ImportSettings.InterpolationMode.Step && Application.isEditor && !Application.isPlaying;
+
+						// @HACK: Creating stepped tangent keyframes is only supported in-editor -- not at runtime (Unity API restriction)
+						#if UNITY_EDITOR // 🤢🤮
+						if( willProcessSteppedKeyframes ) {
+							AnimationCurve rotX = new AnimationCurve();
+							AnimationCurve rotY = new AnimationCurve();
+							AnimationCurve rotZ = new AnimationCurve();
+							for (int k = 0; k < keyframeInput.Length; k++) {
+								Vector3 eulerRotation = new Quaternion( rot[ k ].x, rot[ k ].y, -rot[ k ].z, -rot[ k ].w ).eulerAngles;
+
+								rotX.AddKey( CreateKeyframe( keyframeInput[ k ], eulerRotation.x, interpolationMode ) );
+								rotY.AddKey( CreateKeyframe( keyframeInput[ k ], eulerRotation.y, interpolationMode ) );
+								rotZ.AddKey( CreateKeyframe( keyframeInput[ k ], eulerRotation.z, interpolationMode ) );
+							}
+
+							EditorCurveBinding GetEditorBinding( string property ) {
+								return EditorCurveBinding.DiscreteCurve( relativePath, typeof( Transform ), property );
+							}
+
+							// Null out any other euler rotation curves on this clip, just to be safe.
+							// https://forum.unity.com/threads/new-animationclip-property-names.367288/#post-2384172
+							AnimationUtility.SetEditorCurve( result.clip, GetEditorBinding( "localEulerAngles.x" ), null );
+							AnimationUtility.SetEditorCurve( result.clip, GetEditorBinding( "localEulerAngles.y" ), null );
+							AnimationUtility.SetEditorCurve( result.clip, GetEditorBinding( "localEulerAngles.z" ), null );
+							AnimationUtility.SetEditorCurve( result.clip, GetEditorBinding( "m_LocalEulerAngles.x" ), null );
+							AnimationUtility.SetEditorCurve( result.clip, GetEditorBinding( "m_LocalEulerAngles.y" ), null );
+							AnimationUtility.SetEditorCurve( result.clip, GetEditorBinding( "m_LocalEulerAngles.z" ), null );
+
+							AnimationUtility.SetEditorCurve( result.clip, GetEditorBinding( "localEulerAnglesBaked.x" ), null );
+							AnimationUtility.SetEditorCurve( result.clip, GetEditorBinding( "localEulerAnglesBaked.y" ), null );
+							AnimationUtility.SetEditorCurve( result.clip, GetEditorBinding( "localEulerAnglesBaked.z" ), null );
+							AnimationUtility.SetEditorCurve( result.clip, GetEditorBinding( "m_LocalEulerAnglesBaked.x" ), null );
+							AnimationUtility.SetEditorCurve( result.clip, GetEditorBinding( "m_LocalEulerAnglesBaked.y" ), null );
+							AnimationUtility.SetEditorCurve( result.clip, GetEditorBinding( "m_LocalEulerAnglesBaked.z" ), null );
+
+
+							AnimationUtility.SetEditorCurve( result.clip, GetEditorBinding( "localEulerAnglesRaw.x" ), rotX );
+							AnimationUtility.SetEditorCurve( result.clip, GetEditorBinding( "localEulerAnglesRaw.y" ), rotY );
+							AnimationUtility.SetEditorCurve( result.clip, GetEditorBinding( "localEulerAnglesRaw.z" ), rotZ );
 						}
-						result.clip.SetCurve(relativePath, typeof(Transform), "localRotation.x", rotX);
-						result.clip.SetCurve(relativePath, typeof(Transform), "localRotation.y", rotY);
-						result.clip.SetCurve(relativePath, typeof(Transform), "localRotation.z", rotZ);
-						result.clip.SetCurve(relativePath, typeof(Transform), "localRotation.w", rotW);
+						#endif
+
+						if( !willProcessSteppedKeyframes ) {
+							AnimationCurve rotX = new AnimationCurve();
+							AnimationCurve rotY = new AnimationCurve();
+							AnimationCurve rotZ = new AnimationCurve();
+							AnimationCurve rotW = new AnimationCurve();
+							for (int k = 0; k < keyframeInput.Length; k++) {
+								rotX.AddKey( CreateKeyframe( keyframeInput[k], rot[k].x, interpolationMode ) );
+								rotY.AddKey( CreateKeyframe( keyframeInput[k], rot[k].y, interpolationMode ) );
+								rotZ.AddKey( CreateKeyframe( keyframeInput[k], -rot[k].z, interpolationMode ) );
+								rotW.AddKey( CreateKeyframe( keyframeInput[k], -rot[k].w, interpolationMode ) );
+							}
+
+							result.clip.SetCurve(relativePath, typeof(Transform), "localRotation.x", rotX);
+							result.clip.SetCurve(relativePath, typeof(Transform), "localRotation.y", rotY);
+							result.clip.SetCurve(relativePath, typeof(Transform), "localRotation.z", rotZ);
+							result.clip.SetCurve(relativePath, typeof(Transform), "localRotation.w", rotW);
+						}
+
 						break;
 					case "scale":
 						Vector3[] scale = accessors[sampler.output].ReadVec3().ToArray();
@@ -116,9 +185,9 @@ namespace Siccity.GLTFUtility {
 						AnimationCurve scaleY = new AnimationCurve();
 						AnimationCurve scaleZ = new AnimationCurve();
 						for (int k = 0; k < keyframeInput.Length; k++) {
-							scaleX.AddKey(keyframeInput[k], scale[k].x);
-							scaleY.AddKey(keyframeInput[k], scale[k].y);
-							scaleZ.AddKey(keyframeInput[k], scale[k].z);
+							scaleX.AddKey( CreateKeyframe( keyframeInput[k], scale[k].x, interpolationMode ) );
+							scaleY.AddKey( CreateKeyframe( keyframeInput[k], scale[k].y, interpolationMode ) );
+							scaleZ.AddKey( CreateKeyframe( keyframeInput[k], scale[k].z, interpolationMode ) );
 						}
 						result.clip.SetCurve(relativePath, typeof(Transform), "localScale.x", scaleX);
 						result.clip.SetCurve(relativePath, typeof(Transform), "localScale.y", scaleY);
@@ -130,6 +199,45 @@ namespace Siccity.GLTFUtility {
 				}
 			}
 			return result;
+		}
+
+		public static Keyframe CreateKeyframe( float time, float value, ImportSettings.InterpolationMode interpolationMode ) {
+			float inTangent = 0;
+			float outTangent = 0;
+			float inWeight = 0;
+			float outWeight = 0;
+			WeightedMode weightedMode = WeightedMode.None;
+			bool isKeyBroken = false;
+
+			if( interpolationMode == ImportSettings.InterpolationMode.Step ) {
+				inTangent = float.PositiveInfinity;
+				inWeight = 1;
+				outTangent = float.PositiveInfinity;
+				outWeight = 1;
+				weightedMode = WeightedMode.Both;
+				isKeyBroken = true;
+			} else if( interpolationMode == ImportSettings.InterpolationMode.CubicSpline ) {
+				// @TODO: Find out what the right math is to calculate the tangent/weight values.
+				// For now, just let Unity do whatever it does by default :)
+				return new Keyframe( time, value );
+			} else if( interpolationMode == ImportSettings.InterpolationMode.Linear ) {
+				inTangent = 0;
+				inWeight = 0;
+				outTangent = 0;
+				outWeight = 0;
+				weightedMode = WeightedMode.Both;
+				isKeyBroken = true;
+			}
+
+			Keyframe keyframe = new Keyframe( time, value, inTangent, outTangent, inWeight, outWeight );
+			keyframe.weightedMode = weightedMode;
+			if( isKeyBroken ) {
+				#pragma warning disable CS0618
+				// https://github.com/unity-cn/CustomAnimationTools/blob/0b3b340c0880452949c34355052d9efb02990d4b/AnimationTools/Assets/Editor/CustomAnimationTools.cs#L164
+				keyframe.tangentMode |= ( 1 << 0 );
+				#pragma warning restore CS0618
+			}
+			return keyframe;
 		}
 	}
 
