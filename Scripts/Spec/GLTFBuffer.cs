@@ -35,7 +35,7 @@ namespace Siccity.GLTFUtility {
 			if (uri == null) {
 				// Load entire file
 				if (string.IsNullOrEmpty(filepath)) result.stream = new MemoryStream(bytefile);
-				else result.stream = File.Open(filepath, FileMode.Open);
+				else result.stream = File.OpenRead(filepath);
 				result.startOffset = binChunkStart + 8;
 				result.stream.Position = result.startOffset;
 			} else if (uri.StartsWith(embeddedPrefix)) {
@@ -51,7 +51,7 @@ namespace Siccity.GLTFUtility {
 			} else {
 				// Load URI
 				string directoryRoot = Directory.GetParent(filepath).ToString() + "/";
-				result.stream = File.Open(directoryRoot + uri, FileMode.Open);
+				result.stream = File.OpenRead(directoryRoot + uri);
 				result.startOffset = result.stream.Length - byteLength;
 			}
 
