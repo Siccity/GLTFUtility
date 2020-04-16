@@ -24,9 +24,9 @@ namespace Siccity.GLTFUtility {
 
 		public static void UnpackTRS(this Matrix4x4 trs, ref Vector3 position, ref Quaternion rotation, ref Vector3 scale) {
 			position = trs.GetColumn(3);
-			position.z = -position.z;
+			position.x = -position.x;
 			rotation = trs.rotation;
-			rotation = new Quaternion(rotation.x, rotation.y, -rotation.z, -rotation.w);
+			rotation = new Quaternion(rotation.x, -rotation.y, -rotation.z, rotation.w);
 			scale = trs.lossyScale;
 		}
 	}

@@ -62,17 +62,23 @@ namespace Siccity.GLTFUtility {
 			if (inverseBindMatrices.HasValue) {
 				result.inverseBindMatrices = accessors[inverseBindMatrices.Value].ReadMatrix4x4();
 				for (int i = 0; i < result.inverseBindMatrices.Length; i++) {
-					// Flip the matrix from GLTF to Unity format. This was done through trial and error, i can't explain it.
+					// Flip the matrix from GLTF to Unity format.
+					// This was done through comparing the GLTF matrix to
+					// the correctly imported matrix from the source model,
+					// and flipping the values where needed.
+					// Notice how the rows become collumns
 					Matrix4x4 m = result.inverseBindMatrices[i];
+
 					Vector4 row0 = m.GetRow(0);
+					row0.y = -row0.y;
 					row0.z = -row0.z;
 					Vector4 row1 = m.GetRow(1);
-					row1.z = -row1.z;
+					row1.x = -row1.x;
 					Vector4 row2 = m.GetRow(2);
-					row2.x = -row2.x;
 					row2.y = -row2.y;
+					row2.w = -row2.w;
 					Vector4 row3 = m.GetRow(3);
-					row3.z = -row3.z;
+					row3.x = -row3.x;
 					m.SetColumn(0, row0);
 					m.SetColumn(1, row1);
 					m.SetColumn(2, row2);

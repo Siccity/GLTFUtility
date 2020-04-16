@@ -13,15 +13,15 @@ namespace Siccity.GLTFUtility.Converters {
 			Quaternion q = (Quaternion) value;
 			writer.WriteStartArray();
 			writer.WriteValue(q.x);
-			writer.WriteValue(q.y);
+			writer.WriteValue(-q.y);
 			writer.WriteValue(-q.z);
-			writer.WriteValue(-q.w);
+			writer.WriteValue(q.w);
 			writer.WriteEndArray();
 		}
 
 		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
 			float[] floatArray = serializer.Deserialize<float[]>(reader);
-			return new Quaternion(floatArray[0], floatArray[1], -floatArray[2], -floatArray[3]);
+			return new Quaternion(floatArray[0], -floatArray[1], -floatArray[2], floatArray[3]);
 		}
 
 		public override bool CanConvert(Type objectType) {
