@@ -2,12 +2,13 @@
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
 		_MainTex ("Albedo (RGB)", 2D) = "white" {}
-		[NoScaleOffset] _SpecGlossMap ("Specular Map", 2D) = "white" {}
+		_SpecGlossMap ("Specular Map", 2D) = "white" {}
 		_SpecColor ("Specular Color", Color) = (1,1,1,1)
 		_GlossyReflections ("Glossiness", Range(0,1)) = 1
-		[Normal][NoScaleOffset] _BumpMap ("Normal", 2D) = "bump" {}
-		[NoScaleOffset] _OcclusionMap ("Occlusion", 2D) = "white" {}
-		[NoScaleOffset] _EmissionMap ("Emission", 2D) = "black" {}
+		[Normal] _BumpMap ("Normal", 2D) = "bump" {}
+		_BumpScale("NormalScale", Float) = 1.0
+		_OcclusionMap ("Occlusion", 2D) = "white" {}
+		_EmissionMap ("Emission", 2D) = "black" {}
 		_EmissionColor ("Emission Color", Color) = (0,0,0,0)
 	}
 	SubShader {
@@ -29,10 +30,15 @@
 
 		struct Input {
 			float2 uv_MainTex;
+			float2 uv_BumpMap;
+			float2 uv_SpecGlossMap;
+			float2 uv_OcclusionMap;
+			float2 uv_EmissionMap;
 			float4 color : COLOR;
 		};
 
 		half _GlossyReflections;
+		half _BumpScale;
 		fixed4 _Color;
 		fixed4 _EmissionColor;
 
@@ -40,7 +46,7 @@
 		// See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
 		// #pragma instancing_options assumeuniformscaling
 		UNITY_INSTANCING_BUFFER_START(Props)
-			// put more per-instance properties here
+		// put more per-instance properties here
 		UNITY_INSTANCING_BUFFER_END(Props)
 
 		void surf (Input IN, inout SurfaceOutputStandardSpecular o) {
@@ -49,15 +55,15 @@
 			o.Albedo = c.rgb * IN.color;
 			o.Alpha = c.a;
 			// Specular / roughness
-			fixed4 s = tex2D (_SpecGlossMap, IN.uv_MainTex);
+			fixed4 s = tex2D (_SpecGlossMap, IN.uv_SpecGlossMap);
 			o.Specular = s.rgb * _SpecColor;
 			o.Smoothness = s.a * _GlossyReflections;
 			// Normal comes from a bump map
-			o.Normal = UnpackNormal (tex2D (_BumpMap, IN.uv_MainTex));
+			o.Normal = UnpackScaleNormal (tex2D (_BumpMap, IN.uv_BumpMap), _BumpScale);
 			// Ambient Occlusion comes from red channel
-			o.Occlusion = tex2D (_OcclusionMap, IN.uv_MainTex).r;
+			o.Occlusion = tex2D (_OcclusionMap, IN.uv_OcclusionMap).r;
 			// Emission comes from a texture tinted by color
-			o.Emission = tex2D (_EmissionMap, IN.uv_MainTex) * _EmissionColor;
+			o.Emission = tex2D (_EmissionMap, IN.uv_EmissionMap) * _EmissionColor;
 		}
 		ENDCG
 	}
