@@ -16,17 +16,13 @@ namespace Siccity.GLTFUtility.Converters {
 
 		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
 			float[] floatArray = null;
-			try
-			{
+			try {
 				floatArray = serializer.Deserialize<float[]>(reader);
-			} catch(System.Exception e)
-			{
-				//Console.WriteLine("")
+			} catch (System.Exception e) {
 				floatArray = new float[] { serializer.Deserialize<float>(reader) };
 			}
 
-			switch (floatArray.Length)
-			{
+			switch (floatArray.Length) {
 				case 1:
 					return new Vector2(floatArray[0], floatArray[0]); // just copy float
 				case 2:
@@ -36,7 +32,6 @@ namespace Siccity.GLTFUtility.Converters {
 				default:
 					return new Vector2(1, 1);
 			}
-
 		}
 
 		public override bool CanConvert(Type objectType) {

@@ -3,15 +3,13 @@ using Siccity.GLTFUtility.Converters;
 using UnityEngine;
 using UnityEngine.Scripting;
 
-namespace Siccity.GLTFUtility
-{
+namespace Siccity.GLTFUtility {
 	/// <summary>
 	/// KHR_texture_transform textureInfo extension
 	/// glTF extension that enables shifting and scaling UV coordinates on a per-texture basis
 	/// see: https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/schema/KHR_texture_transform.textureInfo.schema.json
 	/// </summary>
-	[Preserve] public class KHR_texture_transform : IGLTFMaterial_TextureExtension
-	{
+	[Preserve] public class KHR_texture_transform : IGLTFMaterial_TextureExtension {
 		/// <summary>
 		/// The offset of the UV coordinate origin as a factor of the texture dimensions.
 		/// </summary>
@@ -32,8 +30,7 @@ namespace Siccity.GLTFUtility
 		/// </summary>
 		public int texCoord = 0;
 
-		public void Apply(GLTFMaterial.TextureInfo texInfo, Material material, string textureSamplerName)
-		{
+		public void Apply(GLTFMaterial.TextureInfo texInfo, Material material, string textureSamplerName) {
 			material.SetTextureOffset(textureSamplerName, offset);
 			// TODO rotation
 			material.SetTextureScale(textureSamplerName, scale);

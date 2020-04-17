@@ -6,7 +6,7 @@
 		_SpecColor ("Specular Color", Color) = (1,1,1,1)
 		_GlossyReflections ("Glossiness", Range(0,1)) = 1
 		[Normal] _BumpMap ("Normal", 2D) = "bump" {}
-        _BumpScale("NormalScale", Float) = 1.0
+		_BumpScale("NormalScale", Float) = 1.0
 		_OcclusionMap ("Occlusion", 2D) = "white" {}
 		_EmissionMap ("Emission", 2D) = "black" {}
 		_EmissionColor ("Emission Color", Color) = (0,0,0,0)
@@ -46,7 +46,7 @@
 		// See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
 		// #pragma instancing_options assumeuniformscaling
 		UNITY_INSTANCING_BUFFER_START(Props)
-			// put more per-instance properties here
+		// put more per-instance properties here
 		UNITY_INSTANCING_BUFFER_END(Props)
 
 		void surf (Input IN, inout SurfaceOutputStandardSpecular o) {
