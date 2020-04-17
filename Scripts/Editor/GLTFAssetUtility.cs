@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Siccity.GLTFUtility {
 	/// <summary> Contains methods for saving a gameobject as an asset </summary>
 	public static class GLTFAssetUtility {
-		public static void SaveToAsset(GameObject root, GLTFAnimation.ImportResult[] animations, AssetImportContext ctx) {
+		public static void SaveToAsset(GameObject root, AnimationClip[] animations, AssetImportContext ctx) {
 #if UNITY_2018_2_OR_NEWER
 			ctx.AddObjectToAsset("main", root);
 			ctx.SetMainObject(root);
@@ -38,11 +38,11 @@ namespace Siccity.GLTFUtility {
 			}
 		}
 
-		public static void AddAnimations(GLTFAnimation.ImportResult[] animations, AssetImportContext ctx) {
+		public static void AddAnimations(AnimationClip[] animations, AssetImportContext ctx) {
 			if (animations == null) return;
 			HashSet<AnimationClip> visitedAnimations = new HashSet<AnimationClip>();
 			for (int i = 0; i < animations.Length; i++) {
-				AnimationClip clip = animations[i].clip;
+				AnimationClip clip = animations[i];
 				if (visitedAnimations.Contains(clip)) continue;
 				ctx.AddAsset(clip.name, clip);
 				visitedAnimations.Add(clip);

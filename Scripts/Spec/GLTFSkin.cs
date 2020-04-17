@@ -20,7 +20,6 @@ namespace Siccity.GLTFUtility {
 
 #region Import
 			public SkinnedMeshRenderer SetupSkinnedRenderer(GameObject go, Mesh mesh, GLTFNode.ImportResult[] nodes) {
-
 				SkinnedMeshRenderer smr = go.AddComponent<SkinnedMeshRenderer>();
 				Transform[] bones = new Transform[joints.Length];
 				for (int i = 0; i < bones.Length; i++) {
