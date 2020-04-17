@@ -9,7 +9,7 @@ namespace Siccity.GLTFUtility {
 	/// glTF extension that enables shifting and scaling UV coordinates on a per-texture basis
 	/// see: https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/schema/KHR_texture_transform.textureInfo.schema.json
 	/// </summary>
-	[Preserve] public class KHR_texture_transform : IGLTFMaterial_TextureExtension {
+	[Preserve] public class KHR_texture_transform : GLTFMaterial.TextureInfo.IExtension {
 		/// <summary>
 		/// The offset of the UV coordinate origin as a factor of the texture dimensions.
 		/// </summary>
