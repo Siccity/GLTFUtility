@@ -62,7 +62,7 @@ namespace Siccity.GLTFUtility {
 			if (inverseBindMatrices.HasValue) {
 				result.inverseBindMatrices = accessors[inverseBindMatrices.Value].ReadMatrix4x4();
 				for (int i = 0; i < result.inverseBindMatrices.Length; i++) {
-					// Flip the matrix from GLTF to Unity format.
+					// Flip the matrix from GLTF (right handed) to Unity (left handed) format.
 					// This was done through comparing the GLTF matrix to
 					// the correctly imported matrix from the source model,
 					// and flipping the values where needed.
