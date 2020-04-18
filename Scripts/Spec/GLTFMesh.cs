@@ -69,9 +69,9 @@ namespace Siccity.GLTFUtility {
 							int vertStartIndex = verts.Count;
 							submeshVertexStart.Add(vertStartIndex);
 
-							// Verts - (Z points backwards in GLTF)
+							// Verts - (X points left in GLTF)
 							if (primitive.attributes.POSITION.HasValue) {
-								IEnumerable<Vector3> newVerts = accessors[primitive.attributes.POSITION.Value].ReadVec3().Select(v => { v.z = -v.z; return v; });
+								IEnumerable<Vector3> newVerts = accessors[primitive.attributes.POSITION.Value].ReadVec3().Select(v => { v.x = -v.x; return v; });
 								verts.AddRange(newVerts);
 							}
 
@@ -83,14 +83,14 @@ namespace Siccity.GLTFUtility {
 								submeshTrisMode.Add(primitive.mode);
 							}
 
-							/// Normals - (Z points backwards in GLTF)
+							/// Normals - (X points left in GLTF)
 							if (primitive.attributes.NORMAL.HasValue) {
-								normals.AddRange(accessors[primitive.attributes.NORMAL.Value].ReadVec3().Select(v => { v.z = -v.z; return v; }));
+								normals.AddRange(accessors[primitive.attributes.NORMAL.Value].ReadVec3().Select(v => { v.x = -v.x; return v; }));
 							}
 
-							// Tangents - (Z points backwards in GLTF)
+							// Tangents - (X points left in GLTF)
 							if (primitive.attributes.TANGENT.HasValue) {
-								tangents.AddRange(accessors[primitive.attributes.TANGENT.Value].ReadVec4().Select(v => { v.z = -v.z; v.w = -v.w; return v; }));
+								tangents.AddRange(accessors[primitive.attributes.TANGENT.Value].ReadVec4().Select(v => { v.y = -v.y; v.z = -v.z; return v; }));
 							}
 
 							// Vertex colors
@@ -166,7 +166,7 @@ namespace Siccity.GLTFUtility {
 							Debug.LogWarning("Accessor is null");
 							return new Vector3[vertCount];
 						}
-						Vector3[] accessorData = accessors[accessor.Value].ReadVec3().Select(v => { v.z = -v.z; return v; }).ToArray();
+						Vector3[] accessorData = accessors[accessor.Value].ReadVec3().Select(v => { v.x = -v.x; return v; }).ToArray();
 						if (accessorData.Length != vertCount) {
 							Vector3[] resized = new Vector3[vertCount];
 							Array.Copy(accessorData, 0, resized, vertStartIndex, accessorData.Length);

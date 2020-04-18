@@ -64,7 +64,7 @@ namespace Siccity.GLTFUtility {
 			for (int i = 0; i < channels.Length; i++) {
 				Channel channel = channels[i];
 				if (samplers.Length <= channel.sampler) {
-					Debug.LogWarning("Animation channel points to sampler at index " + channel.sampler + " which doesn't exist. Skipping animation clip.");
+					Debug.LogWarning($"GLTFUtility: Animation channel points to sampler at index {channel.sampler} which doesn't exist. Skipping animation clip.");
 					continue;
 				}
 				Sampler sampler = samplers[channel.sampler];
@@ -106,9 +106,9 @@ namespace Siccity.GLTFUtility {
 						AnimationCurve posY = new AnimationCurve();
 						AnimationCurve posZ = new AnimationCurve();
 						for (int k = 0; k < keyframeInput.Length; k++) {
-							posX.AddKey( CreateKeyframe( keyframeInput[k], pos[k].x, interpolationMode ) );
+							posX.AddKey( CreateKeyframe( keyframeInput[k], -pos[k].x, interpolationMode ) );
 							posY.AddKey( CreateKeyframe( keyframeInput[k], pos[k].y, interpolationMode ) );
-							posZ.AddKey( CreateKeyframe( keyframeInput[k], -pos[k].z, interpolationMode ) );
+							posZ.AddKey( CreateKeyframe( keyframeInput[k], pos[k].z, interpolationMode ) );
 						}
 						result.clip.SetCurve(relativePath, typeof(Transform), "localPosition.x", posX);
 						result.clip.SetCurve(relativePath, typeof(Transform), "localPosition.y", posY);
@@ -120,13 +120,13 @@ namespace Siccity.GLTFUtility {
 						bool willProcessSteppedKeyframes = interpolationMode == ImportSettings.InterpolationMode.Step && Application.isEditor && !Application.isPlaying;
 
 						// @HACK: Creating stepped tangent keyframes is only supported in-editor -- not at runtime (Unity API restriction)
-						#if UNITY_EDITOR // 🤢🤮
+						#if UNITY_EDITOR // 🤢🤮💔
 						if( willProcessSteppedKeyframes ) {
 							AnimationCurve rotX = new AnimationCurve();
 							AnimationCurve rotY = new AnimationCurve();
 							AnimationCurve rotZ = new AnimationCurve();
 							for (int k = 0; k < keyframeInput.Length; k++) {
-								Vector3 eulerRotation = new Quaternion( rot[ k ].x, rot[ k ].y, -rot[ k ].z, -rot[ k ].w ).eulerAngles;
+								Vector3 eulerRotation = new Quaternion( rot[ k ].x, -rot[ k ].y, -rot[ k ].z, rot[ k ].w ).eulerAngles;
 
 								rotX.AddKey( CreateKeyframe( keyframeInput[ k ], eulerRotation.x, interpolationMode ) );
 								rotY.AddKey( CreateKeyframe( keyframeInput[ k ], eulerRotation.y, interpolationMode ) );
@@ -167,9 +167,9 @@ namespace Siccity.GLTFUtility {
 							AnimationCurve rotW = new AnimationCurve();
 							for (int k = 0; k < keyframeInput.Length; k++) {
 								rotX.AddKey( CreateKeyframe( keyframeInput[k], rot[k].x, interpolationMode ) );
-								rotY.AddKey( CreateKeyframe( keyframeInput[k], rot[k].y, interpolationMode ) );
+								rotY.AddKey( CreateKeyframe( keyframeInput[k], -rot[k].y, interpolationMode ) );
 								rotZ.AddKey( CreateKeyframe( keyframeInput[k], -rot[k].z, interpolationMode ) );
-								rotW.AddKey( CreateKeyframe( keyframeInput[k], -rot[k].w, interpolationMode ) );
+								rotW.AddKey( CreateKeyframe( keyframeInput[k], rot[k].w, interpolationMode ) );
 							}
 
 							result.clip.SetCurve(relativePath, typeof(Transform), "localRotation.x", rotX);
