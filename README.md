@@ -32,10 +32,18 @@ Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-for
 **NOTICE** This is a work in progress. Expect bugs. Current features can be tracked below:
 
 ### Features
+*System*
 - [x] Editor import
 - [ ] Editor export
 - [x] Runtime import API
 - [ ] Runtime export API
+- [x] GLTF format
+- [x] GLB format
+- [x] Multithreading
+- [ ] URP
+- [ ] HDRP
+
+*Spec*
 - [x] Static mesh (with submeshes)
 - [x] UVs (up to 8 channels)
 - [x] Normals
@@ -46,13 +54,15 @@ Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-for
 - [x] Remote textures (during async only)
 - [x] Rig
 - [x] Animations (multiple)
-- [x] Morph targets
+- [x] Morph targets (with experimental names)
 - [x] Cameras
-- [ ] Lights
-- [ ] Draco compression
-- [x] Multithreading
-- [x] GLTF format
-- [x] GLB format
+
+*Extensions*
+- [x] KHR_texture_transform (partial support)
+- [x] KHR_materials_pbrSpecularGlossiness 
+- [ ] KHR_lights_punctual 
+- [ ] KHR_draco_mesh_compression
+
 
 ### Runtime import API
 ```cs
