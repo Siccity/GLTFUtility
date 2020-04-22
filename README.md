@@ -40,8 +40,8 @@ Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-for
 - [x] GLTF format
 - [x] GLB format
 - [x] Multithreading
-- [ ] URP
-- [ ] HDRP
+- [ ] URP [#75](https://github.com/Siccity/GLTFUtility/issues/75)
+- [ ] HDRP [#73](https://github.com/Siccity/GLTFUtility/issues/73)
 
 *Spec*
 - [x] Static mesh (with submeshes)
@@ -53,6 +53,7 @@ Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-for
 - [x] Textures (embedded/external)
 - [x] Remote textures (during async only)
 - [x] Rig
+- [ ] Avatar/Mask [#70](https://github.com/Siccity/GLTFUtility/issues/70)
 - [x] Animations (multiple)
 - [x] Morph targets (with experimental names)
 - [x] Cameras
@@ -60,8 +61,8 @@ Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-for
 *Extensions*
 - [x] KHR_texture_transform (partial support)
 - [x] KHR_materials_pbrSpecularGlossiness 
-- [ ] KHR_lights_punctual 
-- [ ] KHR_draco_mesh_compression
+- [ ] KHR_lights_punctual [#25](https://github.com/Siccity/GLTFUtility/issues/25)
+- [ ] KHR_draco_mesh_compression [#27](https://github.com/Siccity/GLTFUtility/issues/27)
 
 
 ### Runtime import API
