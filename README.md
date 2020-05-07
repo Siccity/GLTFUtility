@@ -22,8 +22,7 @@ Using Unity Package Manager ([Help](https://docs.unity3d.com/Manual/upm-git.html
 Using git:
 1. Get Newtonsoft.JSON from one of these sources
     * Official upm package: `"com.unity.nuget.newtonsoft-json": "2.0.0-preview"`,
-    * Unofficial Asset Store: [link](https://assetstore.unity.com/packages/tools/input-management/json-net-for-unity-11347)
-    * Unofficial git repo: [link](https://github.com/jilleJr/Newtonsoft.Json-for-Unity)
+    * Unofficial git repo: https://github.com/jilleJr/Newtonsoft.Json-for-Unity
 2. Clone GLTFUtility by itself or as a submodule
     * Clone into your assets folder `git clone git@github.com:Siccity/GLTFUtility.git`
     * Add repo as submodule `git submodule add git@github.com:Siccity/GLTFUtility.git Assets/Submodules/GLTFUtility`
