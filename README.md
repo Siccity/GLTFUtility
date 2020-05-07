@@ -16,18 +16,21 @@ glTF is a new opensource 3d model transmission format which supports everything 
 Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-forget solution, keeping consistency with built-in functionality.
 
 ### Installation
-1. GLTFUtility requires Newtonsoft Json to be installed in your project.
-    * Official upm package: `"com.unity.nuget.newtonsoft-json": "2.0.0-preview",`
+Using Unity Package Manager ([Help](https://docs.unity3d.com/Manual/upm-git.html)):
+1. `"com.siccity.gltfutility": "https://github.com/siccity/gltfutility.git"`
+
+Using git:
+1. Get Newtonsoft.JSON from one of these sources
+    * Official upm package: `"com.unity.nuget.newtonsoft-json": "2.0.0-preview"`,
     * Unofficial Asset Store: [link](https://assetstore.unity.com/packages/tools/input-management/json-net-for-unity-11347)
     * Unofficial git repo: [link](https://github.com/jilleJr/Newtonsoft.Json-for-Unity)
+2. Clone GLTFUtility by itself or as a submodule
+    * Clone into your assets folder `git clone git@github.com:Siccity/GLTFUtility.git`
+    * Add repo as submodule `git submodule add git@github.com:Siccity/GLTFUtility.git Assets/Submodules/GLTFUtility`
 
-2. Choose *one* of the following:
-    * Download [.zip](https://github.com/Siccity/GLTFUtility/archive/master.zip) and extract to your project assets
-    * Download latest [.unitypackage](https://github.com/Siccity/GLTFUtility/releases) and unpack to your projects assets
-    * (git) Clone into your assets folder `git clone git@github.com:Siccity/GLTFUtility.git`
-    * (git) Add repo as submodule `git submodule add git@github.com:Siccity/GLTFUtility.git Assets/Submodules/GLTFUtility`
-    * (package) If using Unity 2018.3 or later, you can add a new entry to the manifest.json file in your Packages folder
-  `"com.siccity.gltfutility": "https://github.com/siccity/gltfutility.git"` [Manual](https://docs.unity3d.com/Manual/upm-git.html)
+Manual download:
+1. Get [Newtonsoft.JSON](https://assetstore.unity.com/packages/tools/input-management/json-net-for-unity-11347) from the asset store
+2. Download [GLTFUtility-master.zip](https://github.com/Siccity/GLTFUtility/archive/master.zip) and extract to your project assets
 
 **NOTICE** This is a work in progress. Expect bugs. Current features can be tracked below:
 
