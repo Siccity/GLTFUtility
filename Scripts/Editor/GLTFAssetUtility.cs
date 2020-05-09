@@ -16,6 +16,12 @@ namespace Siccity.GLTFUtility {
 #endif
 			MeshRenderer[] renderers = root.GetComponentsInChildren<MeshRenderer>(true);
 			SkinnedMeshRenderer[] skinnedRenderers = root.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+			if (skinnedRenderers.Length >= 0) {
+				Animator animator = root.AddComponent<Animator>();
+				animator.avatar = AvatarBuilder.BuildGenericAvatar(root as GameObject, "");
+				animator.avatar.name = root.name + " Avatar";
+				ctx.AddAsset(animator.avatar.name, animator.avatar);
+			}
 			MeshFilter[] filters = root.GetComponentsInChildren<MeshFilter>(true);
 			AddMeshes(filters, skinnedRenderers, ctx);
 			AddMaterials(renderers, skinnedRenderers, ctx);
