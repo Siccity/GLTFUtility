@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using Siccity.GLTFUtility.Converters;
 using UnityEngine;
 using UnityEngine.Scripting;
 
@@ -22,7 +23,7 @@ namespace Siccity.GLTFUtility {
 			/// <summary> The index of an accessor containing keyframe output values. </summary>
 			[JsonProperty(Required = Required.Always)] public int output;
 			/// <summary> Valid names include: "LINEAR", "STEP", "CUBICSPLINE" </summary>
-			public string interpolation = "LINEAR";
+			[JsonConverter(typeof(EnumConverter))] public InterpolationMode interpolation = InterpolationMode.LINEAR;
 		}
 
 		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#channel
@@ -65,6 +66,13 @@ namespace Siccity.GLTFUtility {
 				}
 				Sampler sampler = samplers[channel.sampler];
 
+				// Get interpolation mode
+				InterpolationMode interpolationMode = importSettings.interpolationMode;
+				if (interpolationMode == InterpolationMode.ImportFromFile) {
+					interpolationMode = sampler.interpolation;
+				}
+				if (interpolationMode == InterpolationMode.CUBICSPLINE) Debug.LogWarning("Animation interpolation mode CUBICSPLINE not fully supported, result might look different.");
+
 				string relativePath = "";
 
 				GLTFNode.ImportResult node = nodes[channel.target.node.Value];
@@ -75,7 +83,7 @@ namespace Siccity.GLTFUtility {
 					if (node.parent.HasValue) node = nodes[node.parent.Value];
 					else node = null;
 				}
-
+				System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
 				float[] keyframeInput = accessors[sampler.input].ReadFloat().ToArray();
 				switch (channel.target.path) {
 					case "translation":
@@ -84,9 +92,9 @@ namespace Siccity.GLTFUtility {
 						AnimationCurve posY = new AnimationCurve();
 						AnimationCurve posZ = new AnimationCurve();
 						for (int k = 0; k < keyframeInput.Length; k++) {
-							posX.AddKey(keyframeInput[k], -pos[k].x);
-							posY.AddKey(keyframeInput[k], pos[k].y);
-							posZ.AddKey(keyframeInput[k], pos[k].z);
+							posX.AddKey(CreateKeyframe(k, keyframeInput, pos, x => -x.x, interpolationMode));
+							posY.AddKey(CreateKeyframe(k, keyframeInput, pos, x => x.y, interpolationMode));
+							posZ.AddKey(CreateKeyframe(k, keyframeInput, pos, x => x.z, interpolationMode));
 						}
 						result.clip.SetCurve(relativePath, typeof(Transform), "localPosition.x", posX);
 						result.clip.SetCurve(relativePath, typeof(Transform), "localPosition.y", posY);
@@ -99,10 +107,11 @@ namespace Siccity.GLTFUtility {
 						AnimationCurve rotZ = new AnimationCurve();
 						AnimationCurve rotW = new AnimationCurve();
 						for (int k = 0; k < keyframeInput.Length; k++) {
-							rotX.AddKey(keyframeInput[k], rot[k].x);
-							rotY.AddKey(keyframeInput[k], -rot[k].y);
-							rotZ.AddKey(keyframeInput[k], -rot[k].z);
-							rotW.AddKey(keyframeInput[k], rot[k].w);
+							// The Animation window in Unity shows keyframes incorrectly converted to euler. This is only to deceive you. The quaternions underneath work correctly
+							rotX.AddKey(CreateKeyframe(k, keyframeInput, rot, x => x.x, interpolationMode));
+							rotY.AddKey(CreateKeyframe(k, keyframeInput, rot, x => -x.y, interpolationMode));
+							rotZ.AddKey(CreateKeyframe(k, keyframeInput, rot, x => -x.z, interpolationMode));
+							rotW.AddKey(CreateKeyframe(k, keyframeInput, rot, x => x.w, interpolationMode));
 						}
 						result.clip.SetCurve(relativePath, typeof(Transform), "localRotation.x", rotX);
 						result.clip.SetCurve(relativePath, typeof(Transform), "localRotation.y", rotY);
@@ -115,9 +124,9 @@ namespace Siccity.GLTFUtility {
 						AnimationCurve scaleY = new AnimationCurve();
 						AnimationCurve scaleZ = new AnimationCurve();
 						for (int k = 0; k < keyframeInput.Length; k++) {
-							scaleX.AddKey(keyframeInput[k], scale[k].x);
-							scaleY.AddKey(keyframeInput[k], scale[k].y);
-							scaleZ.AddKey(keyframeInput[k], scale[k].z);
+							scaleX.AddKey(CreateKeyframe(k, keyframeInput, scale, x => x.x, interpolationMode));
+							scaleY.AddKey(CreateKeyframe(k, keyframeInput, scale, x => x.y, interpolationMode));
+							scaleZ.AddKey(CreateKeyframe(k, keyframeInput, scale, x => x.z, interpolationMode));
 						}
 						result.clip.SetCurve(relativePath, typeof(Transform), "localScale.x", scaleX);
 						result.clip.SetCurve(relativePath, typeof(Transform), "localScale.y", scaleY);
@@ -129,6 +138,24 @@ namespace Siccity.GLTFUtility {
 				}
 			}
 			return result;
+		}
+
+		public static Keyframe CreateKeyframe<T>(int index, float[] timeArray, T[] valueArray, Func<T, float> getValue, InterpolationMode interpolationMode) {
+			float time = timeArray[index];
+			Keyframe keyframe;
+#pragma warning disable CS0618
+			if (interpolationMode == InterpolationMode.STEP) {
+				keyframe = new Keyframe(time, getValue(valueArray[index]), float.PositiveInfinity, float.PositiveInfinity, 1, 1);
+			} else if (interpolationMode == InterpolationMode.CUBICSPLINE) {
+				// @TODO: Find out what the right math is to calculate the tangent/weight values.
+				float inTangent = getValue(valueArray[index * 3]);
+				float outTangent = getValue(valueArray[(index * 3) + 2]);
+				keyframe = new Keyframe(time, getValue(valueArray[(index * 3) + 1]), inTangent, outTangent, 1, 1);
+			} else { // LINEAR
+				keyframe = new Keyframe(time, getValue(valueArray[index]), 0, 0, 0, 0);
+			}
+#pragma warning restore CS0618
+			return keyframe;
 		}
 	}
 
