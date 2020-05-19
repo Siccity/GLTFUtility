@@ -31,8 +31,6 @@ Manual download:
 1. Get [Newtonsoft.JSON](https://assetstore.unity.com/packages/tools/input-management/json-net-for-unity-11347) from the asset store
 2. Download [GLTFUtility-master.zip](https://github.com/Siccity/GLTFUtility/archive/master.zip) and extract to your project assets
 
-**NOTICE** This is a work in progress. Expect bugs. Current features can be tracked below:
-
 ### Features
 *System*
 - [x] Editor import
