@@ -16,20 +16,24 @@ glTF is a new opensource 3d model transmission format which supports everything 
 Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-forget solution, keeping consistency with built-in functionality.
 
 ### Installation
-Using Unity Package Manager ([Help](https://docs.unity3d.com/Manual/upm-git.html)):
-1. `"com.siccity.gltfutility": "https://github.com/siccity/gltfutility.git"`
+<details><summary>Using Unity Package Manager (<a href="https://docs.unity3d.com/Manual/upm-git.html">Help</a>)</summary>
 
-Using git:
+1. `"com.siccity.gltfutility": "https://github.com/siccity/gltfutility.git"`
+</details>
+<details><summary>Using git</summary>
+
 1. Get Newtonsoft.JSON from one of these sources
     * Official upm package: `"com.unity.nuget.newtonsoft-json": "2.0.0-preview"`,
     * Unofficial git repo: https://github.com/jilleJr/Newtonsoft.Json-for-Unity
 2. Clone GLTFUtility by itself or as a submodule
     * Clone into your assets folder `git clone git@github.com:Siccity/GLTFUtility.git`
     * Add repo as submodule `git submodule add git@github.com:Siccity/GLTFUtility.git Assets/Submodules/GLTFUtility`
+</details>
+<details><summary>Manual download</summary>
 
-Manual download:
 1. Get [Newtonsoft.JSON](https://assetstore.unity.com/packages/tools/input-management/json-net-for-unity-11347) from the asset store
 2. Download [GLTFUtility-master.zip](https://github.com/Siccity/GLTFUtility/archive/master.zip) and extract to your project assets
+</details>
 
 ### Features
 *System*
