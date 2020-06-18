@@ -177,6 +177,7 @@ namespace Siccity.GLTFUtility {
 
 				public Mesh ToMesh() {
 					Mesh mesh = new Mesh();
+					mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;											 
 					mesh.vertices = verts.ToArray();
 					mesh.subMeshCount = submeshTris.Count;
 					var onlyTriangles = true;
