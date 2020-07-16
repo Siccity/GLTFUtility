@@ -135,7 +135,15 @@ namespace Siccity.GLTFUtility {
 				Shader sh = null;
 #if UNITY_2019_1_OR_NEWER
 				// LWRP support
-				if (GraphicsSettings.renderPipelineAsset) sh = GraphicsSettings.renderPipelineAsset.defaultShader;
+				if (GraphicsSettings.renderPipelineAsset)
+                {
+                    if (alphaMode == AlphaMode.BLEND && shaderSettings.MetallicBlend != null)
+                        sh = shaderSettings.MetallicBlend;
+                    else if (shaderSettings.Metallic != null)
+                        sh = shaderSettings.Metallic;
+                    else
+                        sh = GraphicsSettings.renderPipelineAsset.defaultShader;
+                }
 #endif
 				if (sh == null) {
 					if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.MetallicBlend;
@@ -209,7 +217,15 @@ namespace Siccity.GLTFUtility {
 				Shader sh = null;
 #if UNITY_2019_1_OR_NEWER
 				// LWRP support
-				if (GraphicsSettings.renderPipelineAsset) sh = GraphicsSettings.renderPipelineAsset.defaultShader;
+				if (GraphicsSettings.renderPipelineAsset)
+                {
+                    if (alphaMode == AlphaMode.BLEND && shaderSettings.SpecularBlend != null)
+                        sh = shaderSettings.SpecularBlend;
+                    else if (shaderSettings.Specular != null)
+                        sh = shaderSettings.Specular;
+                    else
+                        sh = GraphicsSettings.renderPipelineAsset.defaultShader;
+                }
 #endif
 				if (sh == null) {
 					if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.SpecularBlend;
