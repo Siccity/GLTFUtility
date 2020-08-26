@@ -444,6 +444,7 @@ namespace Siccity.GLTFUtility {
 			result.type = type;
 			result.count = count;
 			result.byteOffset = byteOffset;
+			result.byteStride = result.bufferView != null ? result.bufferView.byteStride : null;
 			// Sparse accessor works by overwriting specified indices instead of defining a full data set. This can save space, especially for morph targets
 			if (sparse != null) {
 				result.sparse = new ImportResult.Sparse() {
