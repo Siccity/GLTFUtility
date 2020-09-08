@@ -133,22 +133,8 @@ namespace Siccity.GLTFUtility {
 			public IEnumerator CreateMaterial(GLTFTexture.ImportResult[] textures, AlphaMode alphaMode, ShaderSettings shaderSettings, Action<Material> onFinish) {
 				// Shader
 				Shader sh = null;
-#if UNITY_2019_1_OR_NEWER
-				// LWRP support
-				if (GraphicsSettings.renderPipelineAsset)
-                {
-                    if (alphaMode == AlphaMode.BLEND && shaderSettings.MetallicBlend != null)
-                        sh = shaderSettings.MetallicBlend;
-                    else if (shaderSettings.Metallic != null)
-                        sh = shaderSettings.Metallic;
-                    else
-                        sh = GraphicsSettings.renderPipelineAsset.defaultShader;
-                }
-#endif
-				if (sh == null) {
-					if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.MetallicBlend;
-					else sh = shaderSettings.Metallic;
-				}
+				if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.MetallicBlend;
+				else sh = shaderSettings.Metallic;
 
 				// Material
 				Material mat = new Material(sh);
@@ -215,22 +201,8 @@ namespace Siccity.GLTFUtility {
 			public IEnumerator CreateMaterial(GLTFTexture.ImportResult[] textures, AlphaMode alphaMode, ShaderSettings shaderSettings, Action<Material> onFinish) {
 				// Shader
 				Shader sh = null;
-#if UNITY_2019_1_OR_NEWER
-				// LWRP support
-				if (GraphicsSettings.renderPipelineAsset)
-                {
-                    if (alphaMode == AlphaMode.BLEND && shaderSettings.SpecularBlend != null)
-                        sh = shaderSettings.SpecularBlend;
-                    else if (shaderSettings.Specular != null)
-                        sh = shaderSettings.Specular;
-                    else
-                        sh = GraphicsSettings.renderPipelineAsset.defaultShader;
-                }
-#endif
-				if (sh == null) {
-					if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.SpecularBlend;
-					else sh = shaderSettings.Specular;
-				}
+				if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.SpecularBlend;
+				else sh = shaderSettings.Specular;
 
 				// Material
 				Material mat = new Material(sh);
