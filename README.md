@@ -44,8 +44,9 @@ Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-for
 - [x] GLTF format
 - [x] GLB format
 - [x] Multithreading
-- [ ] URP [#75](https://github.com/Siccity/GLTFUtility/issues/75)
+- [x] URP [#75](https://github.com/Siccity/GLTFUtility/issues/75)
 - [ ] HDRP [#73](https://github.com/Siccity/GLTFUtility/issues/73)
+- [ ] LWRP
 
 *Spec*
 - [x] Static mesh (with submeshes)
