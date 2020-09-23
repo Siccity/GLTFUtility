@@ -74,7 +74,8 @@ namespace Siccity.GLTFUtility {
 								bufferView.stream.Seek(bufferView.byteOffset, System.IO.SeekOrigin.Begin);
 								bufferView.stream.Read(buffer, 0, bufferView.byteLength);
 								List<Mesh> meshes = new List<Mesh>();
-								loader.DecodeMesh(buffer, ref meshes);
+								int numFaces = loader.ConvertDracoMeshToUnity(buffer, ref meshes);
+								if (numFaces == 0) Debug.LogWarning("0 faces on draco mesh");
 
 								submeshTrisMode.Add(primitive.mode);
 								if (meshes.Count == 1) {
@@ -85,8 +86,9 @@ namespace Siccity.GLTFUtility {
 										meshes[0].GetIndices(tris, k);
 										submeshTris.Add(tris);
 									}
-									meshes[0].GetNormals(normals);
 									meshes[0].GetVertices(verts);
+									normals = meshes[0].normals.ToList();
+									tangents = meshes[0].tangents.ToList();
 
 									if (meshes[0].uv != null) uv1 = meshes[0].uv.Select(x => new Vector2(x.x, -x.y)).ToList();
 									if (meshes[0].uv2 != null) uv2 = meshes[0].uv2.Select(x => new Vector2(x.x, -x.y)).ToList();
@@ -97,7 +99,6 @@ namespace Siccity.GLTFUtility {
 									if (meshes[0].uv7 != null) uv7 = meshes[0].uv7.Select(x => new Vector2(x.x, -x.y)).ToList();
 									if (meshes[0].uv8 != null) uv8 = meshes[0].uv8.Select(x => new Vector2(x.x, -x.y)).ToList();
 
-									
 								} else {
 									Debug.LogWarning("Draco decoded " + meshes.Count + " meshes. Only 1 is supported at this time.");
 								}
