@@ -53,7 +53,7 @@ namespace Siccity.GLTFUtility {
 				List<BlendShape> blendShapes = new List<BlendShape>();
 				List<int> submeshVertexStart = new List<int>();
 
-				private class BlendShape {
+				public class BlendShape {
 					public string name;
 					public Vector3[] pos, norm, tan;
 				}
@@ -66,43 +66,42 @@ namespace Siccity.GLTFUtility {
 						for (int i = 0; i < gltfMesh.primitives.Count; i++) {
 							GLTFPrimitive primitive = gltfMesh.primitives[i];
 
+							// Load draco mesh
 							if (primitive.extensions != null && primitive.extensions.KHR_draco_mesh_compression != null) {
 								GLTFPrimitive.DracoMeshCompression draco = primitive.extensions.KHR_draco_mesh_compression;
 								GLTFBufferView.ImportResult bufferView = bufferViews[draco.bufferView];
-								DracoMeshLoader loader = new DracoMeshLoader();
+								GLTFUtilityDracoLoader loader = new GLTFUtilityDracoLoader();
 								byte[] buffer = new byte[bufferView.byteLength];
 								bufferView.stream.Seek(bufferView.byteOffset, System.IO.SeekOrigin.Begin);
 								bufferView.stream.Read(buffer, 0, bufferView.byteLength);
-								List<Mesh> meshes = new List<Mesh>();
-								int numFaces = loader.ConvertDracoMeshToUnity(buffer, ref meshes);
+								Mesh mesh;
+								int numFaces = loader.LoadMesh(buffer, out mesh);
 								if (numFaces == 0) Debug.LogWarning("0 faces on draco mesh");
 
 								submeshTrisMode.Add(primitive.mode);
-								if (meshes.Count == 1) {
-									Debug.Log(meshes[0].subMeshCount);
-
-									for (int k = 0; k < meshes[0].subMeshCount; k++) {
-										List<int> tris = new List<int>();
-										meshes[0].GetIndices(tris, k);
-										submeshTris.Add(tris);
-									}
-									meshes[0].GetVertices(verts);
-									normals = meshes[0].normals.ToList();
-									tangents = meshes[0].tangents.ToList();
-
-									if (meshes[0].uv != null) uv1 = meshes[0].uv.Select(x => new Vector2(x.x, -x.y)).ToList();
-									if (meshes[0].uv2 != null) uv2 = meshes[0].uv2.Select(x => new Vector2(x.x, -x.y)).ToList();
-									if (meshes[0].uv3 != null) uv3 = meshes[0].uv3.Select(x => new Vector2(x.x, -x.y)).ToList();
-									if (meshes[0].uv4 != null) uv4 = meshes[0].uv4.Select(x => new Vector2(x.x, -x.y)).ToList();
-									if (meshes[0].uv5 != null) uv5 = meshes[0].uv5.Select(x => new Vector2(x.x, -x.y)).ToList();
-									if (meshes[0].uv6 != null) uv6 = meshes[0].uv6.Select(x => new Vector2(x.x, -x.y)).ToList();
-									if (meshes[0].uv7 != null) uv7 = meshes[0].uv7.Select(x => new Vector2(x.x, -x.y)).ToList();
-									if (meshes[0].uv8 != null) uv8 = meshes[0].uv8.Select(x => new Vector2(x.x, -x.y)).ToList();
-
-								} else {
-									Debug.LogWarning("Draco decoded " + meshes.Count + " meshes. Only 1 is supported at this time.");
+								for (int k = 0; k < mesh.subMeshCount; k++) {
+									List<int> tris = new List<int>();
+									mesh.GetIndices(tris, k);
+									tris.Reverse();
+									submeshTris.Add(tris);
 								}
-							} else {
+								mesh.GetVertices(verts);
+								verts = verts.Select(x => new Vector3(-x.x, x.y, x.z)).ToList();
+
+								normals = mesh.normals.Select(v => { v.x = -v.x; return v; }).ToList();
+								tangents = mesh.tangents.Select(v => { v.y = -v.y; v.z = -v.z; return v; }).ToList();
+
+								if (mesh.uv != null) uv1 = mesh.uv.Select(x => new Vector2(x.x, -x.y)).ToList();
+								if (mesh.uv2 != null) uv2 = mesh.uv2.Select(x => new Vector2(x.x, -x.y)).ToList();
+								if (mesh.uv3 != null) uv3 = mesh.uv3.Select(x => new Vector2(x.x, -x.y)).ToList();
+								if (mesh.uv4 != null) uv4 = mesh.uv4.Select(x => new Vector2(x.x, -x.y)).ToList();
+								if (mesh.uv5 != null) uv5 = mesh.uv5.Select(x => new Vector2(x.x, -x.y)).ToList();
+								if (mesh.uv6 != null) uv6 = mesh.uv6.Select(x => new Vector2(x.x, -x.y)).ToList();
+								if (mesh.uv7 != null) uv7 = mesh.uv7.Select(x => new Vector2(x.x, -x.y)).ToList();
+								if (mesh.uv8 != null) uv8 = mesh.uv8.Select(x => new Vector2(x.x, -x.y)).ToList();
+							}
+							// Load normal mesh
+							else {
 								int vertStartIndex = verts.Count;
 								submeshVertexStart.Add(vertStartIndex);
 
