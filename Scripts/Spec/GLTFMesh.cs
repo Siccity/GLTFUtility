@@ -53,7 +53,7 @@ namespace Siccity.GLTFUtility {
 				List<BlendShape> blendShapes = new List<BlendShape>();
 				List<int> submeshVertexStart = new List<int>();
 
-				public class BlendShape {
+				private class BlendShape {
 					public string name;
 					public Vector3[] pos, norm, tan;
 				}
@@ -91,6 +91,24 @@ namespace Siccity.GLTFUtility {
 								normals = mesh.normals.Select(v => { v.x = -v.x; return v; }).ToList();
 								tangents = mesh.tangents.Select(v => { v.y = -v.y; v.z = -v.z; return v; }).ToList();
 
+								// Weights
+								weights = mesh.boneWeights.ToList();
+								Debug.Log(mesh.boneWeights.Length);
+
+								// BlendShapes
+								for (int k = 0; k < mesh.blendShapeCount; k++) {
+									int frameCount = mesh.GetBlendShapeFrameCount(k);
+									BlendShape blendShape = new BlendShape();
+									blendShape.pos = new Vector3[frameCount];
+									blendShape.norm = new Vector3[frameCount];
+									blendShape.tan = new Vector3[frameCount];
+									for (int o = 0; o < frameCount; o++) {
+										mesh.GetBlendShapeFrameVertices(k, o, blendShape.pos, blendShape.norm, blendShape.tan);
+									}
+									blendShapes.Add(blendShape);
+								}
+
+								// UVs
 								if (mesh.uv != null) uv1 = mesh.uv.Select(x => new Vector2(x.x, -x.y)).ToList();
 								if (mesh.uv2 != null) uv2 = mesh.uv2.Select(x => new Vector2(x.x, -x.y)).ToList();
 								if (mesh.uv3 != null) uv3 = mesh.uv3.Select(x => new Vector2(x.x, -x.y)).ToList();
