@@ -270,22 +270,23 @@ public unsafe class GLTFUtilityDracoLoader {
 		if (newColors != null) {
 			mesh.colors = newColors;
 		}
-		if (newJoints != null && newWeights != null && newJoints.Length == newWeights.Length) {
-			BoneWeight[] boneWeights = new BoneWeight[newWeights.Length];
-			for (int k = 0; k < boneWeights.Length; k++) {
-				NormalizeWeights(ref newWeights[k]);
-				boneWeights[k].weight0 = newWeights[k].x;
-				boneWeights[k].weight1 = newWeights[k].y;
-				boneWeights[k].weight2 = newWeights[k].z;
-				boneWeights[k].weight3 = newWeights[k].w;
-				boneWeights[k].boneIndex0 = Mathf.RoundToInt(newJoints[k].x);
-				boneWeights[k].boneIndex1 = Mathf.RoundToInt(newJoints[k].y);
-				boneWeights[k].boneIndex2 = Mathf.RoundToInt(newJoints[k].z);
-				boneWeights[k].boneIndex3 = Mathf.RoundToInt(newJoints[k].w);
-			}
-			mesh.boneWeights = boneWeights;
-		} else Debug.LogWarning("newJoints and newWeights not same length. Skipped");
-
+		if (newJoints != null && newWeights != null) {
+			if (newJoints.Length == newWeights.Length) {
+				BoneWeight[] boneWeights = new BoneWeight[newWeights.Length];
+				for (int k = 0; k < boneWeights.Length; k++) {
+					NormalizeWeights(ref newWeights[k]);
+					boneWeights[k].weight0 = newWeights[k].x;
+					boneWeights[k].weight1 = newWeights[k].y;
+					boneWeights[k].weight2 = newWeights[k].z;
+					boneWeights[k].weight3 = newWeights[k].w;
+					boneWeights[k].boneIndex0 = Mathf.RoundToInt(newJoints[k].x);
+					boneWeights[k].boneIndex1 = Mathf.RoundToInt(newJoints[k].y);
+					boneWeights[k].boneIndex2 = Mathf.RoundToInt(newJoints[k].z);
+					boneWeights[k].boneIndex3 = Mathf.RoundToInt(newJoints[k].w);
+				}
+				mesh.boneWeights = boneWeights;
+			} else Debug.LogWarning("Draco: joints and weights not same length. Skipped");
+		}
 		return mesh;
 	}
 
