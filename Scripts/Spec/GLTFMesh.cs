@@ -93,7 +93,6 @@ namespace Siccity.GLTFUtility {
 
 								// Weights
 								weights = mesh.boneWeights.ToList();
-								Debug.Log(mesh.boneWeights.Length);
 
 								// BlendShapes
 								for (int k = 0; k < mesh.blendShapeCount; k++) {

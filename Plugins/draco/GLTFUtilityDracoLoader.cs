@@ -43,13 +43,10 @@ public unsafe class GLTFUtilityDracoLoader {
 	enum AttributeType {
 		INVALID = -1,
 		POSITION = 0,
-		NORMAL,
-		COLOR,
-		TEX_COORD,
-		// A special id used to mark attributes that are not assigned to any known
-		// predefined use case. Such attributes are often used for a shader specific
-		// data.
-		GENERIC
+		NORMAL = 1,
+		COLOR = 2,
+		TEX_COORD = 3,
+		GENERIC = 4
 	}
 
 	// The order must be consistent with C++ interface.
@@ -139,8 +136,9 @@ public unsafe class GLTFUtilityDracoLoader {
 		Vector3[] newVertices = new Vector3[dracoMesh -> numVertices];
 		Vector2[] newUVs = null;
 		Vector3[] newNormals = null;
+		Vector4[] newWeights = null;
+		Vector4[] newJoints = null;
 		Color[] newColors = null;
-		byte[] newGenerics = null;
 
 		// Copy face indices.
 		DracoData * indicesData;
@@ -214,19 +212,34 @@ public unsafe class GLTFUtilityDracoLoader {
 			}
 		}
 
-		// Copy generic data. This script does not do anyhting with the generic
-		// data.
-		if (GetAttributeByType(dracoMesh, AttributeType.GENERIC, 0, & attr)) {
-			DracoData * genericData = null;
-			if (GetAttributeData(dracoMesh, attr, & genericData)) {
+		// Copy weights.
+		if (GetAttributeByType(dracoMesh, AttributeType.GENERIC, 1, & attr)) {
+			DracoData * weightData = null;
+			if (GetAttributeData(dracoMesh, attr, & weightData)) {
 				elementSize =
-					DataTypeSize((GLTFUtilityDracoLoader.DataType) genericData -> dataType) *
+					DataTypeSize((GLTFUtilityDracoLoader.DataType) weightData -> dataType) *
 					attr -> numComponents;
-				newGenerics = new byte[dracoMesh -> numVertices * elementSize];
-				var newGenericPtr = UnsafeUtility.AddressOf(ref newGenerics[0]);
-				UnsafeUtility.MemCpy(newGenericPtr, (void * ) genericData -> data,
+				newWeights = new Vector4[dracoMesh -> numVertices];
+				var newWeightsPtr = UnsafeUtility.AddressOf(ref newWeights[0]);
+				UnsafeUtility.MemCpy(newWeightsPtr, (void * ) weightData -> data,
 					dracoMesh -> numVertices * elementSize);
-				ReleaseDracoData( & genericData);
+				ReleaseDracoData( & weightData);
+				ReleaseDracoAttribute( & attr);
+			}
+		}
+
+		// Copy joints.
+		if (GetAttributeByType(dracoMesh, AttributeType.GENERIC, 0, & attr)) {
+			DracoData * jointData = null;
+			if (GetAttributeData(dracoMesh, attr, & jointData)) {
+				elementSize =
+					DataTypeSize((GLTFUtilityDracoLoader.DataType) jointData -> dataType) *
+					attr -> numComponents;
+				newJoints = new Vector4[dracoMesh -> numVertices];
+				var newJointsPtr = UnsafeUtility.AddressOf(ref newJoints[0]);
+				UnsafeUtility.MemCpy(newJointsPtr, (void * ) jointData -> data,
+					dracoMesh -> numVertices * elementSize);
+				ReleaseDracoData( & jointData);
 				ReleaseDracoAttribute( & attr);
 			}
 		}
@@ -257,8 +270,32 @@ public unsafe class GLTFUtilityDracoLoader {
 		if (newColors != null) {
 			mesh.colors = newColors;
 		}
+		if (newJoints != null && newWeights != null && newJoints.Length == newWeights.Length) {
+			BoneWeight[] boneWeights = new BoneWeight[newWeights.Length];
+			for (int k = 0; k < boneWeights.Length; k++) {
+				NormalizeWeights(ref newWeights[k]);
+				boneWeights[k].weight0 = newWeights[k].x;
+				boneWeights[k].weight1 = newWeights[k].y;
+				boneWeights[k].weight2 = newWeights[k].z;
+				boneWeights[k].weight3 = newWeights[k].w;
+				boneWeights[k].boneIndex0 = Mathf.RoundToInt(newJoints[k].x);
+				boneWeights[k].boneIndex1 = Mathf.RoundToInt(newJoints[k].y);
+				boneWeights[k].boneIndex2 = Mathf.RoundToInt(newJoints[k].z);
+				boneWeights[k].boneIndex3 = Mathf.RoundToInt(newJoints[k].w);
+			}
+			mesh.boneWeights = boneWeights;
+		} else Debug.LogWarning("newJoints and newWeights not same length. Skipped");
 
 		return mesh;
+	}
+
+	public void NormalizeWeights(ref Vector4 weights) {
+		float total = weights.x + weights.y + weights.z + weights.w;
+		float mult = 1f / total;
+		weights.x *= mult;
+		weights.y *= mult;
+		weights.z *= mult;
+		weights.w *= mult;
 	}
 
 	private int DataTypeSize(DataType dt) {
