@@ -65,7 +65,6 @@ namespace Siccity.GLTFUtility {
 					} else {
 						for (int i = 0; i < gltfMesh.primitives.Count; i++) {
 							GLTFPrimitive primitive = gltfMesh.primitives[i];
-
 							// Load draco mesh
 							if (primitive.extensions != null && primitive.extensions.KHR_draco_mesh_compression != null) {
 								GLTFPrimitive.DracoMeshCompression draco = primitive.extensions.KHR_draco_mesh_compression;
@@ -73,23 +72,25 @@ namespace Siccity.GLTFUtility {
 								GLTFUtilityDracoLoader loader = new GLTFUtilityDracoLoader();
 								byte[] buffer = new byte[bufferView.byteLength];
 								bufferView.stream.Seek(bufferView.byteOffset, System.IO.SeekOrigin.Begin);
+
 								bufferView.stream.Read(buffer, 0, bufferView.byteLength);
+
 								Mesh mesh;
 								int numFaces = loader.LoadMesh(buffer, out mesh);
 								if (numFaces == 0) Debug.LogWarning("0 faces on draco mesh");
 
 								submeshTrisMode.Add(primitive.mode);
-								for (int k = 0; k < mesh.subMeshCount; k++) {
-									List<int> tris = new List<int>();
-									mesh.GetIndices(tris, k);
-									tris.Reverse();
-									submeshTris.Add(tris);
-								}
-								mesh.GetVertices(verts);
-								verts = verts.Select(x => new Vector3(-x.x, x.y, x.z)).ToList();
 
-								normals = mesh.normals.Select(v => { v.x = -v.x; return v; }).ToList();
-								tangents = mesh.tangents.Select(v => { v.y = -v.y; v.z = -v.z; return v; }).ToList();
+								// Tris
+								List<int> tris = new List<int>();
+								mesh.GetIndices(tris, 0); // Meshes from draco always have only one submesh
+								tris.Reverse();
+								int vertCount = verts.Count();
+								submeshTris.Add(tris.Select(x => x + vertCount).ToList());
+
+								verts.AddRange(mesh.vertices.Select(x => new Vector3(-x.x, x.y, x.z)));
+								normals.AddRange(mesh.normals.Select(v => { v.x = -v.x; return v; }));
+								tangents.AddRange(mesh.tangents.Select(v => { v.y = -v.y; v.z = -v.z; return v; }));
 
 								// Weights
 								weights = mesh.boneWeights.ToList();
@@ -108,14 +109,38 @@ namespace Siccity.GLTFUtility {
 								}
 
 								// UVs
-								if (mesh.uv != null) uv1 = mesh.uv.Select(x => new Vector2(x.x, -x.y)).ToList();
-								if (mesh.uv2 != null) uv2 = mesh.uv2.Select(x => new Vector2(x.x, -x.y)).ToList();
-								if (mesh.uv3 != null) uv3 = mesh.uv3.Select(x => new Vector2(x.x, -x.y)).ToList();
-								if (mesh.uv4 != null) uv4 = mesh.uv4.Select(x => new Vector2(x.x, -x.y)).ToList();
-								if (mesh.uv5 != null) uv5 = mesh.uv5.Select(x => new Vector2(x.x, -x.y)).ToList();
-								if (mesh.uv6 != null) uv6 = mesh.uv6.Select(x => new Vector2(x.x, -x.y)).ToList();
-								if (mesh.uv7 != null) uv7 = mesh.uv7.Select(x => new Vector2(x.x, -x.y)).ToList();
-								if (mesh.uv8 != null) uv8 = mesh.uv8.Select(x => new Vector2(x.x, -x.y)).ToList();
+								if (mesh.uv != null) {
+									if (uv1 == null) uv1 = new List<Vector2>();
+									uv1.AddRange(mesh.uv.Select(x => new Vector2(x.x, -x.y)));
+								}
+								if (mesh.uv2 != null) {
+									if (uv2 == null) uv2 = new List<Vector2>();
+									uv2.AddRange(mesh.uv2.Select(x => new Vector2(x.x, -x.y)));
+								}
+								if (mesh.uv3 != null) {
+									if (uv3 == null) uv3 = new List<Vector2>();
+									uv3.AddRange(mesh.uv3.Select(x => new Vector2(x.x, -x.y)));
+								}
+								if (mesh.uv4 != null) {
+									if (uv4 == null) uv4 = new List<Vector2>();
+									uv4.AddRange(mesh.uv4.Select(x => new Vector2(x.x, -x.y)));
+								}
+								if (mesh.uv5 != null) {
+									if (uv5 == null) uv5 = new List<Vector2>();
+									uv5.AddRange(mesh.uv5.Select(x => new Vector2(x.x, -x.y)));
+								}
+								if (mesh.uv6 != null) {
+									if (uv6 == null) uv6 = new List<Vector2>();
+									uv6.AddRange(mesh.uv6.Select(x => new Vector2(x.x, -x.y)));
+								}
+								if (mesh.uv7 != null) {
+									if (uv7 == null) uv7 = new List<Vector2>();
+									uv7.AddRange(mesh.uv7.Select(x => new Vector2(x.x, -x.y)));
+								}
+								if (mesh.uv8 != null) {
+									if (uv8 == null) uv8 = new List<Vector2>();
+									uv8.AddRange(mesh.uv8.Select(x => new Vector2(x.x, -x.y)));
+								}
 							}
 							// Load normal mesh
 							else {
