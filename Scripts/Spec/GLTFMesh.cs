@@ -75,9 +75,8 @@ namespace Siccity.GLTFUtility {
 
 								bufferView.stream.Read(buffer, 0, bufferView.byteLength);
 
-								Mesh mesh;
-								int numFaces = loader.LoadMesh(buffer, out mesh);
-								if (numFaces == 0) Debug.LogWarning("0 faces on draco mesh");
+								Mesh mesh = loader.LoadMesh(buffer);
+								if (mesh == null) Debug.LogWarning("Draco mesh couldn't be loaded");
 
 								submeshTrisMode.Add(primitive.mode);
 
@@ -93,7 +92,10 @@ namespace Siccity.GLTFUtility {
 								tangents.AddRange(mesh.tangents.Select(v => { v.y = -v.y; v.z = -v.z; return v; }));
 
 								// Weights
-								weights = mesh.boneWeights.ToList();
+								if (mesh.boneWeights != null) {
+									if (weights == null) weights = new List<BoneWeight>();
+									weights.AddRange(mesh.boneWeights);
+								}
 
 								// BlendShapes
 								for (int k = 0; k < mesh.blendShapeCount; k++) {

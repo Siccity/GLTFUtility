@@ -114,19 +114,19 @@ public unsafe class GLTFUtilityDracoLoader {
 
 	// Decodes a Draco mesh, creates a Unity mesh from the decoded data and
 	// adds the Unity mesh to meshes. encodedData is the compressed Draco mesh.
-	public unsafe int LoadMesh(byte[] encodedData, out Mesh unityMesh) {
+	public unsafe Mesh LoadMesh(byte[] encodedData) {
 		DracoMesh * mesh = null;
 		if (DecodeDracoMesh(encodedData, encodedData.Length, & mesh) <= 0) {
 			Debug.Log("Failed: Decoding error.");
-			unityMesh = null;
-			return -1;
+			return null;
 		}
 
-		unityMesh = CreateUnityMesh(mesh);
+		Mesh unityMesh = CreateUnityMesh(mesh);
 
 		int numFaces = mesh -> numFaces;
 		ReleaseDracoMesh( & mesh);
-		return numFaces;
+		if (numFaces > 0) return unityMesh;
+		else return null;
 	}
 
 	// Creates a Unity mesh from the decoded Draco mesh.
