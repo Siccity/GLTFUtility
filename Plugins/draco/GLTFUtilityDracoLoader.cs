@@ -68,6 +68,13 @@ public unsafe class GLTFUtilityDracoLoader {
 		public int numAttributes;
 	}
 
+	[StructLayout(LayoutKind.Sequential)] public struct Vector4Int {
+		public int x;
+		public int y;
+		public int z;
+		public int w;
+	}
+
 	// Release data associated with DracoMesh.
 	[DllImport("dracodec_unity")] private static extern void ReleaseDracoMesh(
 		DracoMesh * * mesh);
@@ -219,10 +226,19 @@ public unsafe class GLTFUtilityDracoLoader {
 				elementSize =
 					DataTypeSize((GLTFUtilityDracoLoader.DataType) weightData -> dataType) *
 					attr -> numComponents;
-				newWeights = new Vector4[dracoMesh -> numVertices];
-				var newWeightsPtr = UnsafeUtility.AddressOf(ref newWeights[0]);
-				UnsafeUtility.MemCpy(newWeightsPtr, (void * ) weightData -> data,
-					dracoMesh -> numVertices * elementSize);
+				if (attr -> dataType == 9) {
+					newWeights = new Vector4[dracoMesh -> numVertices];
+					var newWeightsPtr = UnsafeUtility.AddressOf(ref newWeights[0]);
+					UnsafeUtility.MemCpy(newWeightsPtr, (void * ) weightData -> data,
+						dracoMesh -> numVertices * elementSize);
+				} else if (attr -> dataType == 4) {
+					var newWeightsInt = new Vector4Int[dracoMesh -> numVertices];
+					var newWeightsPtr = UnsafeUtility.AddressOf(ref newWeightsInt[0]);
+					UnsafeUtility.MemCpy(newWeightsPtr, (void * ) weightData -> data,
+						dracoMesh -> numVertices * elementSize);
+					newWeights = newWeightsInt.Select(x => new Vector4(x.x,x.y,x.z,x.w)).ToArray();
+				}
+				
 				ReleaseDracoData( & weightData);
 				ReleaseDracoAttribute( & attr);
 			}
@@ -235,12 +251,32 @@ public unsafe class GLTFUtilityDracoLoader {
 				elementSize =
 					DataTypeSize((GLTFUtilityDracoLoader.DataType) jointData -> dataType) *
 					attr -> numComponents;
-				newJoints = new Vector4[dracoMesh -> numVertices];
-				var newJointsPtr = UnsafeUtility.AddressOf(ref newJoints[0]);
-				UnsafeUtility.MemCpy(newJointsPtr, (void * ) jointData -> data,
-					dracoMesh -> numVertices * elementSize);
+				if (attr -> dataType == 9) {
+					newJoints = new Vector4[dracoMesh -> numVertices];
+					var newJointsPtr = UnsafeUtility.AddressOf(ref newJoints[0]);
+					UnsafeUtility.MemCpy(newJointsPtr, (void * ) jointData -> data,
+						dracoMesh -> numVertices * elementSize);
+				} else if (attr -> dataType == 4) {
+					var newJointsInt = new Vector4Int[dracoMesh -> numVertices];
+					var newJointsPtr = UnsafeUtility.AddressOf(ref newJointsInt[0]);
+					UnsafeUtility.MemCpy(newJointsPtr, (void * ) jointData -> data,
+						dracoMesh -> numVertices * elementSize);
+					newJoints = newJointsInt.Select(x => new Vector4(x.x,x.y,x.z,x.w)).ToArray();
+				}
+
 				ReleaseDracoData( & jointData);
 				ReleaseDracoAttribute( & attr);
+			}
+		}
+		
+		// Dirty fix:
+		// If any value in weights is above 1.5, swap weights and joints.
+		// I honestly have no clue where the correct uniqueIDs are supposed to come from.
+		if (newWeights != null && newJoints != null) {
+			if (newWeights.Any(x => x.x > 1.5f ||  x.y > 1.5f || x.z > 1.5f || x.w > 1.5f)) {
+				Vector4[] temp = newWeights;
+				newWeights = newJoints;
+				newJoints = temp;
 			}
 		}
 
