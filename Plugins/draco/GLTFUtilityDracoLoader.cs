@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -238,7 +239,7 @@ public unsafe class GLTFUtilityDracoLoader {
 						dracoMesh -> numVertices * elementSize);
 					newWeights = newWeightsInt.Select(x => new Vector4(x.x,x.y,x.z,x.w)).ToArray();
 				}
-				
+
 				ReleaseDracoData( & weightData);
 				ReleaseDracoAttribute( & attr);
 			}
@@ -268,7 +269,7 @@ public unsafe class GLTFUtilityDracoLoader {
 				ReleaseDracoAttribute( & attr);
 			}
 		}
-		
+
 		// Dirty fix:
 		// If any value in weights is above 1.5, swap weights and joints.
 		// I honestly have no clue where the correct uniqueIDs are supposed to come from.
