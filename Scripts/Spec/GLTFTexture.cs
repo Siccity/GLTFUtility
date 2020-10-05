@@ -25,7 +25,7 @@ namespace Siccity.GLTFUtility {
 			/// <summary> Create or return cached texture </summary>
 			public IEnumerator GetTextureCached(bool linear, Action<Texture2D> onFinish, Action<float> onProgress = null) {
 				if (cache == null) {
-					IEnumerator en = image.CreateTextureAsync(linear, x => cache = x, onProgress);
+					IEnumerator en = image.CreateTextureAsync(linear, x => cache = x, image.mimeType, onProgress);
 					while (en.MoveNext()) { yield return null; };
 				}
 				onFinish(cache);
