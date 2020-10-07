@@ -69,11 +69,11 @@ public unsafe class GLTFUtilityDracoLoader {
 		public int numAttributes;
 	}
 
-	[StructLayout(LayoutKind.Sequential)] public struct Vector4Int {
-		public int x;
-		public int y;
-		public int z;
-		public int w;
+	[StructLayout(LayoutKind.Sequential)] public struct Vector4<T> where T : struct {
+		public T x;
+		public T y;
+		public T z;
+		public T w;
 	}
 
 	// Release data associated with DracoMesh.
@@ -233,7 +233,7 @@ public unsafe class GLTFUtilityDracoLoader {
 					UnsafeUtility.MemCpy(newWeightsPtr, (void * ) weightData -> data,
 						dracoMesh -> numVertices * elementSize);
 				} else if (attr -> dataType == 4) {
-					var newWeightsInt = new Vector4Int[dracoMesh -> numVertices];
+					var newWeightsInt = new Vector4<UInt16>[dracoMesh -> numVertices];
 					var newWeightsPtr = UnsafeUtility.AddressOf(ref newWeightsInt[0]);
 					UnsafeUtility.MemCpy(newWeightsPtr, (void * ) weightData -> data,
 						dracoMesh -> numVertices * elementSize);
@@ -258,7 +258,7 @@ public unsafe class GLTFUtilityDracoLoader {
 					UnsafeUtility.MemCpy(newJointsPtr, (void * ) jointData -> data,
 						dracoMesh -> numVertices * elementSize);
 				} else if (attr -> dataType == 4) {
-					var newJointsInt = new Vector4Int[dracoMesh -> numVertices];
+					var newJointsInt = new Vector4<UInt16>[dracoMesh -> numVertices];
 					var newJointsPtr = UnsafeUtility.AddressOf(ref newJointsInt[0]);
 					UnsafeUtility.MemCpy(newJointsPtr, (void * ) jointData -> data,
 						dracoMesh -> numVertices * elementSize);
@@ -329,6 +329,7 @@ public unsafe class GLTFUtilityDracoLoader {
 
 	public void NormalizeWeights(ref Vector4 weights) {
 		float total = weights.x + weights.y + weights.z + weights.w;
+		if (total == 0) return;
 		float mult = 1f / total;
 		weights.x *= mult;
 		weights.y *= mult;
