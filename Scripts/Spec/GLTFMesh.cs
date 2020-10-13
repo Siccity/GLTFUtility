@@ -75,7 +75,16 @@ namespace Siccity.GLTFUtility {
 
 								bufferView.stream.Read(buffer, 0, bufferView.byteLength);
 
-								Mesh mesh = loader.LoadMesh(buffer);
+								GLTFUtilityDracoLoader.MeshAttributes attribs = new GLTFUtilityDracoLoader.MeshAttributes(
+									primitive.attributes.POSITION ?? -1,
+									primitive.attributes.NORMAL ?? -1,
+									primitive.attributes.TEXCOORD_0 ?? -1,
+									primitive.attributes.JOINTS_0 ?? -1,
+									primitive.attributes.WEIGHTS_0 ?? -1,
+									primitive.attributes.COLOR_0 ?? -1
+								);
+
+								Mesh mesh = loader.LoadMesh(buffer, attribs);
 								if (mesh == null) Debug.LogWarning("Draco mesh couldn't be loaded");
 
 								submeshTrisMode.Add(primitive.mode);
