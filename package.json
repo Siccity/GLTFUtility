@@ -6,6 +6,6 @@
     "keywords": ["glTF", "import"],
 	"description": "Lightweight glTF loader.",
 	"dependencies": {
-		"com.unity.nuget.newtonsoft-json": "2.0.0-preview"
+		"com.unity.nuget.newtonsoft-json": "2.0.0"
 	}
 }
