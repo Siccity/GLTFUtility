@@ -172,33 +172,35 @@ public unsafe class GLTFUtilityDracoLoader {
 			newTriangles.Length * elementSize);
 		ReleaseDracoData( & indicesData);
 
-		// Copy positions.
 		DracoAttribute * attr = null;
-		GetAttributeByUniqueId(dracoMesh, attributes.pos, & attr);
-		DracoData * posData = null;
-		GetAttributeData(dracoMesh, attr, & posData);
-		elementSize = DataTypeSize((GLTFUtilityDracoLoader.DataType) posData -> dataType) *
-			attr -> numComponents;
-		var newVerticesPtr = UnsafeUtility.AddressOf(ref newVertices[0]);
-		UnsafeUtility.MemCpy(newVerticesPtr, (void * ) posData -> data,
-			dracoMesh -> numVertices * elementSize);
-		ReleaseDracoData( & posData);
-		ReleaseDracoAttribute( & attr);
+
+		// Copy positions.
+		if (GetAttributeByUniqueId(dracoMesh, attributes.pos, & attr)) {
+			DracoData * posData = null;
+			GetAttributeData(dracoMesh, attr, & posData);
+			elementSize = DataTypeSize((GLTFUtilityDracoLoader.DataType) posData -> dataType) *
+				attr -> numComponents;
+			var newVerticesPtr = UnsafeUtility.AddressOf(ref newVertices[0]);
+			UnsafeUtility.MemCpy(newVerticesPtr, (void * ) posData -> data,
+				dracoMesh -> numVertices * elementSize);
+			ReleaseDracoData( & posData);
+			ReleaseDracoAttribute( & attr);
+		}
 
 		// Copy normals.
-		if (GetAttributeByType(dracoMesh, AttributeType.NORMAL, 0, & attr)) {
-			DracoData * normData = null;
-			if (GetAttributeData(dracoMesh, attr, & normData)) {
-				elementSize =
-					DataTypeSize((GLTFUtilityDracoLoader.DataType) normData -> dataType) *
-					attr -> numComponents;
-				newNormals = new Vector3[dracoMesh -> numVertices];
-				var newNormalsPtr = UnsafeUtility.AddressOf(ref newNormals[0]);
-				UnsafeUtility.MemCpy(newNormalsPtr, (void * ) normData -> data,
-					dracoMesh -> numVertices * elementSize);
-				ReleaseDracoData( & normData);
-				ReleaseDracoAttribute( & attr);
-			}
+		if (GetAttributeByUniqueId(dracoMesh, attributes.norms, & attr)) {
+				DracoData * normData = null;
+				if (GetAttributeData(dracoMesh, attr, & normData)) {
+					elementSize =
+						DataTypeSize((GLTFUtilityDracoLoader.DataType) normData -> dataType) *
+						attr -> numComponents;
+					newNormals = new Vector3[dracoMesh -> numVertices];
+					var newNormalsPtr = UnsafeUtility.AddressOf(ref newNormals[0]);
+					UnsafeUtility.MemCpy(newNormalsPtr, (void * ) normData -> data,
+						dracoMesh -> numVertices * elementSize);
+					ReleaseDracoData( & normData);
+					ReleaseDracoAttribute( & attr);
+				}
 		}
 
 		// Copy texture coordinates.
