@@ -84,30 +84,29 @@ namespace Siccity.GLTFUtility {
 									primitive.extensions.KHR_draco_mesh_compression.attributes.COLOR_0 ?? -1
 								);
 
-								Mesh mesh = loader.LoadMesh(buffer, attribs);
-								if (mesh == null) Debug.LogWarning("Draco mesh couldn't be loaded");
+								//Mesh mesh = loader.LoadMesh(buffer, attribs);
+
+								GLTFUtilityDracoLoader.AsyncMesh asyncMesh = loader.LoadMesh(buffer, attribs);
+								if (asyncMesh == null) Debug.LogWarning("Draco mesh couldn't be loaded");
 
 								submeshTrisMode.Add(primitive.mode);
 
 								// Tris
-								List<int> tris = new List<int>();
-								mesh.GetIndices(tris, 0); // Meshes from draco always have only one submesh
-								tris.Reverse();
 								int vertCount = verts.Count();
-								submeshTris.Add(tris.Select(x => x + vertCount).ToList());
+								submeshTris.Add(asyncMesh.tris.Reverse().Select(x => x + vertCount).ToList());
 
-								verts.AddRange(mesh.vertices.Select(x => new Vector3(-x.x, x.y, x.z)));
-								normals.AddRange(mesh.normals.Select(v => { v.x = -v.x; return v; }));
-								tangents.AddRange(mesh.tangents.Select(v => { v.y = -v.y; v.z = -v.z; return v; }));
+								verts.AddRange(asyncMesh.verts.Select(x => new Vector3(-x.x, x.y, x.z)));
+								normals.AddRange(asyncMesh.norms.Select(v => { v.x = -v.x; return v; }));
+								//tangents.AddRange(asyncMesh.tangents.Select(v => { v.y = -v.y; v.z = -v.z; return v; }));
 
 								// Weights
-								if (mesh.boneWeights != null) {
+								if (asyncMesh.boneWeights != null) {
 									if (weights == null) weights = new List<BoneWeight>();
-									weights.AddRange(mesh.boneWeights);
+									weights.AddRange(asyncMesh.boneWeights);
 								}
 
-								// BlendShapes
-								for (int k = 0; k < mesh.blendShapeCount; k++) {
+								// BlendShapes not supported yet
+								/* for (int k = 0; k < mesh.blendShapeCount; k++) {
 									int frameCount = mesh.GetBlendShapeFrameCount(k);
 									BlendShape blendShape = new BlendShape();
 									blendShape.pos = new Vector3[frameCount];
@@ -117,40 +116,12 @@ namespace Siccity.GLTFUtility {
 										mesh.GetBlendShapeFrameVertices(k, o, blendShape.pos, blendShape.norm, blendShape.tan);
 									}
 									blendShapes.Add(blendShape);
-								}
+								} */
 
 								// UVs
-								if (mesh.uv != null) {
+								if (asyncMesh.uv != null) {
 									if (uv1 == null) uv1 = new List<Vector2>();
-									uv1.AddRange(mesh.uv.Select(x => new Vector2(x.x, -x.y)));
-								}
-								if (mesh.uv2 != null) {
-									if (uv2 == null) uv2 = new List<Vector2>();
-									uv2.AddRange(mesh.uv2.Select(x => new Vector2(x.x, -x.y)));
-								}
-								if (mesh.uv3 != null) {
-									if (uv3 == null) uv3 = new List<Vector2>();
-									uv3.AddRange(mesh.uv3.Select(x => new Vector2(x.x, -x.y)));
-								}
-								if (mesh.uv4 != null) {
-									if (uv4 == null) uv4 = new List<Vector2>();
-									uv4.AddRange(mesh.uv4.Select(x => new Vector2(x.x, -x.y)));
-								}
-								if (mesh.uv5 != null) {
-									if (uv5 == null) uv5 = new List<Vector2>();
-									uv5.AddRange(mesh.uv5.Select(x => new Vector2(x.x, -x.y)));
-								}
-								if (mesh.uv6 != null) {
-									if (uv6 == null) uv6 = new List<Vector2>();
-									uv6.AddRange(mesh.uv6.Select(x => new Vector2(x.x, -x.y)));
-								}
-								if (mesh.uv7 != null) {
-									if (uv7 == null) uv7 = new List<Vector2>();
-									uv7.AddRange(mesh.uv7.Select(x => new Vector2(x.x, -x.y)));
-								}
-								if (mesh.uv8 != null) {
-									if (uv8 == null) uv8 = new List<Vector2>();
-									uv8.AddRange(mesh.uv8.Select(x => new Vector2(x.x, -x.y)));
+									uv1.AddRange(asyncMesh.uv.Select(x => new Vector2(x.x, -x.y)));
 								}
 							}
 							// Load normal mesh

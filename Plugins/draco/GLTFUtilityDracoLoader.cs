@@ -13,9 +13,9 @@
 // limitations under the License.
 //
 using System;
-using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
@@ -89,6 +89,15 @@ public unsafe class GLTFUtilityDracoLoader {
 		public T w;
 	}
 
+	public class AsyncMesh {
+		public int[] tris;
+		public Vector3[] verts;
+		public Vector2[] uv;
+		public Vector3[] norms;
+		public BoneWeight[] boneWeights;
+		public Color[] colors;
+	}
+
 	// Release data associated with DracoMesh.
 	[DllImport("dracodec_unity")] private static extern void ReleaseDracoMesh(
 		DracoMesh * * mesh);
@@ -135,14 +144,14 @@ public unsafe class GLTFUtilityDracoLoader {
 
 	// Decodes a Draco mesh, creates a Unity mesh from the decoded data and
 	// adds the Unity mesh to meshes. encodedData is the compressed Draco mesh.
-	public unsafe Mesh LoadMesh(byte[] encodedData, MeshAttributes attributes) {
+	public unsafe AsyncMesh LoadMesh(byte[] encodedData, MeshAttributes attributes) {
 		DracoMesh * mesh = null;
 		if (DecodeDracoMesh(encodedData, encodedData.Length, & mesh) <= 0) {
 			Debug.Log("Failed: Decoding error.");
 			return null;
 		}
 
-		Mesh unityMesh = CreateUnityMesh(mesh, attributes);
+		AsyncMesh unityMesh = CreateAsyncMesh(mesh, attributes);
 
 		int numFaces = mesh -> numFaces;
 		ReleaseDracoMesh( & mesh);
@@ -151,15 +160,12 @@ public unsafe class GLTFUtilityDracoLoader {
 	}
 
 	// Creates a Unity mesh from the decoded Draco mesh.
-	public unsafe Mesh CreateUnityMesh(DracoMesh * dracoMesh, MeshAttributes attributes) {
+	public unsafe AsyncMesh CreateAsyncMesh(DracoMesh * dracoMesh, MeshAttributes attributes) {
 		int numFaces = dracoMesh -> numFaces;
-		int[] newTriangles = new int[dracoMesh -> numFaces * 3];
-		Vector3[] newVertices = new Vector3[dracoMesh -> numVertices];
-		Vector2[] newUVs = null;
-		Vector3[] newNormals = null;
-		Vector4[] newWeights = null;
-		Vector4[] newJoints = null;
-		Color[] newColors = null;
+
+		AsyncMesh mesh = new AsyncMesh();
+		mesh.tris = new int[dracoMesh -> numFaces * 3];
+		mesh.verts = new Vector3[dracoMesh -> numVertices];
 
 		// Copy face indices.
 		DracoData * indicesData;
@@ -167,9 +173,9 @@ public unsafe class GLTFUtilityDracoLoader {
 		int elementSize =
 			DataTypeSize((GLTFUtilityDracoLoader.DataType) indicesData -> dataType);
 		int * indices = (int * ) (indicesData -> data);
-		var indicesPtr = UnsafeUtility.AddressOf(ref newTriangles[0]);
+		var indicesPtr = UnsafeUtility.AddressOf(ref mesh.tris[0]);
 		UnsafeUtility.MemCpy(indicesPtr, indices,
-			newTriangles.Length * elementSize);
+			mesh.tris.Length * elementSize);
 		ReleaseDracoData( & indicesData);
 
 		DracoAttribute * attr = null;
@@ -180,7 +186,7 @@ public unsafe class GLTFUtilityDracoLoader {
 			GetAttributeData(dracoMesh, attr, & posData);
 			elementSize = DataTypeSize((GLTFUtilityDracoLoader.DataType) posData -> dataType) *
 				attr -> numComponents;
-			var newVerticesPtr = UnsafeUtility.AddressOf(ref newVertices[0]);
+		var newVerticesPtr = UnsafeUtility.AddressOf(ref mesh.verts[0]);
 			UnsafeUtility.MemCpy(newVerticesPtr, (void * ) posData -> data,
 				dracoMesh -> numVertices * elementSize);
 			ReleaseDracoData( & posData);
@@ -189,18 +195,18 @@ public unsafe class GLTFUtilityDracoLoader {
 
 		// Copy normals.
 		if (GetAttributeByUniqueId(dracoMesh, attributes.norms, & attr)) {
-				DracoData * normData = null;
-				if (GetAttributeData(dracoMesh, attr, & normData)) {
-					elementSize =
-						DataTypeSize((GLTFUtilityDracoLoader.DataType) normData -> dataType) *
-						attr -> numComponents;
-					newNormals = new Vector3[dracoMesh -> numVertices];
-					var newNormalsPtr = UnsafeUtility.AddressOf(ref newNormals[0]);
-					UnsafeUtility.MemCpy(newNormalsPtr, (void * ) normData -> data,
-						dracoMesh -> numVertices * elementSize);
-					ReleaseDracoData( & normData);
-					ReleaseDracoAttribute( & attr);
-				}
+			DracoData * normData = null;
+			if (GetAttributeData(dracoMesh, attr, & normData)) {
+				elementSize =
+					DataTypeSize((GLTFUtilityDracoLoader.DataType) normData -> dataType) *
+					attr -> numComponents;
+				mesh.norms = new Vector3[dracoMesh -> numVertices];
+				var newNormalsPtr = UnsafeUtility.AddressOf(ref mesh.norms[0]);
+				UnsafeUtility.MemCpy(newNormalsPtr, (void * ) normData -> data,
+					dracoMesh -> numVertices * elementSize);
+				ReleaseDracoData( & normData);
+				ReleaseDracoAttribute( & attr);
+			}
 		}
 
 		// Copy texture coordinates.
@@ -210,8 +216,8 @@ public unsafe class GLTFUtilityDracoLoader {
 				elementSize =
 					DataTypeSize((GLTFUtilityDracoLoader.DataType) texData -> dataType) *
 					attr -> numComponents;
-				newUVs = new Vector2[dracoMesh -> numVertices];
-				var newUVsPtr = UnsafeUtility.AddressOf(ref newUVs[0]);
+				mesh.uv = new Vector2[dracoMesh -> numVertices];
+				var newUVsPtr = UnsafeUtility.AddressOf(ref mesh.uv[0]);
 				UnsafeUtility.MemCpy(newUVsPtr, (void * ) texData -> data,
 					dracoMesh -> numVertices * elementSize);
 				ReleaseDracoData( & texData);
@@ -226,8 +232,8 @@ public unsafe class GLTFUtilityDracoLoader {
 				elementSize =
 					DataTypeSize((GLTFUtilityDracoLoader.DataType) colorData -> dataType) *
 					attr -> numComponents;
-				newColors = new Color[dracoMesh -> numVertices];
-				var newColorsPtr = UnsafeUtility.AddressOf(ref newColors[0]);
+				mesh.colors = new Color[dracoMesh -> numVertices];
+				var newColorsPtr = UnsafeUtility.AddressOf(ref mesh.colors[0]);
 				UnsafeUtility.MemCpy(newColorsPtr, (void * ) colorData -> data,
 					dracoMesh -> numVertices * elementSize);
 				ReleaseDracoData( & colorData);
@@ -236,6 +242,7 @@ public unsafe class GLTFUtilityDracoLoader {
 		}
 
 		// Copy weights.
+		Vector4[] weights = null;
 		if (GetAttributeByUniqueId(dracoMesh, attributes.weights, & attr)) {
 			DracoData * weightData = null;
 			if (GetAttributeData(dracoMesh, attr, & weightData)) {
@@ -243,8 +250,8 @@ public unsafe class GLTFUtilityDracoLoader {
 					DataTypeSize((GLTFUtilityDracoLoader.DataType) weightData -> dataType) *
 					attr -> numComponents;
 				if (attr -> dataType == 9) {
-					newWeights = new Vector4[dracoMesh -> numVertices];
-					var newWeightsPtr = UnsafeUtility.AddressOf(ref newWeights[0]);
+					weights = new Vector4[dracoMesh -> numVertices];
+					var newWeightsPtr = UnsafeUtility.AddressOf(ref weights[0]);
 					UnsafeUtility.MemCpy(newWeightsPtr, (void * ) weightData -> data,
 						dracoMesh -> numVertices * elementSize);
 				} else if (attr -> dataType == 4) {
@@ -252,7 +259,7 @@ public unsafe class GLTFUtilityDracoLoader {
 					var newWeightsPtr = UnsafeUtility.AddressOf(ref newWeightsInt[0]);
 					UnsafeUtility.MemCpy(newWeightsPtr, (void * ) weightData -> data,
 						dracoMesh -> numVertices * elementSize);
-					newWeights = newWeightsInt.Select(x => new Vector4(x.x,x.y,x.z,x.w)).ToArray();
+					weights = newWeightsInt.Select(x => new Vector4(x.x, x.y, x.z, x.w)).ToArray();
 				}
 
 				ReleaseDracoData( & weightData);
@@ -261,6 +268,7 @@ public unsafe class GLTFUtilityDracoLoader {
 		}
 
 		// Copy joints.
+		Vector4[] joints = null;
 		if (GetAttributeByUniqueId(dracoMesh, attributes.joints, & attr)) {
 			DracoData * jointData = null;
 			if (GetAttributeData(dracoMesh, attr, & jointData)) {
@@ -268,8 +276,8 @@ public unsafe class GLTFUtilityDracoLoader {
 					DataTypeSize((GLTFUtilityDracoLoader.DataType) jointData -> dataType) *
 					attr -> numComponents;
 				if (attr -> dataType == 9) {
-					newJoints = new Vector4[dracoMesh -> numVertices];
-					var newJointsPtr = UnsafeUtility.AddressOf(ref newJoints[0]);
+					joints = new Vector4[dracoMesh -> numVertices];
+					var newJointsPtr = UnsafeUtility.AddressOf(ref joints[0]);
 					UnsafeUtility.MemCpy(newJointsPtr, (void * ) jointData -> data,
 						dracoMesh -> numVertices * elementSize);
 				} else if (attr -> dataType == 4) {
@@ -277,7 +285,7 @@ public unsafe class GLTFUtilityDracoLoader {
 					var newJointsPtr = UnsafeUtility.AddressOf(ref newJointsInt[0]);
 					UnsafeUtility.MemCpy(newJointsPtr, (void * ) jointData -> data,
 						dracoMesh -> numVertices * elementSize);
-					newJoints = newJointsInt.Select(x => new Vector4(x.x,x.y,x.z,x.w)).ToArray();
+					joints = newJointsInt.Select(x => new Vector4(x.x, x.y, x.z, x.w)).ToArray();
 				}
 
 				ReleaseDracoData( & jointData);
@@ -285,9 +293,7 @@ public unsafe class GLTFUtilityDracoLoader {
 			}
 		}
 
-		Mesh mesh = new Mesh();
-
-#if UNITY_2017_3_OR_NEWER
+/* #if UNITY_2017_3_OR_NEWER
 		mesh.indexFormat = (newVertices.Length > System.UInt16.MaxValue) ?
 			UnityEngine.Rendering.IndexFormat.UInt32 :
 			UnityEngine.Rendering.IndexFormat.UInt16;
@@ -295,35 +301,21 @@ public unsafe class GLTFUtilityDracoLoader {
 		if (newVertices.Length > System.UInt16.MaxValue) {
 			throw new System.Exception("Draco meshes with more than 65535 vertices are only supported from Unity 2017.3 onwards.");
 		}
-#endif
+#endif */
 
-		mesh.vertices = newVertices;
-		mesh.SetTriangles(newTriangles, 0, true);
-		if (newUVs != null) {
-			mesh.uv = newUVs;
-		}
-		if (newNormals != null) {
-			mesh.normals = newNormals;
-		} else {
-			mesh.RecalculateNormals();
-			Debug.Log("Mesh doesn't have normals, recomputed.");
-		}
-		if (newColors != null) {
-			mesh.colors = newColors;
-		}
-		if (newJoints != null && newWeights != null) {
-			if (newJoints.Length == newWeights.Length) {
-				BoneWeight[] boneWeights = new BoneWeight[newWeights.Length];
+		if (joints != null && weights != null) {
+			if (joints.Length == weights.Length) {
+				BoneWeight[] boneWeights = new BoneWeight[weights.Length];
 				for (int k = 0; k < boneWeights.Length; k++) {
-					NormalizeWeights(ref newWeights[k]);
-					boneWeights[k].weight0 = newWeights[k].x;
-					boneWeights[k].weight1 = newWeights[k].y;
-					boneWeights[k].weight2 = newWeights[k].z;
-					boneWeights[k].weight3 = newWeights[k].w;
-					boneWeights[k].boneIndex0 = Mathf.RoundToInt(newJoints[k].x);
-					boneWeights[k].boneIndex1 = Mathf.RoundToInt(newJoints[k].y);
-					boneWeights[k].boneIndex2 = Mathf.RoundToInt(newJoints[k].z);
-					boneWeights[k].boneIndex3 = Mathf.RoundToInt(newJoints[k].w);
+					NormalizeWeights(ref weights[k]);
+					boneWeights[k].weight0 = weights[k].x;
+					boneWeights[k].weight1 = weights[k].y;
+					boneWeights[k].weight2 = weights[k].z;
+					boneWeights[k].weight3 = weights[k].w;
+					boneWeights[k].boneIndex0 = Mathf.RoundToInt(joints[k].x);
+					boneWeights[k].boneIndex1 = Mathf.RoundToInt(joints[k].y);
+					boneWeights[k].boneIndex2 = Mathf.RoundToInt(joints[k].z);
+					boneWeights[k].boneIndex3 = Mathf.RoundToInt(joints[k].w);
 				}
 				mesh.boneWeights = boneWeights;
 			} else Debug.LogWarning("Draco: joints and weights not same length. Skipped");
