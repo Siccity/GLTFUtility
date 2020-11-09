@@ -12,6 +12,7 @@ namespace Siccity.GLTFUtility {
 		[FormerlySerializedAs("shaders")]
 		public ShaderSettings shaderOverrides = new ShaderSettings();
 		public bool useLegacyClips;
+		public bool generateLightmapUVs;
 
 		[Tooltip("Interpolation mode applied to all keyframe tangents. Use Import From File when mixing modes within an animation.")]
 		public InterpolationMode interpolationMode = InterpolationMode.ImportFromFile;

@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Siccity.GLTFUtility {
 	/// <summary> Contains methods for saving a gameobject as an asset </summary>
 	public static class GLTFAssetUtility {
-		public static void SaveToAsset(GameObject root, AnimationClip[] animations, AssetImportContext ctx) {
+		public static void SaveToAsset(GameObject root, AnimationClip[] animations, AssetImportContext ctx, bool generateLightmapUVs) {
 #if UNITY_2018_2_OR_NEWER
 			ctx.AddObjectToAsset("main", root);
 			ctx.SetMainObject(root);
@@ -17,15 +17,16 @@ namespace Siccity.GLTFUtility {
 			MeshRenderer[] renderers = root.GetComponentsInChildren<MeshRenderer>(true);
 			SkinnedMeshRenderer[] skinnedRenderers = root.GetComponentsInChildren<SkinnedMeshRenderer>(true);
 			MeshFilter[] filters = root.GetComponentsInChildren<MeshFilter>(true);
-			AddMeshes(filters, skinnedRenderers, ctx);
+			AddMeshes(filters, skinnedRenderers, ctx, generateLightmapUVs);
 			AddMaterials(renderers, skinnedRenderers, ctx);
 			AddAnimations(animations, ctx);
 		}
 
-		public static void AddMeshes(MeshFilter[] filters, SkinnedMeshRenderer[] skinnedRenderers, AssetImportContext ctx) {
+		public static void AddMeshes(MeshFilter[] filters, SkinnedMeshRenderer[] skinnedRenderers, AssetImportContext ctx, bool generateLightmapUVs) {
 			HashSet<Mesh> visitedMeshes = new HashSet<Mesh>();
 			for (int i = 0; i < filters.Length; i++) {
 				Mesh mesh = filters[i].sharedMesh;
+				if (generateLightmapUVs) Unwrapping.GenerateSecondaryUVSet(mesh);
 				if (visitedMeshes.Contains(mesh)) continue;
 				ctx.AddAsset(mesh.name, mesh);
 				visitedMeshes.Add(mesh);
