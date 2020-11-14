@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Siccity.GLTFUtility {
 	/// <summary> Contains methods for saving a gameobject as an asset </summary>
 	public static class GLTFAssetUtility {
-		public static void SaveToAsset(GameObject root, AnimationClip[] animations, AssetImportContext ctx, bool generateLightmapUVs) {
+		public static void SaveToAsset(GameObject root, AnimationClip[] animations, AssetImportContext ctx, ImportSettings settings) {
 #if UNITY_2018_2_OR_NEWER
 			ctx.AddObjectToAsset("main", root);
 			ctx.SetMainObject(root);
@@ -17,9 +17,9 @@ namespace Siccity.GLTFUtility {
 			MeshRenderer[] renderers = root.GetComponentsInChildren<MeshRenderer>(true);
 			SkinnedMeshRenderer[] skinnedRenderers = root.GetComponentsInChildren<SkinnedMeshRenderer>(true);
 			MeshFilter[] filters = root.GetComponentsInChildren<MeshFilter>(true);
-			AddMeshes(filters, skinnedRenderers, ctx, generateLightmapUVs);
+			AddMeshes(filters, skinnedRenderers, ctx, settings.generateLightmapUVs);
 			AddMaterials(renderers, skinnedRenderers, ctx);
-			AddAnimations(animations, ctx);
+			AddAnimations(animations, ctx, settings.animationSettings);
 		}
 
 		public static void AddMeshes(MeshFilter[] filters, SkinnedMeshRenderer[] skinnedRenderers, AssetImportContext ctx, bool generateLightmapUVs) {
@@ -39,8 +39,16 @@ namespace Siccity.GLTFUtility {
 			}
 		}
 
-		public static void AddAnimations(AnimationClip[] animations, AssetImportContext ctx) {
+		public static void AddAnimations(AnimationClip[] animations, AssetImportContext ctx, AnimationSettings settings) {
 			if (animations == null) return;
+
+			// Editor-only animation settings
+			foreach (AnimationClip clip in animations) {
+				AnimationClipSettings clipSettings = AnimationUtility.GetAnimationClipSettings(clip);
+				clipSettings.loopTime = settings.looping;
+				AnimationUtility.SetAnimationClipSettings(clip, clipSettings);
+			}
+
 			HashSet<AnimationClip> visitedAnimations = new HashSet<AnimationClip>();
 			for (int i = 0; i < animations.Length; i++) {
 				AnimationClip clip = animations[i];

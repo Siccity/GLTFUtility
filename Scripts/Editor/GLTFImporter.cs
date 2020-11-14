@@ -1,4 +1,5 @@
-﻿using UnityEditor.Experimental.AssetImporters;
+﻿using UnityEditor;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
@@ -12,8 +13,9 @@ namespace Siccity.GLTFUtility {
 			AnimationClip[] animations;
 			if (importSettings == null) importSettings = new ImportSettings();
 			GameObject root = Importer.LoadFromFile(ctx.assetPath, importSettings, out animations, Format.GLTF);
+
 			// Save asset
-			GLTFAssetUtility.SaveToAsset(root, animations, ctx, importSettings.generateLightmapUVs);
+			GLTFAssetUtility.SaveToAsset(root, animations, ctx, importSettings);
 		}
 	}
 }

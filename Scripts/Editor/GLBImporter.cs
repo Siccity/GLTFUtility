@@ -11,7 +11,7 @@ namespace Siccity.GLTFUtility {
 			if (importSettings == null) importSettings = new ImportSettings();
 			GameObject root = Importer.LoadFromFile(ctx.assetPath, importSettings, out animations, Format.GLB);
 			// Save asset
-			GLTFAssetUtility.SaveToAsset(root, animations, ctx, importSettings.generateLightmapUVs);
+			GLTFAssetUtility.SaveToAsset(root, animations, ctx, importSettings);
 		}
 	}
 }

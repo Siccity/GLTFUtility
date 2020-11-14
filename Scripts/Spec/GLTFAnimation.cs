@@ -56,9 +56,7 @@ namespace Siccity.GLTFUtility {
 			result.clip = new AnimationClip();
 			result.clip.name = name;
 
-			if (importSettings.useLegacyClips) {
-				result.clip.legacy = true;
-			}
+			result.clip.legacy = importSettings.useLegacyClips;
 
 			for (int i = 0; i < channels.Length; i++) {
 				Channel channel = channels[i];

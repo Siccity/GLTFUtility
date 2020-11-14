@@ -11,6 +11,7 @@ namespace Siccity.GLTFUtility {
 		public bool materials = true;
 		[FormerlySerializedAs("shaders")]
 		public ShaderSettings shaderOverrides = new ShaderSettings();
+		public AnimationSettings animationSettings = new AnimationSettings();
 		public bool useLegacyClips;
 		public bool generateLightmapUVs;
 
