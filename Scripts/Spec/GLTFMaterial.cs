@@ -47,7 +47,7 @@ namespace Siccity.GLTFUtility {
 				while (en.MoveNext()) { yield return null; };
 			}
 			// Load fallback material
-			else mat = new Material(Shader.Find("Standard"));
+			else mat = new Material(alphaMode == AlphaMode.BLEND ? shaderSettings.MetallicBlend : shaderSettings.Metallic);
 			// Normal texture
 			if (normalTexture != null) {
 				en = TryGetTexture(textures, normalTexture, true, tex => {
