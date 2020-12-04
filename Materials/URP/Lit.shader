@@ -1,4 +1,4 @@
-Shader "Universal Render Pipeline/Lit"
+Shader "GLTFUtility/URP/Lit"
 {
     Properties
     {
@@ -119,7 +119,7 @@ Shader "Universal Render Pipeline/Lit"
             #pragma fragment LitPassFragment
 
             #include "LitInput.hlsl"
-            #include "LitForwardPass.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/Shaders/LitForwardPass.hlsl"
             ENDHLSL
         }
 
@@ -211,7 +211,7 @@ Shader "Universal Render Pipeline/Lit"
 
             #pragma shader_feature _SPECGLOSSMAP
 
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
+            #include "LitInput.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/Shaders/LitMetaPass.hlsl"
 
             ENDHLSL

@@ -626,6 +626,6 @@
         }
     },
     "m_Path": "GLTFUtility/URP",
-    "m_ConcretePrecision": 0,
+    "m_ConcretePrecision": 1,
     "m_ActiveOutputNodeGuidSerialized": "19bceb69-39fc-408c-86f7-1cd00f6d3056"
 }

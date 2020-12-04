@@ -60,9 +60,9 @@ half SampleOcclusion(float2 uv)
 #ifdef _OCCLUSIONMAP
 // TODO: Controls things like these by exposing SHADER_QUALITY levels (low, medium, high)
 #if defined(SHADER_API_GLES)
-    return SAMPLE_TEXTURE2D(_OcclusionMap, sampler_OcclusionMap, uv).g;
+    return SAMPLE_TEXTURE2D(_OcclusionMap, sampler_OcclusionMap, uv).r;
 #else
-    half occ = SAMPLE_TEXTURE2D(_OcclusionMap, sampler_OcclusionMap, uv).g;
+    half occ = SAMPLE_TEXTURE2D(_OcclusionMap, sampler_OcclusionMap, uv).r;
     return LerpWhiteTo(occ, _OcclusionStrength);
 #endif
 #else
@@ -81,12 +81,13 @@ inline void InitializeStandardLitSurfaceData(float2 uv, out SurfaceData outSurfa
 #if _SPECULAR_SETUP
     outSurfaceData.metallic = 1.0h;
     outSurfaceData.specular = specGloss.rgb;
+	outSurfaceData.smoothness = specGloss.a;
 #else
-    outSurfaceData.metallic = specGloss.r;
-    outSurfaceData.specular = half3(0.0h, 0.0h, 0.0h);
-#endif
+    outSurfaceData.metallic = specGloss.b;
+	outSurfaceData.specular = half3(0.0h, 0.0h, 0.0h);
+    outSurfaceData.smoothness = 1.0h - specGloss.g;
+#endif 
 
-    outSurfaceData.smoothness = specGloss.a;
     outSurfaceData.normalTS = SampleNormal(uv, TEXTURE2D_ARGS(_BumpMap, sampler_BumpMap), _BumpScale);
     outSurfaceData.occlusion = SampleOcclusion(uv);
     outSurfaceData.emission = SampleEmission(uv, _EmissionColor.rgb, TEXTURE2D_ARGS(_EmissionMap, sampler_EmissionMap));
