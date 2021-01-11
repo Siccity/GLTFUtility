@@ -36,7 +36,11 @@ half4 SampleMetallicSpecGloss(float2 uv, half albedoAlpha)
     #ifdef _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
         specGloss.a = albedoAlpha * _Smoothness;
     #else
-        specGloss.a *= _Smoothness;
+        #if _SPECULAR_SETUP
+            specGloss.a *= _Smoothness;
+        #else
+            specGloss.a = (1.0h - specGloss.g) * _Smoothness; // Convert roughness to smoothness and move it from green to alpha channel
+        #endif
     #endif
 #else // _METALLICSPECGLOSSMAP
     #if _SPECULAR_SETUP
@@ -85,7 +89,7 @@ inline void InitializeStandardLitSurfaceData(float2 uv, out SurfaceData outSurfa
 #else
     outSurfaceData.metallic = specGloss.b;
 	outSurfaceData.specular = half3(0.0h, 0.0h, 0.0h);
-    outSurfaceData.smoothness = 1.0h - specGloss.g;
+    outSurfaceData.smoothness = specGloss.a;
 #endif 
 
     outSurfaceData.normalTS = SampleNormal(uv, TEXTURE2D_ARGS(_BumpMap, sampler_BumpMap), _BumpScale);
