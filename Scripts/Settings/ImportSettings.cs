@@ -26,7 +26,11 @@ namespace Siccity.GLTFUtility {
 		[Range(1, 64)]
 		public float packMargin = 4;
 
+		[Tooltip("Sample rate set on all imported animation clips.")]
+		public float frameRate = 24;
 		[Tooltip("Interpolation mode applied to all keyframe tangents. Use Import From File when mixing modes within an animation.")]
 		public InterpolationMode interpolationMode = InterpolationMode.ImportFromFile;
+		[Tooltip("When true, remove redundant keyframes from blend shape animations.")]
+		public bool compressBlendShapeKeyFrames = true;
 	}
 }
