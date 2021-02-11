@@ -140,7 +140,6 @@ namespace Siccity.GLTFUtility {
 						result.clip.SetCurve(relativePath, typeof(Transform), "localScale.z", scaleZ);
 						break;
 					case "weights":
-						//Debug.LogWarning("GLTFUtility: Morph weights in animation is not supported");
 						GLTFNode.ImportResult skinnedMeshNode = nodes[channel.target.node.Value];
 						SkinnedMeshRenderer skinnedMeshRenderer = skinnedMeshNode.transform.GetComponent<SkinnedMeshRenderer>();
 
@@ -170,8 +169,12 @@ namespace Siccity.GLTFUtility {
 								bool addKey = true;
 								if(importSettings.compressBlendShapeKeyFrames) {
 									if(k == 0 || !Mathf.Approximately(weightValues[k], previouslyKeyedValues[j])) {
-										previouslyKeyedValues[j] = weightValues[k];
+										if(k > 0) {
+											weightValues[k-1] = previouslyKeyedValues[j];
+											blendShapeCurves[j].AddKey(CreateKeyframe(k-1, keyframeInput, weightValues, x => x, interpolationMode));
+										}
 										addKey = true;
+										previouslyKeyedValues[j] = weightValues[k];
 									} else {
 										addKey = false;
 									}
