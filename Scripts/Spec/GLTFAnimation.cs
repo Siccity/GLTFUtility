@@ -57,7 +57,12 @@ namespace Siccity.GLTFUtility {
 			result.clip.name = name;
 			result.clip.frameRate = importSettings.frameRate;
 
-			result.clip.legacy = importSettings.useLegacyClips;
+			result.clip.legacy = importSettings.animationSettings.useLegacyClips;
+
+			if (result.clip.legacy && importSettings.animationSettings.looping)
+			{
+				result.clip.wrapMode = WrapMode.Loop;
+			}
 
 			for (int i = 0; i < channels.Length; i++) {
 				Channel channel = channels[i];

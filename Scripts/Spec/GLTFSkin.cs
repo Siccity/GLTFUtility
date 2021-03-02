@@ -49,6 +49,8 @@ namespace Siccity.GLTFUtility {
 					mesh.bindposes = bindPoses;
 				}
 				smr.sharedMesh = mesh;
+				// Max 4 bones per vertex, auto-detection fails sometimes.
+				smr.quality = SkinQuality.Bone4;
 				return smr;
 			}
 		}
