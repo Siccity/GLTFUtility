@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -221,7 +222,56 @@ namespace Siccity.GLTFUtility {
 			GameObject gameObject = nodeTask.Result.GetRoot();
 			if (importSettings.extrasProcessor != null)
 			{
-				importSettings.extrasProcessor.ProcessExtras(gltfObject.extras);
+				if(gltfObject.extras == null)
+				{
+					gltfObject.extras = new JObject();
+				}
+
+				if(gltfObject.materials != null)
+				{
+					JArray materialExtras = new JArray();
+					bool hasMaterialExtraData = false;
+					foreach (GLTFMaterial material in gltfObject.materials)
+					{
+						if (material.extras != null)
+						{
+							materialExtras.Add(material.extras);
+							hasMaterialExtraData = true;
+						}
+						else
+						{
+							materialExtras.Add(new JObject());
+						}
+					}
+					if (hasMaterialExtraData)
+					{
+						gltfObject.extras.Add("material", materialExtras);
+					}
+				}
+
+				if (gltfObject.animations != null)
+				{
+					JArray animationExtras = new JArray();
+					bool hasAnimationExtraData = false;
+					foreach (GLTFAnimation animation in gltfObject.animations)
+					{
+						if (animation.extras != null)
+						{
+							hasAnimationExtraData = true;
+							animationExtras.Add(animation.extras);
+						}
+						else
+						{
+							animationExtras.Add(new JObject());
+						}
+					}
+					if (hasAnimationExtraData)
+					{
+						gltfObject.extras.Add("animation", animationExtras);
+					}
+				}
+
+				importSettings.extrasProcessor.ProcessExtras(gameObject, animations, gltfObject.extras);
 			}
 			return gameObject;
 		}

@@ -8,7 +8,7 @@ namespace Siccity.GLTFUtility {
 	[Serializable]
 	public class GLTFExtrasProcessor
 	{
-		public virtual void ProcessExtras(IDictionary<string, JToken> extras)
+		public virtual void ProcessExtras(GameObject importedObject, AnimationClip[] animations, JObject extras)
 		{
 		}
 	}

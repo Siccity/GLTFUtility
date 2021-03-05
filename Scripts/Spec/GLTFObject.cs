@@ -23,6 +23,6 @@ namespace Siccity.GLTFUtility {
 		public List<GLTFCamera> cameras;
 		public List<string> extensionsUsed;
 		public List<string> extensionsRequired;
-		public IDictionary<string, JToken> extras;
+		public JObject extras;
 	}
 }
