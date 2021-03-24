@@ -1,7 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+#if !UNITY_2020_2_OR_NEWER
 using UnityEditor.Experimental.AssetImporters;
+#else
+using UnityEditor.AssetImporters;
+#endif
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
