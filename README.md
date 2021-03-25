@@ -35,6 +35,8 @@ Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-for
 2. Download [GLTFUtility-master.zip](https://github.com/Siccity/GLTFUtility/archive/master.zip) and extract to your project assets
 </details>
 
+[Important notice](https://github.com/Siccity/GLTFUtility#Important-shader-note)
+
 ### Features
 *System*
 - [x] Editor import
@@ -94,3 +96,14 @@ void OnFinishAsync(GameObject result) {
    Debug.Log("Finished importing " + result.name);
 }
 ```
+
+### Important shader note
+To ensure that Unity includes the GLTFUtility shaders in builds, you must add these shaders to the 'Always Included Shaders' list.
+
+1. Open Edit -> Project Settings
+2. Open Graphics
+3. Scroll to Always Included Shaders
+4. Under Size, increase the value by 4 and hit Enter.
+5. In the Project panel, navigate to Packages/GLTFUtility/Materials/Built-in.
+6. In this directory are 4 .shader files.
+7. Drag and drop each of the 4 files into one of the 4 newly created rows in Always Included Shaders.
