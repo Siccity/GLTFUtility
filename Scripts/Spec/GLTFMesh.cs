@@ -160,7 +160,7 @@ namespace Siccity.GLTFUtility {
 
 								// Weights
 								if (primitive.attributes.WEIGHTS_0.HasValue && primitive.attributes.JOINTS_0.HasValue) {
-									Vector4[] weights0 = accessors[primitive.attributes.WEIGHTS_0.Value].ReadVec4();
+									Vector4[] weights0 = accessors[primitive.attributes.WEIGHTS_0.Value].ReadVec4(true);
 									Vector4[] joints0 = accessors[primitive.attributes.JOINTS_0.Value].ReadVec4();
 									if (joints0.Length == weights0.Length) {
 										BoneWeight[] boneWeights = new BoneWeight[weights0.Length];
