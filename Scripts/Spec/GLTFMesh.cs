@@ -96,7 +96,10 @@ namespace Siccity.GLTFUtility {
 								submeshTris.Add(asyncMesh.tris.Reverse().Select(x => x + vertCount).ToList());
 
 								verts.AddRange(asyncMesh.verts.Select(x => new Vector3(-x.x, x.y, x.z)));
-								normals.AddRange(asyncMesh.norms.Select(v => { v.x = -v.x; return v; }));
+
+								if (asyncMesh.norms != null) {
+									normals.AddRange(asyncMesh.norms.Select(v => { v.x = -v.x; return v; }));
+								}
 								//tangents.AddRange(asyncMesh.tangents.Select(v => { v.y = -v.y; v.z = -v.z; return v; }));
 
 								// Weights
