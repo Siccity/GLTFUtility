@@ -18,19 +18,27 @@ namespace Siccity.GLTFUtility {
 #else
 			ctx.SetMainAsset("main obj", root);
 #endif
+			UnwrapParam? unwrapParams = new UnwrapParam()
+			{
+				angleError = settings.angleError,
+				areaError = settings.areaError,
+				hardAngle = settings.hardAngle,
+				packMargin = settings.packMargin
+			};
+
 			MeshRenderer[] renderers = root.GetComponentsInChildren<MeshRenderer>(true);
 			SkinnedMeshRenderer[] skinnedRenderers = root.GetComponentsInChildren<SkinnedMeshRenderer>(true);
 			MeshFilter[] filters = root.GetComponentsInChildren<MeshFilter>(true);
-			AddMeshes(filters, skinnedRenderers, ctx, settings.generateLightmapUVs);
+			AddMeshes(filters, skinnedRenderers, ctx, settings.generateLightmapUVs ? unwrapParams : null);
 			AddMaterials(renderers, skinnedRenderers, ctx);
 			AddAnimations(animations, ctx, settings.animationSettings);
 		}
 
-		public static void AddMeshes(MeshFilter[] filters, SkinnedMeshRenderer[] skinnedRenderers, AssetImportContext ctx, bool generateLightmapUVs) {
+		public static void AddMeshes(MeshFilter[] filters, SkinnedMeshRenderer[] skinnedRenderers, AssetImportContext ctx, UnwrapParam? lightmapUnwrapInfo) {
 			HashSet<Mesh> visitedMeshes = new HashSet<Mesh>();
 			for (int i = 0; i < filters.Length; i++) {
 				Mesh mesh = filters[i].sharedMesh;
-				if (generateLightmapUVs) Unwrapping.GenerateSecondaryUVSet(mesh);
+				if (lightmapUnwrapInfo.HasValue) Unwrapping.GenerateSecondaryUVSet(mesh, lightmapUnwrapInfo.Value);
 				if (visitedMeshes.Contains(mesh)) continue;
 				ctx.AddAsset(mesh.name, mesh);
 				visitedMeshes.Add(mesh);
