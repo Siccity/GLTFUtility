@@ -129,6 +129,7 @@ namespace Siccity.GLTFUtility {
 					if (nodes[i].camera.HasValue) {
 						GLTFCamera cameraData = cameras[nodes[i].camera.Value];
 						Camera camera = Result[i].transform.gameObject.AddComponent<Camera>();
+						Result[i].transform.localRotation = Result[i].transform.localRotation * Quaternion.Euler(0, 180, 0);
 						if (cameraData.type == CameraType.orthographic) {
 							camera.orthographic = true;
 							camera.nearClipPlane = cameraData.orthographic.znear;
