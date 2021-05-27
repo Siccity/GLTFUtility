@@ -235,10 +235,10 @@ namespace Siccity.GLTFUtility {
 				return c;
 			}
 
-			public Vector3[] ReadVec3() {
+			public Vector3[] ReadVec3(bool normalize = false) {
 				if (!ValidateAccessorType(type, AccessorType.VEC3)) return new Vector3[count];
 
-				Func<BufferedBinaryReader, float> floatReader = GetFloatReader(componentType);
+				Func<BufferedBinaryReader, float> floatReader = normalize ? GetNormalizedFloatReader(componentType) : GetFloatReader(componentType);
 
 				Vector3[] v = new Vector3[count];
 				if (bufferView != null) {
@@ -272,10 +272,10 @@ namespace Siccity.GLTFUtility {
 				return v;
 			}
 
-			public Vector2[] ReadVec2() {
+			public Vector2[] ReadVec2(bool normalize = false) {
 				if (!ValidateAccessorType(type, AccessorType.VEC2)) return new Vector2[count];
 
-				Func<BufferedBinaryReader, float> floatReader = GetNormalizedFloatReader(componentType);
+				Func<BufferedBinaryReader, float> floatReader = normalize ? GetNormalizedFloatReader(componentType) : GetFloatReader(componentType);
 
 				Vector2[] v = new Vector2[count];
 				if (bufferView != null) {
