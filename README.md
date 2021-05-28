@@ -70,6 +70,7 @@ Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-for
 - [x] KHR_materials_pbrSpecularGlossiness 
 - [ ] KHR_lights_punctual [#25](https://github.com/Siccity/GLTFUtility/issues/25)
 - [x] KHR_draco_mesh_compression [#27](https://github.com/Siccity/GLTFUtility/issues/27)
+- [x] KHR_mesh_quantization
 
 ### Known issues
 * `ArgumentNullException: Value cannot be null` in build but not in editor.

@@ -134,7 +134,7 @@ namespace Siccity.GLTFUtility {
 
 								// Verts - (X points left in GLTF)
 								if (primitive.attributes.POSITION.HasValue) {
-									IEnumerable<Vector3> newVerts = accessors[primitive.attributes.POSITION.Value].ReadVec3().Select(v => { v.x = -v.x; return v; });
+									IEnumerable<Vector3> newVerts = accessors[primitive.attributes.POSITION.Value].ReadVec3(true).Select(v => { v.x = -v.x; return v; });
 									verts.AddRange(newVerts);
 								}
 
@@ -148,12 +148,12 @@ namespace Siccity.GLTFUtility {
 
 								/// Normals - (X points left in GLTF)
 								if (primitive.attributes.NORMAL.HasValue) {
-									normals.AddRange(accessors[primitive.attributes.NORMAL.Value].ReadVec3().Select(v => { v.x = -v.x; return v; }));
+									normals.AddRange(accessors[primitive.attributes.NORMAL.Value].ReadVec3(true).Select(v => { v.x = -v.x; return v; }));
 								}
 
 								// Tangents - (X points left in GLTF)
 								if (primitive.attributes.TANGENT.HasValue) {
-									tangents.AddRange(accessors[primitive.attributes.TANGENT.Value].ReadVec4().Select(v => { v.y = -v.y; v.z = -v.z; return v; }));
+									tangents.AddRange(accessors[primitive.attributes.TANGENT.Value].ReadVec4(true).Select(v => { v.y = -v.y; v.z = -v.z; return v; }));
 								}
 
 								// Vertex colors
@@ -230,7 +230,7 @@ namespace Siccity.GLTFUtility {
 							Debug.LogWarning("Accessor is null");
 							return new Vector3[vertCount];
 						}
-						Vector3[] accessorData = accessors[accessor.Value].ReadVec3().Select(v => { v.x = -v.x; return v; }).ToArray();
+						Vector3[] accessorData = accessors[accessor.Value].ReadVec3(true).Select(v => { v.x = -v.x; return v; }).ToArray();
 						if (accessorData.Length != vertCount) {
 							Vector3[] resized = new Vector3[vertCount];
 							Array.Copy(accessorData, 0, resized, vertStartIndex, accessorData.Length);
@@ -316,7 +316,7 @@ namespace Siccity.GLTFUtility {
 						if (uvs != null) uvs.AddRange(new Vector2[vertCount - uvs.Count]);
 						return;
 					}
-					Vector2[] _uvs = accessors[texcoord.Value].ReadVec2();
+					Vector2[] _uvs = accessors[texcoord.Value].ReadVec2(true);
 					FlipY(ref _uvs);
 					if (uvs == null) uvs = new List<Vector2>(_uvs);
 					else uvs.AddRange(_uvs);
