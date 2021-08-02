@@ -18,7 +18,7 @@ namespace Siccity.GLTFUtility.Converters {
 			float[] floatArray = null;
 			try {
 				floatArray = serializer.Deserialize<float[]>(reader);
-			} catch (System.Exception e) {
+			} catch (System.Exception) {
 				floatArray = new float[] { serializer.Deserialize<float>(reader) };
 			}
 
