@@ -75,6 +75,8 @@ Focusing on simplicity and ease of use, GLTFUtility aims to be an import-and-for
 ### Known issues
 * `ArgumentNullException: Value cannot be null` in build but not in editor.
   * This is most likely due to shaders being stripped from the build. To fix this, add the GLTFUtility shaders to the Always Included Shaders list in Graphic Settings.
+* Draco compression does not work on iOS and UWP
+  * More info on [#133](https://github.com/Siccity/GLTFUtility/issues/133)
 
 ### Runtime import API
 ```cs
