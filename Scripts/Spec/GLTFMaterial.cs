@@ -47,7 +47,7 @@ namespace Siccity.GLTFUtility {
 				while (en.MoveNext()) { yield return null; };
 			}
 			// Load fallback material
-			else mat = new Material(Shader.Find("Standard"));
+			else mat = new Material(alphaMode == AlphaMode.BLEND ? shaderSettings.MetallicBlend : shaderSettings.Metallic);
 			// Normal texture
 			if (normalTexture != null) {
 				en = TryGetTexture(textures, normalTexture, true, tex => {
@@ -96,6 +96,11 @@ namespace Siccity.GLTFUtility {
 			if (alphaMode == AlphaMode.MASK) {
 				mat.SetFloat("_AlphaCutoff", alphaCutoff);
 			}
+
+#if UNITY_2019_1_OR_NEWER
+			if (GraphicsSettings.renderPipelineAsset) URPHelper.SetMaterialKeywords(mat, alphaMode, doubleSided);
+#endif
+
 			mat.name = name;
 			onFinish(mat);
 		}
@@ -139,6 +144,8 @@ namespace Siccity.GLTFUtility {
 				// Material
 				Material mat = new Material(sh);
 				mat.color = baseColorFactor;
+				if (mat.HasProperty("_BaseColor"))
+					mat.SetColor("_BaseColor", baseColorFactor);
 				mat.SetFloat("_Metallic", metallicFactor);
 				mat.SetFloat("_Roughness", roughnessFactor);
 
@@ -150,10 +157,21 @@ namespace Siccity.GLTFUtility {
 							Debug.LogWarning("Attempted to get basecolor texture index " + baseColorTexture.index + " when only " + textures.Length + " exist");
 						} else {
 							IEnumerator en = textures[baseColorTexture.index].GetTextureCached(false, tex => {
-								if (tex != null) {
-									mat.SetTexture("_MainTex", tex);
-									if (baseColorTexture.extensions != null) {
-										baseColorTexture.extensions.Apply(baseColorTexture, mat, "_MainTex");
+								if (tex != null)
+								{
+									if (mat.HasProperty("_BaseMap"))
+									{
+										mat.SetTexture("_BaseMap", tex);
+										if (baseColorTexture.extensions != null) {
+											baseColorTexture.extensions.Apply(baseColorTexture, mat, "_BaseMap");
+										}
+									}
+									if (mat.HasProperty("_MainTex"))
+									{
+										mat.SetTexture("_MainTex", tex);
+										if (baseColorTexture.extensions != null) {
+											baseColorTexture.extensions.Apply(baseColorTexture, mat, "_MainTex");
+										}
 									}
 								}
 							});
@@ -179,9 +197,6 @@ namespace Siccity.GLTFUtility {
 					}
 				}
 
-				// After the texture and color is extracted from the glTFObject
-				if (mat.HasProperty("_BaseMap")) mat.SetTexture("_BaseMap", mat.mainTexture);
-				if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", baseColorFactor);
 				onFinish(mat);
 			}
 		}
@@ -207,6 +222,8 @@ namespace Siccity.GLTFUtility {
 				// Material
 				Material mat = new Material(sh);
 				mat.color = diffuseFactor;
+				if (mat.HasProperty("_BaseColor"))
+					mat.SetColor("_BaseColor", diffuseFactor);
 				mat.SetColor("_SpecColor", specularFactor);
 				mat.SetFloat("_GlossyReflections", glossinessFactor);
 
@@ -219,9 +236,21 @@ namespace Siccity.GLTFUtility {
 						} else {
 							IEnumerator en = textures[diffuseTexture.index].GetTextureCached(false, tex => {
 								if (tex != null) {
-									mat.SetTexture("_MainTex", tex);
-									if (diffuseTexture.extensions != null) {
-										diffuseTexture.extensions.Apply(diffuseTexture, mat, "_MainTex");
+									if (mat.HasProperty("_BaseMap"))
+									{
+										mat.SetTexture("_BaseMap", tex);
+										if (diffuseTexture.extensions != null)
+										{
+											diffuseTexture.extensions.Apply(diffuseTexture, mat, "_BaseMap");
+										}
+									}
+									if (mat.HasProperty("_MainTex"))
+									{
+										mat.SetTexture("_MainTex", tex);
+										if (diffuseTexture.extensions != null)
+										{
+											diffuseTexture.extensions.Apply(diffuseTexture, mat, "_MainTex");
+										}
 									}
 								}
 							});
