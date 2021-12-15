@@ -55,7 +55,7 @@ namespace Siccity.GLTFUtility {
 			ImportResult result = new ImportResult();
 			result.clip = new AnimationClip();
 			result.clip.name = name;
-			result.clip.frameRate = importSettings.frameRate;
+			result.clip.frameRate = importSettings.animationSettings.frameRate;
 
 			result.clip.legacy = importSettings.animationSettings.useLegacyClips;
 
@@ -73,7 +73,7 @@ namespace Siccity.GLTFUtility {
 				Sampler sampler = samplers[channel.sampler];
 
 				// Get interpolation mode
-				InterpolationMode interpolationMode = importSettings.interpolationMode;
+				InterpolationMode interpolationMode = importSettings.animationSettings.interpolationMode;
 				if (interpolationMode == InterpolationMode.ImportFromFile) {
 					interpolationMode = sampler.interpolation;
 				}
@@ -172,7 +172,7 @@ namespace Siccity.GLTFUtility {
 								weightValues[k] = weights[weightIndex];
 
 								bool addKey = true;
-								if(importSettings.compressBlendShapeKeyFrames) {
+								if(importSettings.animationSettings.compressBlendShapeKeyFrames) {
 									if(k == 0 || !Mathf.Approximately(weightValues[k], previouslyKeyedValues[j])) {
 										if(k > 0) {
 											weightValues[k-1] = previouslyKeyedValues[j];
