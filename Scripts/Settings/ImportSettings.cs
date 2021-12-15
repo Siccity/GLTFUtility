@@ -3,6 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.EventSystems;
+using UnityEngine.Events;
+
 
 namespace Siccity.GLTFUtility {
 	[Serializable]
@@ -28,5 +31,8 @@ namespace Siccity.GLTFUtility {
 
 		[Tooltip("Interpolation mode applied to all keyframe tangents. Use Import From File when mixing modes within an animation.")]
 		public InterpolationMode interpolationMode = InterpolationMode.ImportFromFile;
+
+		[Tooltip("Script used to process extra data.")]
+		public GLTFExtrasProcessor extrasProcessor;
 	}
 }

@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace Siccity.GLTFUtility {
 	/// <summary> API used for importing .gltf and .glb files </summary>
@@ -217,7 +218,12 @@ namespace Siccity.GLTFUtility {
 				item.Dispose();
 			}
 
-			return nodeTask.Result.GetRoot();
+			GameObject gameObject = nodeTask.Result.GetRoot();
+			if (importSettings.extrasProcessor != null)
+			{
+				importSettings.extrasProcessor.ProcessExtras(gltfObject.extras);
+			}
+			return gameObject;
 		}
 #endregion
 
