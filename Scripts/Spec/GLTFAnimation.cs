@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Siccity.GLTFUtility.Converters;
 using UnityEngine;
 using UnityEngine.Scripting;
+using Newtonsoft.Json.Linq;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#animation
@@ -14,6 +15,7 @@ namespace Siccity.GLTFUtility {
 		[JsonProperty(Required = Required.Always)] public Channel[] channels;
 		[JsonProperty(Required = Required.Always)] public Sampler[] samplers;
 		public string name;
+		public JObject extras;
 
 #region Classes
 		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#animation-sampler

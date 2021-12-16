@@ -3,6 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.EventSystems;
+using UnityEngine.Events;
+
 
 namespace Siccity.GLTFUtility {
 	[Serializable]
@@ -25,5 +28,7 @@ namespace Siccity.GLTFUtility {
 		[Range(1, 64)]
 		public float packMargin = 4;
 
+		[Tooltip("Script used to process extra data.")]
+		public GLTFExtrasProcessor extrasProcessor;
 	}
 }

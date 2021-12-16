@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Scripting;
 
@@ -22,5 +23,6 @@ namespace Siccity.GLTFUtility {
 		public List<GLTFCamera> cameras;
 		public List<string> extensionsUsed;
 		public List<string> extensionsRequired;
+		public JObject extras;
 	}
 }
