@@ -12,7 +12,6 @@ namespace Siccity.GLTFUtility {
 		[FormerlySerializedAs("shaders")]
 		public ShaderSettings shaderOverrides = new ShaderSettings();
 		public AnimationSettings animationSettings = new AnimationSettings();
-		public bool useLegacyClips;
 		public bool generateLightmapUVs;
 		[Range(0, 180)]
 		public float hardAngle = 88;
@@ -26,7 +25,5 @@ namespace Siccity.GLTFUtility {
 		[Range(1, 64)]
 		public float packMargin = 4;
 
-		[Tooltip("Interpolation mode applied to all keyframe tangents. Use Import From File when mixing modes within an animation.")]
-		public InterpolationMode interpolationMode = InterpolationMode.ImportFromFile;
 	}
 }
