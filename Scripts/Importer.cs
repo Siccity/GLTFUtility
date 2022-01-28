@@ -342,10 +342,12 @@ namespace Siccity.GLTFUtility {
 			importTask.task.Start();
 			// Wait for task to complete
 			while (!importTask.task.IsCompleted) yield return null;
+			yield return null;
 			// Run additional unity code on main thread
 			importTask.OnCoroutine(onProgress).RunCoroutine();
 			//Wait for additional coroutines to complete
 			while (!importTask.IsCompleted) { yield return null; }
+			yield return null;
 		}
 #endregion
 
