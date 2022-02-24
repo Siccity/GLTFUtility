@@ -62,7 +62,7 @@ namespace Siccity.GLTFUtility {
 				this.meshTask = meshTask;
 				this.skinTask = skinTask;
 				this.cameras = cameras;
-				task = new Task(() => { });
+				//task = new Task(() => { });
 			}
 
 			public override IEnumerator OnCoroutine(Action<float> onProgress = null) {
