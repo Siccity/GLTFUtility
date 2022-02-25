@@ -158,7 +158,10 @@ namespace Siccity.GLTFUtility {
 
 			/// <summary> Runs task followed by OnCompleted </summary>
 			public TReturn RunSynchronously() {
-				task.RunSynchronously();
+				if(task != null)
+				{
+					task.RunSynchronously();
+				}
 				IEnumerator en = OnCoroutine();
 				while (en.MoveNext()) { };
 				return Result;
@@ -338,16 +341,23 @@ namespace Siccity.GLTFUtility {
 		private static IEnumerator TaskSupervisor(ImportTask importTask, Action<float> onProgress = null) {
 			// Wait for required results to complete before starting
 			while (!importTask.IsReady) yield return null;
-			// Start threaded task
-			importTask.task.Start();
-			// Wait for task to complete
-			while (!importTask.task.IsCompleted) yield return null;
+			// Prevent asynchronous data disorder
 			yield return null;
+			if(importTask.task != null)
+			{
+				// Start threaded task
+				importTask.task.Start();
+				// Wait for task to complete
+				while (!importTask.task.IsCompleted) yield return null;
+				// Prevent asynchronous data disorder
+				yield return new WaitForSeconds(0.1f);
+			}
 			// Run additional unity code on main thread
 			importTask.OnCoroutine(onProgress).RunCoroutine();
 			//Wait for additional coroutines to complete
 			while (!importTask.IsCompleted) { yield return null; }
-			yield return null;
+			// Prevent asynchronous data disorder
+			yield return new WaitForSeconds(0.1f);
 		}
 #endregion
 
