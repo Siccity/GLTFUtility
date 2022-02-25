@@ -158,7 +158,10 @@ namespace Siccity.GLTFUtility {
 
 			/// <summary> Runs task followed by OnCompleted </summary>
 			public TReturn RunSynchronously() {
-				task.RunSynchronously();
+				if(task != null)
+				{
+					task.RunSynchronously();
+				}
 				IEnumerator en = OnCoroutine();
 				while (en.MoveNext()) { };
 				return Result;
