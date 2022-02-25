@@ -14,6 +14,6 @@ namespace Siccity.GLTFUtility {
 		[Tooltip("When true, remove redundant keyframes from blend shape animations.")]
 		public bool compressBlendShapeKeyFrames = true;
 		[Tooltip("Load animations as legacy AnimationClips.")]
-		public bool useLegacyClips;
+		public bool useLegacyClips = true;
 	}
 }

@@ -42,6 +42,7 @@ namespace Siccity.GLTFUtility {
 				List<Vector4> tangents = new List<Vector4>();
 				List<Color> colors = new List<Color>();
 				List<BoneWeight> weights = null;
+				BoneWeight[] weightsArray = null;
 				List<Vector2> uv1 = null;
 				List<Vector2> uv2 = null;
 				List<Vector2> uv3 = null;
@@ -161,13 +162,17 @@ namespace Siccity.GLTFUtility {
 									colors.AddRange(accessors[primitive.attributes.COLOR_0.Value].ReadColor());
 								}
 
-								// Weights
-								if (primitive.attributes.WEIGHTS_0.HasValue && primitive.attributes.JOINTS_0.HasValue) {
-									Vector4[] weights0 = accessors[primitive.attributes.WEIGHTS_0.Value].ReadVec4(true);
+								// Weights //发现问题点
+								if (primitive.attributes.WEIGHTS_0.HasValue && primitive.attributes.JOINTS_0.HasValue)
+								{
+									Vector4[] weights0 = accessors[primitive.attributes.WEIGHTS_0.Value].ReadVec4(true);								
 									Vector4[] joints0 = accessors[primitive.attributes.JOINTS_0.Value].ReadVec4();
-									if (joints0.Length == weights0.Length) {
+
+									if (joints0.Length == weights0.Length)
+									{
 										BoneWeight[] boneWeights = new BoneWeight[weights0.Length];
-										for (int k = 0; k < boneWeights.Length; k++) {
+										for (int k = 0; k < boneWeights.Length; k++)
+										{
 											NormalizeWeights(ref weights0[k]);
 											boneWeights[k].weight0 = weights0[k].x;
 											boneWeights[k].weight1 = weights0[k].y;
@@ -178,10 +183,11 @@ namespace Siccity.GLTFUtility {
 											boneWeights[k].boneIndex2 = Mathf.RoundToInt(joints0[k].z);
 											boneWeights[k].boneIndex3 = Mathf.RoundToInt(joints0[k].w);
 										}
-										if (weights == null) weights = new List<BoneWeight>(new BoneWeight[vertCount - boneWeights.Length]);
-										weights.AddRange(boneWeights);
-									} else Debug.LogWarning("WEIGHTS_0 and JOINTS_0 not same length. Skipped");
-								} else {
+										weightsArray = boneWeights;
+									}
+								}
+								else
+								{
 									if (weights != null) weights.AddRange(new BoneWeight[vertCount - weights.Count]);
 								}
 
@@ -269,6 +275,7 @@ namespace Siccity.GLTFUtility {
 					}
 
 					mesh.colors = colors.ToArray();
+
 					if (uv1 != null) mesh.uv = uv1.ToArray();
 					if (uv2 != null) mesh.uv2 = uv2.ToArray();
 					if (uv3 != null) mesh.uv3 = uv3.ToArray();
@@ -277,9 +284,6 @@ namespace Siccity.GLTFUtility {
 					if (uv6 != null) mesh.uv6 = uv6.ToArray();
 					if (uv7 != null) mesh.uv7 = uv7.ToArray();
 					if (uv8 != null) mesh.uv8 = uv8.ToArray();
-					if (weights != null) mesh.boneWeights = weights.ToArray();
-
-					mesh.RecalculateBounds();
 
 					// Blend shapes
 					for (int i = 0; i < blendShapes.Count; i++) {
@@ -297,11 +301,19 @@ namespace Siccity.GLTFUtility {
 						mesh.tangents = tangents.ToArray();
 
 					mesh.name = name;
+
+					if (weights != null) mesh.boneWeights = weights.ToArray();
+					if (weightsArray != null) mesh.boneWeights = weightsArray;
+
+					mesh.RecalculateBounds();
+
 					return mesh;
 				}
 
-				public void NormalizeWeights(ref Vector4 weights) {
+				public void NormalizeWeights(ref Vector4 weights)
+				{
 					float total = weights.x + weights.y + weights.z + weights.w;
+					if (total == 0) return;
 					float mult = 1f / total;
 					weights.x *= mult;
 					weights.y *= mult;
@@ -337,11 +349,13 @@ namespace Siccity.GLTFUtility {
 				this.meshes = meshes;
 				this.materialTask = materialTask;
 
+				meshData = new MeshData[meshes.Count];
+
 				task = new Task(() => {
 					if (meshes == null) return;
 
-					meshData = new MeshData[meshes.Count];
-					for (int i = 0; i < meshData.Length; i++) {
+					for (int i = 0; i < meshData.Length; i++)
+					{
 						meshData[i] = new MeshData(meshes[i], accessorTask.Result, bufferViewTask.Result);
 					}
 				});
@@ -349,15 +363,20 @@ namespace Siccity.GLTFUtility {
 
 			public override IEnumerator OnCoroutine(Action<float> onProgress = null) {
 				// No mesh
-				if (meshData == null) {
+				if (meshData == null)
+				{
 					if (onProgress != null) onProgress.Invoke(1f);
 					IsCompleted = true;
 					yield break;
 				}
 
+				yield return new WaitForSeconds(0.1f);
+
 				Result = new ImportResult[meshData.Length];
-				for (int i = 0; i < meshData.Length; i++) {
-					if (meshData[i] == null) {
+				for (int i = 0; i < meshData.Length; i++)
+				{
+					if (meshData[i] == null)
+					{
 						Debug.LogWarning("Mesh " + i + " import error");
 						continue;
 					}
@@ -365,21 +384,26 @@ namespace Siccity.GLTFUtility {
 					Result[i] = new ImportResult();
 					Result[i].mesh = meshData[i].ToMesh();
 					Result[i].materials = new Material[meshes[i].primitives.Count];
-					for (int k = 0; k < meshes[i].primitives.Count; k++) {
+					for (int k = 0; k < meshes[i].primitives.Count; k++)
+					{
 						int? matIndex = meshes[i].primitives[k].material;
-						if (matIndex.HasValue && materialTask.Result != null && materialTask.Result.Count() > matIndex.Value) {
+						if (matIndex.HasValue && materialTask.Result != null && materialTask.Result.Count() > matIndex.Value)
+						{
 							GLTFMaterial.ImportResult matImport = materialTask.Result[matIndex.Value];
 							if (matImport != null) Result[i].materials[k] = matImport.material;
-							else {
+							else
+							{
 								Debug.LogWarning("Mesh[" + i + "].matIndex points to null material (index " + matIndex.Value + ")");
 								Result[i].materials[k] = GLTFMaterial.defaultMaterial;
 							}
-						} else {
+						}
+						else
+						{
 							Result[i].materials[k] = GLTFMaterial.defaultMaterial;
 						}
 					}
 					if (string.IsNullOrEmpty(Result[i].mesh.name)) Result[i].mesh.name = "mesh" + i;
-					if (onProgress != null) onProgress.Invoke((float) (i + 1) / (float) meshData.Length);
+					if (onProgress != null) onProgress.Invoke((float)(i + 1) / (float)meshData.Length);
 					yield return null;
 				}
 				IsCompleted = true;
