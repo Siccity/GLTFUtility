@@ -63,7 +63,7 @@ namespace Siccity.GLTFUtility
 #if UNITY_2019_1_OR_NEWER
 			if (bHDRPShader)
 			{
-				return Shader.Find("HDRP/Lit");
+				return Shader.Find("Shader Graphs/HDRP_Standard (Metallic)");
 			}
 			else if (GraphicsSettings.renderPipelineAsset != null)
 			{
@@ -79,7 +79,7 @@ namespace Siccity.GLTFUtility
 #if UNITY_2019_1_OR_NEWER
 			if (bHDRPShader)
 			{
-				return Shader.Find("HDRP/Lit");
+				return Shader.Find("Shader Graphs/HDRP_Standard (Metallic) TwoSide");
 			}
 			else
 			if (GraphicsSettings.renderPipelineAsset) return Shader.Find("GLTFUtility/URP/Standard (Metallic) TwoSide");
@@ -93,7 +93,7 @@ namespace Siccity.GLTFUtility
 #if UNITY_2019_1_OR_NEWER
 			if (bHDRPShader)
 			{
-				return Shader.Find("HDRP/Lit");
+				return Shader.Find("Shader Graphs/HDRP_Standard Transparent (Metallic)");
 			}
 			else
 			if (GraphicsSettings.renderPipelineAsset) return Shader.Find("GLTFUtility/URP/Standard Transparent (Metallic)");
@@ -106,7 +106,7 @@ namespace Siccity.GLTFUtility
 #if UNITY_2019_1_OR_NEWER
 			if (bHDRPShader)
 			{
-				return Shader.Find("HDRP/Lit");
+				return Shader.Find("Shader Graphs/HDRP_Standard Transparent (Metallic) TwoSide");
 			}
 			else
 			if (GraphicsSettings.renderPipelineAsset) return Shader.Find("GLTFUtility/URP/Standard Transparent (Metallic) TwoSide");
@@ -120,7 +120,7 @@ namespace Siccity.GLTFUtility
 #if UNITY_2019_1_OR_NEWER
 			if (bHDRPShader)
 			{
-				return Shader.Find("HDRP/Lit");
+				return Shader.Find("Shader Graphs/HDRP_Standard (Specular)");
 			}
 			else
 			if (GraphicsSettings.renderPipelineAsset) return Shader.Find("GLTFUtility/URP/Standard (Specular)");
@@ -134,7 +134,7 @@ namespace Siccity.GLTFUtility
 #if UNITY_2019_1_OR_NEWER
 			if (bHDRPShader)
 			{
-				return Shader.Find("HDRP/Lit");
+				return Shader.Find("Shader Graphs/HDRP_Standard (Specular) TwoSide");
 			}
 			else
 			if (GraphicsSettings.renderPipelineAsset) return Shader.Find("GLTFUtility/URP/Standard (Specular) TwoSide");
@@ -148,7 +148,7 @@ namespace Siccity.GLTFUtility
 #if UNITY_2019_1_OR_NEWER
 			if (bHDRPShader)
 			{
-				return Shader.Find("HDRP/Lit");
+				return Shader.Find("Shader Graphs/HDRP_Standard Transparent (Specular)");
 			}
 			else
 			if (GraphicsSettings.renderPipelineAsset) return Shader.Find("GLTFUtility/URP/Standard Transparent (Specular)");
@@ -162,7 +162,7 @@ namespace Siccity.GLTFUtility
 #if UNITY_2019_1_OR_NEWER
 			if (bHDRPShader)
 			{
-				return Shader.Find("HDRP/Lit");
+				return Shader.Find("Shader Graphs/HDRP_Standard Transparent (Specular) TwoSide");
 			}
 			else
 			if (GraphicsSettings.renderPipelineAsset) return Shader.Find("GLTFUtility/URP/Standard Transparent (Specular) TwoSide");

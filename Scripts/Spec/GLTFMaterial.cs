@@ -132,7 +132,7 @@ namespace Siccity.GLTFUtility {
 				while (en.MoveNext()) { yield return null; };
 			}
 
-			if (alphaMode == AlphaMode.MASK) {
+			if (alphaMode == AlphaMode.MASK || alphaMode == AlphaMode.BLEND) {
 				if (ShaderSettings.bHDRPShader)
 				{
 					mat.SetInt("_AlphaCutoffEnable", 1);

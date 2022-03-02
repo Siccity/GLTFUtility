@@ -1,4 +1,5 @@
 using System;
+using UnityEditor;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility
@@ -160,7 +161,7 @@ namespace Siccity.GLTFUtility
 				queueOffset = 50 - (int) material.GetFloat("_QueueOffset");
 
 			SurfaceType surfaceType = SurfaceType.Opaque;
-			if (ShaderSettings.bHDRPShader)
+			if(ShaderSettings.bHDRPShader)
 			{
 				surfaceType = (SurfaceType)material.GetFloat("_SurfaceType");
 			}
@@ -168,7 +169,6 @@ namespace Siccity.GLTFUtility
 			{
 				surfaceType = (SurfaceType)material.GetFloat("_Surface");
 			}
-
 			if (surfaceType == SurfaceType.Opaque)
 			{
 				if (alphaClip)
@@ -230,10 +230,11 @@ namespace Siccity.GLTFUtility
 
 				// General Transparent Material Settings
 				material.SetOverrideTag("RenderType", "Transparent");
-				if (ShaderSettings.bHDRPShader)
+
+				if(ShaderSettings.bHDRPShader)
 				{
 					material.SetInt("_ZWrite", 0);
-					material.SetInt("_TransparentZWrite", 0);
+					material.SetInt("_TransparentZWrite", 0); 
 				}
 				else
 				{
