@@ -18,7 +18,7 @@ namespace Siccity.GLTFUtility
 		{
 			get
 			{
-				return GraphicsSettings.renderPipelineAsset != null && GraphicsSettings.renderPipelineAsset.name.Contains("HDRP");
+				return GraphicsSettings.renderPipelineAsset != null && GraphicsSettings.renderPipelineAsset.name.Contains("HDR");
 			}
 		}
 		[SerializeField] private Shader metallic;
