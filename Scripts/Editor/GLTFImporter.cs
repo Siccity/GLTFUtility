@@ -1,4 +1,14 @@
-﻿using UnityEditor;
+﻿#if HAVE_GLTFAST || HAVE_UNITYGLTF
+#define ANOTHER_IMPORTER_HAS_HIGHER_PRIORITY
+#endif
+
+#if !ANOTHER_IMPORTER_HAS_HIGHER_PRIORITY && !GLTFUTILITY_FORCE_DEFAULT_IMPORTER_OFF
+#define ENABLE_DEFAULT_GLB_IMPORTER
+#endif
+#if GLTFUTILITY_FORCE_DEFAULT_IMPORTER_ON
+#define ENABLE_DEFAULT_GLB_IMPORTER
+#endif
+
 #if !UNITY_2020_2_OR_NEWER
 using UnityEditor.Experimental.AssetImporters;
 #else
@@ -7,7 +17,11 @@ using UnityEditor.AssetImporters;
 using UnityEngine;
 
 namespace Siccity.GLTFUtility {
+#if ENABLE_DEFAULT_GLB_IMPORTER
 	[ScriptedImporter(1, "gltf")]
+#else
+    [ScriptedImporter(1, null, overrideExts: new[] { "gltf" })]
+#endif
 	public class GLTFImporter : ScriptedImporter {
 
 		public ImportSettings importSettings;
