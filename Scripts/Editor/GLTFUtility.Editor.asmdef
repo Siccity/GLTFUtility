@@ -8,5 +8,17 @@
         "Editor"
     ],
     "excludePlatforms": [],
-    "allowUnsafeCode": false
+    "allowUnsafeCode": false,
+    "versionDefines": [
+        {
+            "name": "com.atteneder.gltfast",
+            "expression": "3.0.0",
+            "define": "HAVE_GLTFAST"
+        },
+        {
+            "name": "org.khronos.unitygltf",
+            "expression": "0.0.0",
+            "define": "HAVE_UNITYGLTF"
+        }
+    ]
 }
