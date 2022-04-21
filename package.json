@@ -1,11 +1,14 @@
 {
-    "name": "com.siccity.gltfutility",
+    "name": "thirdparty.siccity.gltfutility",
     "displayName": "GLTFUtility",
-    "version": "0.7.2",
+    "version": "1.0.0",
     "unity": "2018.2",
     "keywords": ["glTF", "import"],
 	"description": "Lightweight glTF loader.",
-	"dependencies": {
-		"com.unity.nuget.newtonsoft-json": "2.0.0"
-	}
+    "author": "Scott Holman <scott.holman@magnopus.com>",
+    "homepage": "https://github.com/Siccity/GLTFUtility",
+    "license": "MIT License",
+    "publishConfig": {
+        "registry": "http://packages.magnopus.local:8081/artifactory/api/npm/unitynpm/"
+    }
 }
