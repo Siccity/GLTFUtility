@@ -100,6 +100,9 @@ void OnFinishAsync(GameObject result) {
 }
 ```
 
+### Draco Library
+For more info on the Draco compression library please see [Draco](Plugins/draco/README.md)
+
 ### Important shader note
 To ensure that Unity includes the GLTFUtility shaders in builds, you must add these shaders to the 'Always Included Shaders' list.
 

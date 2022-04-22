@@ -35,7 +35,22 @@ We have built library for several platforms:
 
 Build From Source
 -----------------
-See [BUILDING.md](BUILDING.md) for information on building Draco Unity plug-ins from source.
+1. To build the source code first you need to download the repo from [Here](https://github.com/google/draco).
+2. Next to get a cleaner toolchain that generates an XCode project I recommend downloading the cmake file from [this repo.](https://github.com/leetal/ios-cmake)
+3. Install CMake if not already installed on you mac from [Here](https://cmake.org/download/). Make sure to add CMake to your path.
+4. Open a terminal and navigate to the directory where you downloaded and/or unzipped the Draco repo.
+5. Create a new build directory and navigate into that folder.
+6. To create an XCode project with the downloaded toolchain enter the following command:
+~~~~ bash
+cmake ../ -G Xcode -DCMAKE_TOOLCHAIN_FILE={PATH_TO_DOWNLOADED_TOOLCHAIN} -DPLATFORM=OS64 -DDRACO_UNITY_PLUGIN=1
+~~~~
+7. This should generate an XCode project in the build folder you created. Open this XCode Project.
+8. To build in release mode, first you want to go to Product->Scheme->Edit Scheme. And under Run switch Build Configuration to Release. Close this window.
+9. Next your going to want to build the `dracodec_unity`. Select this from the available build targets and press build.
+10. After this is complete search for where the `libdracodec_unity.a` was placed by opening the Products drop down and right-clicking the `libdracodec_unity.a` and selecting Show in Finder.
+11. There should be 2 files in the output directory, `libdracodec_unity.a` and `libdraco.a`. These are the new plugin files to replace the old ones in Plugins/draco/Plugin/iOS/
+12. Your done!
+
 
 Create Draco Demo Unity Project
 ===============================
