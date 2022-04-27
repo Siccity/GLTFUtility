@@ -56,12 +56,14 @@ namespace Siccity.GLTFUtility {
 			GLTFMesh.ImportTask meshTask;
 			GLTFSkin.ImportTask skinTask;
 			List<GLTFCamera> cameras;
+			private ImportSettings importSettings;
 
-			public ImportTask(List<GLTFNode> nodes, GLTFMesh.ImportTask meshTask, GLTFSkin.ImportTask skinTask, List<GLTFCamera> cameras) : base(meshTask, skinTask) {
+			public ImportTask(List<GLTFNode> nodes, GLTFMesh.ImportTask meshTask, GLTFSkin.ImportTask skinTask, List<GLTFCamera> cameras, ImportSettings importSettings) : base(meshTask, skinTask) {
 				this.nodes = nodes;
 				this.meshTask = meshTask;
 				this.skinTask = skinTask;
 				this.cameras = cameras;
+				this.importSettings = importSettings;
 				//task = new Task(() => { });
 			}
 
@@ -129,7 +131,7 @@ namespace Siccity.GLTFUtility {
 					}
 
 					// Setup camera
-					if (nodes[i].camera.HasValue) {
+					if (nodes[i].camera.HasValue && importSettings.importCameras) {
 						GLTFCamera cameraData = cameras[nodes[i].camera.Value];
 						Camera camera = Result[i].transform.gameObject.AddComponent<Camera>();
 						Result[i].transform.localRotation = Result[i].transform.localRotation * Quaternion.Euler(0, 180, 0);

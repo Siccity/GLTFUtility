@@ -15,6 +15,7 @@ namespace Siccity.GLTFUtility {
 		[FormerlySerializedAs("shaders")]
 		public ShaderSettings shaderOverrides = new ShaderSettings();
 		public AnimationSettings animationSettings = new AnimationSettings();
+		public bool importCameras;
 		public bool generateLightmapUVs;
 		[Range(0, 180)]
 		public float hardAngle = 88;
