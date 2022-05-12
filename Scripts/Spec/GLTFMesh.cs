@@ -4,7 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Unity.Collections;
+using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Scripting;
 
 namespace Siccity.GLTFUtility {
@@ -33,7 +37,8 @@ namespace Siccity.GLTFUtility {
 		}
 
 		public class ImportTask : Importer.ImportTask<ImportResult[]> {
-			private class MeshData {
+			private class TaskMeshData {
+
 				string name;
 				List<Vector3> normals = new List<Vector3>();
 				List<List<int>> submeshTris = new List<List<int>>();
@@ -58,7 +63,7 @@ namespace Siccity.GLTFUtility {
 					public Vector3[] pos, norm, tan;
 				}
 
-				public MeshData(GLTFMesh gltfMesh, GLTFAccessor.ImportResult[] accessors, GLTFBufferView.ImportResult[] bufferViews) {
+				public TaskMeshData(GLTFMesh gltfMesh, GLTFAccessor.ImportResult[] accessors, GLTFBufferView.ImportResult[] bufferViews) {
 					name = gltfMesh.name;
 					if (gltfMesh.primitives.Count == 0) {
 						Debug.LogWarning("0 primitives in mesh");
@@ -300,7 +305,216 @@ namespace Siccity.GLTFUtility {
 					return mesh;
 				}
 
-				public void NormalizeWeights(ref Vector4 weights) {
+                public Jobs.MeshCreationJob CreateJob(Mesh.MeshData meshData, out Mesh mesh)
+                {
+                    Jobs.MeshCreationJob job = new Jobs.MeshCreationJob()
+                    {
+                        meshData = meshData
+                    };
+                    int streamIndex = 0;
+                    NativeList<VertexAttributeDescriptor> descriptor = new NativeList<VertexAttributeDescriptor>(Allocator.TempJob);
+
+                    NativeArray<Vector3> managedVerts = new NativeArray<Vector3>(verts.ToArray(), Allocator.TempJob);
+                    job.vertices = managedVerts.Reinterpret<float3>();
+                    descriptor.Add(new VertexAttributeDescriptor(VertexAttribute.Position, stream: streamIndex++));
+
+                    int subMeshCount = submeshTris.Count;
+                    NativeArray<int> indicesStartIndex = new NativeArray<int>(subMeshCount, Allocator.TempJob);
+                    NativeArray<int> indicesSubMeshLength = new NativeArray<int>(subMeshCount, Allocator.TempJob);
+                    NativeArray<MeshTopology> meshTopologies = new NativeArray<MeshTopology>(subMeshCount, Allocator.TempJob);
+                    meshData.subMeshCount = subMeshCount;
+                    int subMeshIndex = 0;
+                    List<int> managedIndices = new List<int>();
+					for (int i = 0; i < submeshTris.Count; i++) {
+						switch (submeshTrisMode[i]) {
+							case RenderingMode.POINTS:
+                                meshTopologies[i] = MeshTopology.Points;
+								break;
+							case RenderingMode.LINES:
+                                meshTopologies[i] = MeshTopology.Lines;
+								break;
+							case RenderingMode.LINE_STRIP:
+                                meshTopologies[i] = MeshTopology.LineStrip;
+								break;
+							case RenderingMode.TRIANGLES:
+                                meshTopologies[i] = MeshTopology.Triangles;
+								break;
+						}
+                        managedIndices.AddRange(submeshTris[i]);
+                        indicesStartIndex[i] = subMeshIndex;
+                        indicesSubMeshLength[i] = submeshTris[i].Count;
+                        subMeshIndex += submeshTris[i].Count;
+					}
+
+                    job.indices = new NativeArray<int>(managedIndices.ToArray(), Allocator.TempJob);
+                    job.indicesStartIndex = indicesStartIndex;
+                    job.indicesSubMeshLength = indicesSubMeshLength;
+                    job.meshTopologies = meshTopologies;
+
+                    if (normals.Count > 0)
+                    {
+                        NativeArray<Vector3> managedNormals = new NativeArray<Vector3>(normals.ToArray(), Allocator.TempJob);
+                        job.normals = managedNormals.Reinterpret<float3>(); 
+                        descriptor.Add(new VertexAttributeDescriptor(VertexAttribute.Normal, stream: streamIndex++));
+                    }
+                    else
+                    {
+                        job.normals = new NativeArray<float3>(0, Allocator.TempJob);
+                    }
+
+                    if (tangents.Count > 0)
+                    {
+                        NativeArray<Vector4> managedTangents = new NativeArray<Vector4>(tangents.ToArray(), Allocator.TempJob);
+                        job.tangents = managedTangents.Reinterpret<float4>();
+                        descriptor.Add(new VertexAttributeDescriptor(VertexAttribute.Tangent, dimension: 4, stream: streamIndex++));
+                    }
+                    else
+                    {
+                        job.tangents = new NativeArray<float4>(0, Allocator.TempJob);
+                    }
+
+                    if(colors.Count > 0)
+                    {
+                        job.colors = new NativeArray<Color>(colors.ToArray(), Allocator.TempJob);
+                        descriptor.Add(new VertexAttributeDescriptor(VertexAttribute.Color, stream: streamIndex++));
+                    }
+                    else
+                    {
+                        job.colors = new NativeArray<Color>(0, Allocator.TempJob);
+                    }
+
+                    if (uv1 != null)
+                    {
+                        NativeArray<Vector2> managedUVs = new NativeArray<Vector2>(uv1.ToArray(), Allocator.TempJob);
+                        job.uv1 = managedUVs.Reinterpret<float2>();
+                        descriptor.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord0, dimension: 2, stream: streamIndex++));
+                    }
+                    else
+                    {
+                        job.uv1 = new NativeArray<float2>(0, Allocator.TempJob);
+                    }
+                    if (uv2 != null)
+                    {
+                        NativeArray<Vector2> managedUVs = new NativeArray<Vector2>(uv2.ToArray(), Allocator.TempJob);
+                        job.uv2 = managedUVs.Reinterpret<float2>();
+                        descriptor.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord1, dimension: 2, stream: streamIndex++));
+                    }
+                    else
+                    {
+                        job.uv2 = new NativeArray<float2>(0, Allocator.TempJob);
+                    }
+                    if (uv3 != null)
+                    {
+                        NativeArray<Vector2> managedUVs = new NativeArray<Vector2>(uv3.ToArray(), Allocator.TempJob);
+                        job.uv3 = managedUVs.Reinterpret<float2>();
+                        descriptor.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord2, dimension: 2, stream: streamIndex++));
+                    }
+                    else
+                    {
+                        job.uv3 = new NativeArray<float2>(0, Allocator.TempJob);
+                    }
+                    if (uv4 != null)
+                    {
+                        NativeArray<Vector2> managedUVs = new NativeArray<Vector2>(uv4.ToArray(), Allocator.TempJob);
+                        job.uv4 = managedUVs.Reinterpret<float2>();
+                        descriptor.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord3, dimension: 2, stream: streamIndex++));
+                    }
+                    else
+                    {
+                        job.uv4 = new NativeArray<float2>(0, Allocator.TempJob);
+                    }
+                    if (uv5 != null)
+                    {
+                        NativeArray<Vector2> managedUVs = new NativeArray<Vector2>(uv5.ToArray(), Allocator.TempJob);
+                        job.uv5 = managedUVs.Reinterpret<float2>();
+                        descriptor.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord4, dimension: 2, stream: streamIndex++));
+                    }
+                    else
+                    {
+                        job.uv5 = new NativeArray<float2>(0, Allocator.TempJob);
+                    }
+                    if (uv6 != null)
+                    {
+                        NativeArray<Vector2> managedUVs = new NativeArray<Vector2>(uv6.ToArray(), Allocator.TempJob);
+                        job.uv6 = managedUVs.Reinterpret<float2>();
+                        descriptor.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord5, dimension: 2, stream: streamIndex++));
+                    }
+                    else
+                    {
+                        job.uv6 = new NativeArray<float2>(0, Allocator.TempJob);
+                    }
+                    if (uv7 != null)
+                    {
+                        NativeArray<Vector2> managedUVs = new NativeArray<Vector2>(uv7.ToArray(), Allocator.TempJob);
+                        job.uv7 = managedUVs.Reinterpret<float2>();
+                        descriptor.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord6, dimension: 2, stream: streamIndex++));
+                    }
+                    else
+                    {
+                        job.uv7 = new NativeArray<float2>(0, Allocator.TempJob);
+                    }
+                    if (uv8 != null)
+                    {
+                        NativeArray<Vector2> managedUVs = new NativeArray<Vector2>(uv8.ToArray(), Allocator.TempJob);
+                        job.uv8 = managedUVs.Reinterpret<float2>();
+                        descriptor.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord7, dimension: 2, stream: streamIndex++));
+                    }
+                    else
+                    {
+                        job.uv8 = new NativeArray<float2>(0, Allocator.TempJob);
+                    }
+
+                    if (weights != null)
+                    {
+                        job.weights = new NativeArray<BoneWeight>(weights.ToArray(), Allocator.TempJob);
+                        descriptor.Add(new VertexAttributeDescriptor(VertexAttribute.BlendWeight, dimension: 4, stream: streamIndex++));
+                        descriptor.Add(new VertexAttributeDescriptor(VertexAttribute.BlendIndices, VertexAttributeFormat.SInt32, 4, streamIndex++));
+                    }
+                    else
+                    {
+                        job.weights = new NativeArray<BoneWeight>(0, Allocator.TempJob);
+                    }
+
+                    int vertexCount = job.vertices.Length;
+                    IndexFormat format = vertexCount >= ushort.MaxValue ? IndexFormat.UInt32 : IndexFormat.UInt16;
+                    meshData.SetVertexBufferParams(vertexCount, descriptor.ToArray());
+                    meshData.SetIndexBufferParams(subMeshIndex, format);
+                    descriptor.Dispose();
+
+                    mesh = new Mesh();
+                    mesh.name = name;
+
+                    return job;
+                }
+
+                public void JobPostProcessing(Mesh mesh)
+                {
+					bool onlyTriangles = true;
+					for (int i = 0; i < submeshTris.Count; i++) {
+						switch (submeshTrisMode[i]) {
+							case RenderingMode.POINTS:
+							case RenderingMode.LINES:
+							case RenderingMode.LINE_STRIP:
+								onlyTriangles = false;
+								break;
+						}
+					}
+
+					mesh.RecalculateBounds();
+
+					// Blend shapes
+					for (int i = 0; i < blendShapes.Count; i++) {
+						mesh.AddBlendShapeFrame(blendShapes[i].name, 1f, blendShapes[i].pos, blendShapes[i].norm, blendShapes[i].tan);
+					}
+
+					if (normals.Count == 0 && onlyTriangles)
+						mesh.RecalculateNormals();
+
+					if (tangents.Count == 0 && onlyTriangles)
+						mesh.RecalculateTangents();
+                }
+
+                public void NormalizeWeights(ref Vector4 weights) {
 					float total = weights.x + weights.y + weights.z + weights.w;
 					float mult = 1f / total;
 					weights.x *= mult;
@@ -329,20 +543,22 @@ namespace Siccity.GLTFUtility {
 				}
 			}
 
-			private MeshData[] meshData;
+			private TaskMeshData[] meshData;
 			private List<GLTFMesh> meshes;
 			private GLTFMaterial.ImportTask materialTask;
+			private bool asyncMeshCreation;
 
 			public ImportTask(List<GLTFMesh> meshes, GLTFAccessor.ImportTask accessorTask, GLTFBufferView.ImportTask bufferViewTask, GLTFMaterial.ImportTask materialTask, ImportSettings importSettings) : base(accessorTask, materialTask) {
 				this.meshes = meshes;
 				this.materialTask = materialTask;
+				this.asyncMeshCreation = importSettings.asyncMeshCreation;
 
 				task = new Task(() => {
 					if (meshes == null) return;
 
-					meshData = new MeshData[meshes.Count];
+					meshData = new TaskMeshData[meshes.Count];
 					for (int i = 0; i < meshData.Length; i++) {
-						meshData[i] = new MeshData(meshes[i], accessorTask.Result, bufferViewTask.Result);
+						meshData[i] = new TaskMeshData(meshes[i], accessorTask.Result, bufferViewTask.Result);
 					}
 				});
 			}
@@ -356,14 +572,80 @@ namespace Siccity.GLTFUtility {
 				}
 
 				Result = new ImportResult[meshData.Length];
+				if (asyncMeshCreation)
+				{
+					int meshCount = 0;
+					for (int i = 0; i < meshData.Length; i++)
+					{
+						if(meshData[i] == null)
+						{
+							continue;
+						}
+
+						meshCount++;
+					}
+
+                    Mesh[] meshes = new Mesh[meshCount];
+                    NativeArray<JobHandle> jobHandles = new NativeArray<JobHandle>(meshCount, Allocator.Persistent);
+					Mesh.MeshDataArray meshDataArray = Mesh.AllocateWritableMeshData(meshCount);
+                    meshCount = 0;
+					for (int i = 0; i < meshData.Length; i++)
+					{
+						if(meshData[i] == null)
+						{
+							continue;
+						}
+
+                        Jobs.MeshCreationJob job = meshData[i].CreateJob(meshDataArray[i], out Mesh mesh);
+                        meshes[i] = mesh;
+                        jobHandles[meshCount] = job.Schedule();
+						meshCount++;
+					}
+
+                    bool jobComplete = false;
+                    while(!jobComplete)
+                    {
+                        yield return null;
+                        jobComplete = true;
+                        for (int i = 0; i < jobHandles.Length; i++)
+                        {
+                            if(!jobHandles[i].IsCompleted)
+                            {
+                                jobComplete = false;
+                            }
+                        }
+                    }
+                    JobHandle.CompleteAll(jobHandles);
+                    jobHandles.Dispose();
+
+                    Mesh.ApplyAndDisposeWritableMeshData(meshDataArray, meshes);
+
+                    meshCount = 0;
+					for (int i = 0; i < meshData.Length; i++)
+					{
+						if(meshData[i] == null)
+						{
+							continue;
+						}
+
+                        meshData[i].JobPostProcessing(meshes[meshCount]);
+                        Result[i] = new ImportResult();
+                        Result[i].mesh = meshes[meshCount];
+						meshCount++;
+					}
+				}
+
 				for (int i = 0; i < meshData.Length; i++) {
 					if (meshData[i] == null) {
 						Debug.LogWarning("Mesh " + i + " import error");
 						continue;
 					}
 
-					Result[i] = new ImportResult();
-					Result[i].mesh = meshData[i].ToMesh();
+					if (!asyncMeshCreation)
+					{
+                        Result[i] = new ImportResult();
+                        Result[i].mesh = meshData[i].ToMesh();
+					}
 					Result[i].materials = new Material[meshes[i].primitives.Count];
 					for (int k = 0; k < meshes[i].primitives.Count; k++) {
 						int? matIndex = meshes[i].primitives[k].material;

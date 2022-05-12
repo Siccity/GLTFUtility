@@ -1,14 +1,19 @@
 {
     "name": "Siccity.GLTFUtility",
+    "rootNamespace": "",
     "references": [
-        "Dracodec"
+        "Dracodec",
+        "Unity.Burst",
+        "Unity.Mathematics",
+        "Unity.Collections"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
