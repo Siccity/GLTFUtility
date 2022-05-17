@@ -22,6 +22,7 @@ namespace Magnopus.GLTFUtility.Jobs
         public bool generateNormals;
         public bool generateTangents;
 
+        [DeallocateOnJobCompletion] [ReadOnly] public NativeArray<VertexAttributeDescriptor> descriptors;
         [DeallocateOnJobCompletion] [ReadOnly] public NativeArray<float3> vertices;
         [DeallocateOnJobCompletion] public NativeArray<float3> normals;
         [DeallocateOnJobCompletion] public NativeArray<float4> tangents;
@@ -49,10 +50,14 @@ namespace Magnopus.GLTFUtility.Jobs
 
         public void Execute()
 		{
+            int vertexCount = vertices.Length;
+            IndexFormat format = vertexCount >= ushort.MaxValue ? IndexFormat.UInt32 : IndexFormat.UInt16;
+            meshData.SetVertexBufferParams(vertexCount, descriptors);
+            meshData.SetIndexBufferParams(indices.Length, format);
+
             int streamIndex = 0;
             NativeArray<float> vb = meshData.GetVertexData<float>();
 
-            int vertexCount = vertices.Length;
             bool containsNormalAttr = meshData.HasVertexAttribute(VertexAttribute.Normal);
             bool normalsEmpty = normals.Length == 0;
             if (generateNormals)
@@ -125,9 +130,6 @@ namespace Magnopus.GLTFUtility.Jobs
                         vb[strideIndex++] = tangents[i].z;
                         vb[strideIndex++] = tangents[i].w;
                     }
-                }
-                if (generateBounds)
-                {
                 }
             }
 
@@ -292,6 +294,16 @@ namespace Magnopus.GLTFUtility.Jobs
             }
             if (generateBounds)
             {
+                // Weird case where no submeshes exist.
+                if (meshData.subMeshCount == 0)
+                {
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        float3 vert = vertices[i];
+                        meshBounds.c0 = math.min(meshBounds.c0, vert);
+                        meshBounds.c1 = math.max(meshBounds.c1, vert);
+                    }
+                }
                 outputBounds[0] = meshBounds;
             }
         }

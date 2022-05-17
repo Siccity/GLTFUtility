@@ -326,7 +326,7 @@ namespace Siccity.GLTFUtility {
                                 }
                                 else if(meshSettings.asyncNormalsGeneration && !onlyTriangles)
                                 {
-                                    Debug.LogWarning($"Unable to generate normals for {name}. Can generate normals on meshes with only triangles!");
+                                    Debug.LogWarning($"Unable to generate normals for {name}. Can only generate normals on meshes with only triangles!");
                                 }
                             }
                             if (tangents.Count > 0 || (tangents.Count == 0 && onlyTriangles))
@@ -347,11 +347,11 @@ namespace Siccity.GLTFUtility {
                                 {
                                     if (!onlyTriangles)
                                     {
-                                        Debug.LogWarning($"Unable to generate tangents for {name}. Can generate tangents on meshes with only triangles!");
+                                        Debug.LogWarning($"Unable to generate tangents for {name}. Can only generate tangents on meshes with only triangles!");
                                     }
                                     if (uv1 == null)
                                     {
-                                        Debug.LogWarning($"Unable to generate tangents for {name}. Can generate tangents on meshes with uvs!");
+                                        Debug.LogWarning($"Unable to generate tangents for {name}. Can only generate tangents on meshes with uvs!");
                                     }
                                 }
                             }
@@ -529,6 +529,7 @@ namespace Siccity.GLTFUtility {
                         generateBounds = generateBounds,
                         generateNormals = generateNormals,
                         generateTangents = generateTangents,
+                        descriptors = descriptorsNative,
                         vertices = verticesNative,
                         indices = indices,
                         indicesStartIndex = indicesStartIndex,
@@ -636,12 +637,6 @@ namespace Siccity.GLTFUtility {
                     {
                         job.weights = new NativeArray<BoneWeight>(0, Allocator.TempJob);
                     }
-
-                    int vertexCount = job.vertices.Length;
-                    IndexFormat format = vertexCount >= ushort.MaxValue ? IndexFormat.UInt32 : IndexFormat.UInt16;
-                    meshData.SetVertexBufferParams(vertexCount, descriptorsNative);
-                    meshData.SetIndexBufferParams(subMeshIndex, format);
-                    descriptorsNative.Dispose();
 
                     mesh = new Mesh();
                     mesh.name = name;
@@ -788,7 +783,16 @@ namespace Siccity.GLTFUtility {
                         if (meshSettings.asyncBoundsGeneration)
                         {
                             float3x2 output = jobs[i].outputBounds[0];
-                            meshes[i].bounds = new Bounds((output.c0 + output.c1) * 0.5f, output.c1 - output.c0);
+                            if (float.IsInfinity(output.c0.x) || float.IsInfinity(output.c1.x))
+                            {
+                                // Something went wrong during bounds calculation
+                                Debug.LogWarning("Something went wrong during bounds calculation");
+                                meshes[i].RecalculateBounds();
+                            }
+                            else
+                            {
+                                meshes[i].bounds = new Bounds((output.c0 + output.c1) * 0.5f, output.c1 - output.c0);
+                            }
                         }
                         jobs[i].outputBounds.Dispose();
                     }
