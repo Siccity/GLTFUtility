@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Magnopus.GLTFUtility;
+using System;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -11,7 +12,7 @@ namespace Siccity.GLTFUtility
         [FormerlySerializedAs("shaders")]
         public ShaderSettings shaderOverrides = new ShaderSettings();
         public AnimationSettings animationSettings = new AnimationSettings();
-        public bool asyncMeshCreation = true;
+        public MeshSettings meshSettings = new MeshSettings();
         public bool importCameras;
         public bool generateLightmapUVs;
         [Range(0, 180)]
