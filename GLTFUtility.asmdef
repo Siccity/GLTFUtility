@@ -1,14 +1,16 @@
 {
     "name": "Siccity.GLTFUtility",
+    "rootNamespace": "",
     "references": [
         "Dracodec"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
-    "allowUnsafeCode": false,
+    "allowUnsafeCode": true,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
