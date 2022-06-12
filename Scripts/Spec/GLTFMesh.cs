@@ -52,10 +52,14 @@ namespace Siccity.GLTFUtility {
 				List<Vector2> uv8 = null;
 				List<BlendShape> blendShapes = new List<BlendShape>();
 				List<int> submeshVertexStart = new List<int>();
+				List<int> submeshVertexCount = new List<int>();
 
 				private class BlendShape {
 					public string name;
 					public Vector3[] pos, norm, tan;
+					public int startvert;
+					public int vertcount;
+					public int prim;
 				}
 
 				public MeshData(GLTFMesh gltfMesh, GLTFAccessor.ImportResult[] accessors, GLTFBufferView.ImportResult[] bufferViews) {
@@ -138,12 +142,15 @@ namespace Siccity.GLTFUtility {
 									verts.AddRange(newVerts);
 								}
 
+								submeshVertexCount.Add(verts.Count - vertStartIndex);
+
 								int vertCount = verts.Count;
 
 								// Tris - (Invert all triangles. Instead of flipping each triangle, just flip the entire array. Much easier)
 								if (primitive.indices.HasValue) {
 									submeshTris.Add(new List<int>(accessors[primitive.indices.Value].ReadInt().Reverse().Select(x => x + vertStartIndex)));
 									submeshTrisMode.Add(primitive.mode);
+					
 								}
 
 								/// Normals - (X points left in GLTF)
@@ -185,6 +192,8 @@ namespace Siccity.GLTFUtility {
 									if (weights != null) weights.AddRange(new BoneWeight[vertCount - weights.Count]);
 								}
 
+								
+
 								// UVs
 								ReadUVs(ref uv1, accessors, primitive.attributes.TEXCOORD_0, vertCount);
 								ReadUVs(ref uv2, accessors, primitive.attributes.TEXCOORD_1, vertCount);
@@ -215,6 +224,9 @@ namespace Siccity.GLTFUtility {
 									blendShape.pos = GetMorphWeights(primitive.targets[k].POSITION, submeshVertexStart[i], finalVertCount, accessors);
 									blendShape.norm = GetMorphWeights(primitive.targets[k].NORMAL, submeshVertexStart[i], finalVertCount, accessors);
 									blendShape.tan = GetMorphWeights(primitive.targets[k].TANGENT, submeshVertexStart[i], finalVertCount, accessors);
+									blendShape.startvert = submeshVertexStart[i];
+									blendShape.vertcount = submeshVertexCount[i];
+									blendShape.prim = i;
 									if (hasTargetNames) blendShape.name = gltfMesh.extras.targetNames[k];
 									else blendShape.name = "morph-" + blendShapes.Count;
 									blendShapes.Add(blendShape);
@@ -281,9 +293,51 @@ namespace Siccity.GLTFUtility {
 
 					mesh.RecalculateBounds();
 
+					List<BlendShape> keep = new List<BlendShape>();
+					Dictionary<string, BlendShape> lookup = new Dictionary<string, BlendShape>();
+					for (int i = 0; i < blendShapes.Count; i++)
+					{
+						//Debug.Log($"Shape {blendShapes[i].name} for prim {blendShapes[i].prim}");
+						if (lookup.ContainsKey(blendShapes[i].name))
+						{
+							BlendShape comp = lookup[blendShapes[i].name];
+							for (int k = blendShapes[i].startvert; k < blendShapes[i].startvert+blendShapes[i].vertcount; k++)
+							{
+								comp.pos[k] = blendShapes[i].pos[k];
+								comp.norm[k] = blendShapes[i].norm[k];
+								comp.tan[k] = blendShapes[i].tan[k];
+							}
+						}
+						else
+                        {
+							BlendShape temp = new BlendShape();
+							temp.startvert = 0;
+							temp.vertcount = verts.Count;
+							temp.pos = new Vector3[verts.Count];
+							temp.norm = new Vector3[verts.Count];
+							temp.tan = new Vector3[verts.Count];
+							for (int k = 0; k < verts.Count; k++)
+                            {
+								temp.pos[k] = new Vector3(0,0,0);
+								temp.norm[k] = new Vector3(0, 0, 0);
+								temp.tan[k] = new Vector3(0, 0, 0);
+							}
+							for (int k = blendShapes[i].startvert; k < blendShapes[i].startvert + blendShapes[i].vertcount; k++)
+							{
+								temp.pos[k] = blendShapes[i].pos[k];
+								temp.norm[k] = blendShapes[i].norm[k];
+								temp.tan[k] = blendShapes[i].tan[k];
+							}
+							temp.name = blendShapes[i].name;
+							temp.prim = 0;
+							lookup.Add(blendShapes[i].name, temp);
+							keep.Add(temp);
+                        }
+					}
 					// Blend shapes
-					for (int i = 0; i < blendShapes.Count; i++) {
-						mesh.AddBlendShapeFrame(blendShapes[i].name, 1f, blendShapes[i].pos, blendShapes[i].norm, blendShapes[i].tan);
+					for (int i = 0; i < keep.Count; i++) {
+						//Debug.Log($"Shape {keep[i].name}");
+						mesh.AddBlendShapeFrame(keep[i].name, 1f, keep[i].pos, keep[i].norm, keep[i].tan);
 					}
 
 					if (normals.Count == 0 && onlyTriangles)
