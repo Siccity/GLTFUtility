@@ -95,7 +95,7 @@ void ImportGLTFAsync(string filepath) {
    Importer.ImportGLTFAsync(filepath, new ImportSettings(), OnFinishAsync);
 }
 
-void OnFinishAsync(GameObject result) {
+void OnFinishAsync(GameObject result, AnimationClip[] animations) {
    Debug.Log("Finished importing " + result.name);
 }
 ```
