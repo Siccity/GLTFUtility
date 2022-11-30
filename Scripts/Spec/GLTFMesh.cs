@@ -65,70 +65,8 @@ namespace Siccity.GLTFUtility {
 					} else {
 						for (int i = 0; i < gltfMesh.primitives.Count; i++) {
 							GLTFPrimitive primitive = gltfMesh.primitives[i];
-							// Load draco mesh
-							if (primitive.extensions != null && primitive.extensions.KHR_draco_mesh_compression != null) {
-								GLTFPrimitive.DracoMeshCompression draco = primitive.extensions.KHR_draco_mesh_compression;
-								GLTFBufferView.ImportResult bufferView = bufferViews[draco.bufferView];
-								GLTFUtilityDracoLoader loader = new GLTFUtilityDracoLoader();
-								byte[] buffer = new byte[bufferView.byteLength];
-								bufferView.stream.Seek(bufferView.byteOffset, System.IO.SeekOrigin.Begin);
-
-								bufferView.stream.Read(buffer, 0, bufferView.byteLength);
-
-								GLTFUtilityDracoLoader.MeshAttributes attribs = new GLTFUtilityDracoLoader.MeshAttributes(
-									primitive.extensions.KHR_draco_mesh_compression.attributes.POSITION ?? -1,
-									primitive.extensions.KHR_draco_mesh_compression.attributes.NORMAL ?? -1,
-									primitive.extensions.KHR_draco_mesh_compression.attributes.TEXCOORD_0 ?? -1,
-									primitive.extensions.KHR_draco_mesh_compression.attributes.JOINTS_0 ?? -1,
-									primitive.extensions.KHR_draco_mesh_compression.attributes.WEIGHTS_0 ?? -1,
-									primitive.extensions.KHR_draco_mesh_compression.attributes.COLOR_0 ?? -1
-								);
-
-								//Mesh mesh = loader.LoadMesh(buffer, attribs);
-
-								GLTFUtilityDracoLoader.AsyncMesh asyncMesh = loader.LoadMesh(buffer, attribs);
-								if (asyncMesh == null) Debug.LogWarning("Draco mesh couldn't be loaded");
-
-								submeshTrisMode.Add(primitive.mode);
-
-								// Tris
-								int vertCount = verts.Count();
-								submeshTris.Add(asyncMesh.tris.Reverse().Select(x => x + vertCount).ToList());
-
-								verts.AddRange(asyncMesh.verts.Select(x => new Vector3(-x.x, x.y, x.z)));
-
-								if (asyncMesh.norms != null) {
-									normals.AddRange(asyncMesh.norms.Select(v => { v.x = -v.x; return v; }));
-								}
-								//tangents.AddRange(asyncMesh.tangents.Select(v => { v.y = -v.y; v.z = -v.z; return v; }));
-
-								// Weights
-								if (asyncMesh.boneWeights != null) {
-									if (weights == null) weights = new List<BoneWeight>();
-									weights.AddRange(asyncMesh.boneWeights);
-								}
-
-								// BlendShapes not supported yet
-								/* for (int k = 0; k < mesh.blendShapeCount; k++) {
-									int frameCount = mesh.GetBlendShapeFrameCount(k);
-									BlendShape blendShape = new BlendShape();
-									blendShape.pos = new Vector3[frameCount];
-									blendShape.norm = new Vector3[frameCount];
-									blendShape.tan = new Vector3[frameCount];
-									for (int o = 0; o < frameCount; o++) {
-										mesh.GetBlendShapeFrameVertices(k, o, blendShape.pos, blendShape.norm, blendShape.tan);
-									}
-									blendShapes.Add(blendShape);
-								} */
-
-								// UVs
-								if (asyncMesh.uv != null) {
-									if (uv1 == null) uv1 = new List<Vector2>();
-									uv1.AddRange(asyncMesh.uv.Select(x => new Vector2(x.x, -x.y)));
-								}
-							}
 							// Load normal mesh
-							else {
+							{
 								int vertStartIndex = verts.Count;
 								submeshVertexStart.Add(vertStartIndex);
 

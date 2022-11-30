@@ -367,8 +367,6 @@ namespace Siccity.GLTFUtility {
 					switch (gLTFObject.extensionsRequired[i]) {
 						case "KHR_materials_pbrSpecularGlossiness":
 							break;
-						case "KHR_draco_mesh_compression":
-							break;
 						default:
 							Debug.LogWarning($"GLTFUtility: Required extension '{gLTFObject.extensionsRequired[i]}' not supported. Import process will proceed but results may vary.");
 							break;
