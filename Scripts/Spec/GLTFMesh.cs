@@ -199,7 +199,7 @@ namespace Siccity.GLTFUtility {
 
 						bool hasTargetNames = gltfMesh.extras != null && gltfMesh.extras.targetNames != null;
 						if (hasTargetNames) {
-							if (gltfMesh.primitives.All(x => x.targets.Count != gltfMesh.extras.targetNames.Length)) {
+							if (gltfMesh.primitives.All(x => x.targets == null || x.targets.Count != gltfMesh.extras.targetNames.Length)) {
 								Debug.LogWarning("Morph target names found in mesh " + name + " but array length does not match primitive morph target array length");
 								hasTargetNames = false;
 							}
