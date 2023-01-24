@@ -37,7 +37,23 @@ namespace Siccity.GLTFUtility {
 				if (!string.IsNullOrEmpty(path)) {
 #if UNITY_EDITOR
 					// Load textures from asset database if we can
-					Texture2D assetTexture = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(Texture2D)) as Texture2D;
+					string assetPath = path;
+					if (path.Contains("Assets") && path.Contains(":\\"))
+					{
+						string[] split = path.Split("\\");
+						Boolean hitAsset = false;
+						int counter = 0;
+						string newAssetPath = "";
+						while (counter < split.Length)
+						{
+							if (split[counter].Contains("Assets")) hitAsset = true;
+							if (hitAsset && counter + 1 < split.Length) newAssetPath += String.Format("{0}/", split[counter]);
+							else if (hitAsset && counter + 1 == split.Length) newAssetPath += split[counter];
+							counter++;
+						}
+						assetPath = newAssetPath;
+					}
+					Texture2D assetTexture = UnityEditor.AssetDatabase.LoadAssetAtPath(assetPath, typeof(Texture2D)) as Texture2D;
 					if (assetTexture != null) {
 						onFinish(assetTexture);
 						if (onProgress != null) onProgress(1f);
@@ -95,6 +111,22 @@ namespace Siccity.GLTFUtility {
 					for (int i = 0; i < images.Count; i++) {
 						string fullUri = directoryRoot + images[i].uri;
 						if (!string.IsNullOrEmpty(images[i].uri)) {
+							if (images[i].uri != null && images[i].uri.StartsWith("../"))
+							{
+								string tempRootUri = directoryRoot;
+								int dirPushBacks = images[i].uri.Split("../").Length - 1;
+								string partialUriFixed = images[i].uri.Replace("../", "");
+
+								string[] dirSplit = tempRootUri.Split("\\");
+								string newImageDir = "";
+								for (int s = 0; s < dirSplit.Length - dirPushBacks; s++)
+								{
+									newImageDir += String.Format("{0}\\", dirSplit[s]);
+								}
+								tempRootUri = newImageDir;
+								images[i].uri = partialUriFixed;
+								fullUri = tempRootUri + images[i].uri;
+							}
 							if (File.Exists(fullUri)) {
 								// If the file is found at fullUri, read it
 								byte[] bytes = File.ReadAllBytes(fullUri);
