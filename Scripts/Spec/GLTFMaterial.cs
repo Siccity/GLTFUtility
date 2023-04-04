@@ -40,12 +40,12 @@ namespace Siccity.GLTFUtility {
 			IEnumerator en = null;
 			// Load metallic-roughness materials
 			if (pbrMetallicRoughness != null) {
-				en = pbrMetallicRoughness.CreateMaterial(textures, alphaMode, shaderSettings, x => mat = x);
+				en = pbrMetallicRoughness.CreateMaterial(textures, alphaMode, doubleSided, shaderSettings, x => mat = x);
 				while (en.MoveNext()) { yield return null; };
 			}
 			// Load specular-glossiness materials
 			else if (extensions != null && extensions.KHR_materials_pbrSpecularGlossiness != null) {
-				en = extensions.KHR_materials_pbrSpecularGlossiness.CreateMaterial(textures, alphaMode, shaderSettings, x => mat = x);
+				en = extensions.KHR_materials_pbrSpecularGlossiness.CreateMaterial(textures, alphaMode, doubleSided, shaderSettings, x => mat = x);
 				while (en.MoveNext()) { yield return null; };
 			}
 			// Load fallback material
@@ -53,12 +53,27 @@ namespace Siccity.GLTFUtility {
 			// Normal texture
 			if (normalTexture != null) {
 				en = TryGetTexture(textures, normalTexture, true, tex => {
-					if (tex != null) {
-						mat.SetTexture("_BumpMap", tex);
-						mat.EnableKeyword("_NORMALMAP");
-						mat.SetFloat("_BumpScale", normalTexture.scale);
-						if (normalTexture.extensions != null) {
-							normalTexture.extensions.Apply(normalTexture, mat, "_BumpMap");
+					if (tex != null)
+					{
+						if (ShaderSettings.bHDRPShader)
+						{
+							mat.SetTexture("_NormalMap", tex);
+							mat.EnableKeyword("_NORMALMAP");
+							mat.SetFloat("_NormalScale", normalTexture.scale);
+							if (normalTexture.extensions != null)
+							{
+								normalTexture.extensions.Apply(normalTexture, mat, "_NormalMap");
+							}
+						}
+						else
+						{
+							mat.SetTexture("_BumpMap", tex);
+							mat.EnableKeyword("_NORMALMAP");
+							mat.SetFloat("_BumpScale", normalTexture.scale);
+							if (normalTexture.extensions != null)
+							{
+								normalTexture.extensions.Apply(normalTexture, mat, "_BumpMap");
+							}
 						}
 					}
 				});
@@ -78,25 +93,55 @@ namespace Siccity.GLTFUtility {
 			}
 			// Emissive factor
 			if (emissiveFactor != Color.black) {
-				mat.SetColor("_EmissionColor", emissiveFactor);
-				mat.EnableKeyword("_EMISSION");
+				if (ShaderSettings.bHDRPShader)
+				{
+					mat.SetColor("_EmissiveColor", emissiveFactor);
+					mat.SetInt("_UseEmissiveIntensity", 1);
+				}
+				else
+				{
+					mat.SetColor("_EmissionColor", emissiveFactor);
+					mat.EnableKeyword("_EMISSION");
+				}
 			}
 			// Emissive texture
 			if (emissiveTexture != null) {
 				en = TryGetTexture(textures, emissiveTexture, false, tex => {
 					if (tex != null) {
-						mat.SetTexture("_EmissionMap", tex);
-						mat.EnableKeyword("_EMISSION");
-						if (emissiveTexture.extensions != null) {
-							emissiveTexture.extensions.Apply(emissiveTexture, mat, "_EmissionMap");
+						if (ShaderSettings.bHDRPShader)
+						{
+							mat.SetTexture("_EmissiveColorMap", tex);
+							mat.SetInt("_UseEmissiveIntensity",1);
+							if (emissiveTexture.extensions != null)
+							{
+								emissiveTexture.extensions.Apply(emissiveTexture, mat, "_EmissiveColorMap");
+							}
+							mat.SetFloat("_EmissiveExposureWeight", 0.0f);
+						}
+						else
+						{
+							mat.SetTexture("_EmissionMap", tex);
+							mat.EnableKeyword("_EMISSION");
+							if (emissiveTexture.extensions != null)
+							{
+								emissiveTexture.extensions.Apply(emissiveTexture, mat, "_EmissionMap");
+							}
 						}
 					}
 				});
 				while (en.MoveNext()) { yield return null; };
 			}
 
-			if (alphaMode == AlphaMode.MASK) {
-				mat.SetFloat("_AlphaCutoff", alphaCutoff);
+			if (alphaMode == AlphaMode.MASK || alphaMode == AlphaMode.BLEND) {
+				if (ShaderSettings.bHDRPShader)
+				{
+					mat.SetInt("_AlphaCutoffEnable", 1);
+					mat.SetFloat("_AlphaCutoff", alphaCutoff);
+				}
+				else
+				{
+					mat.SetFloat("_AlphaCutoff", alphaCutoff);
+				}
 			}
 			mat.name = name;
 			onFinish(mat);
@@ -132,17 +177,74 @@ namespace Siccity.GLTFUtility {
 			public float roughnessFactor = 1f;
 			public TextureInfo metallicRoughnessTexture;
 
-			public IEnumerator CreateMaterial(GLTFTexture.ImportResult[] textures, AlphaMode alphaMode, ShaderSettings shaderSettings, Action<Material> onFinish) {
+			public IEnumerator CreateMaterial(GLTFTexture.ImportResult[] textures, AlphaMode alphaMode, bool bTwoSide, ShaderSettings shaderSettings, Action<Material> onFinish) {
 				// Shader
 				Shader sh = null;
-				if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.MetallicBlend;
-				else sh = shaderSettings.Metallic;
+				if (alphaMode == AlphaMode.BLEND)
+				{
+					if (bTwoSide)
+					{
+						sh = shaderSettings.MetallicBlendTwoSide;
+					}
+					else
+					{
+						sh = shaderSettings.MetallicBlend;
+					}
+				}
+				else
+				{
+					if (bTwoSide)
+					{
+						sh = shaderSettings.MetallicTwoSide;
+					}
+					else
+					{
+						sh = shaderSettings.Metallic;
+					}
+				}
+				//if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.MetallicBlend;
+				//else sh = shaderSettings.Metallic;
+				PiplineType piplineType = PiplineType.Default;
+				if(ShaderSettings.bHDRPShader)
+				{
+					piplineType = PiplineType.HDRP;
+				}
+				else if (GraphicsSettings.renderPipelineAsset)
+				{
+					piplineType = PiplineType.URP;
+				}
+				else
+				{
+					piplineType = PiplineType.Default;
+				}
 
 				// Material
 				Material mat = new Material(sh);
 				mat.color = baseColorFactor;
 				mat.SetFloat("_Metallic", metallicFactor);
-				mat.SetFloat("_Roughness", roughnessFactor);
+				if (piplineType == PiplineType.HDRP)
+				{
+					if (alphaMode == AlphaMode.BLEND)
+					{
+						mat.SetFloat("_SurfaceType", 1);
+						mat.SetInt("_MaterialID", 1);
+						mat.SetFloat("_AlphaCutoffEnable", 1);
+						URPHelper.SetupMaterialBlendMode(mat);
+					}
+					else if (alphaMode == AlphaMode.OPAQUE)
+					{
+						mat.SetInt("_MaterialID", 1);//Standard
+					}
+					if (bTwoSide)
+					{
+						mat.SetInt("_DoubleSidedEnable", 1);
+					}
+					mat.SetFloat("_Smoothness", 1 - roughnessFactor);
+				}
+				else
+				{
+					mat.SetFloat("_Roughness", roughnessFactor);
+				}
 
 				// Assign textures
 				if (textures != null) {
@@ -153,9 +255,21 @@ namespace Siccity.GLTFUtility {
 						} else {
 							IEnumerator en = textures[baseColorTexture.index].GetTextureCached(false, tex => {
 								if (tex != null) {
-									mat.SetTexture("_MainTex", tex);
-									if (baseColorTexture.extensions != null) {
-										baseColorTexture.extensions.Apply(baseColorTexture, mat, "_MainTex");
+									if (ShaderSettings.bHDRPShader)
+									{
+										mat.SetTexture("_BaseColorMap", tex);
+										if (baseColorTexture.extensions != null)
+										{
+											baseColorTexture.extensions.Apply(baseColorTexture, mat, "_BaseColorMap");
+										}
+									}
+									else
+									{
+										mat.SetTexture("_MainTex", tex);
+										if (baseColorTexture.extensions != null)
+										{
+											baseColorTexture.extensions.Apply(baseColorTexture, mat, "_MainTex");
+										}
 									}
 								}
 							});
@@ -182,8 +296,20 @@ namespace Siccity.GLTFUtility {
 				}
 
 				// After the texture and color is extracted from the glTFObject
-				if (mat.HasProperty("_BaseMap")) mat.SetTexture("_BaseMap", mat.mainTexture);
-				if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", baseColorFactor);
+				//if (mat.HasProperty("_BaseMap")) mat.SetTexture("_BaseMap", mat.mainTexture);
+				//if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", baseColorFactor);
+
+				if (piplineType == PiplineType.URP || piplineType == PiplineType.HDRP)
+				{
+					if (mat.HasProperty("_BaseMap")) mat.SetTexture("_BaseMap", mat.mainTexture);
+					if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", baseColorFactor);
+				}
+				else
+				{
+					if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", mat.mainTexture);
+					if (mat.HasProperty("_Color")) mat.SetColor("_Color", baseColorFactor);
+				}
+
 				onFinish(mat);
 			}
 		}
@@ -200,17 +326,64 @@ namespace Siccity.GLTFUtility {
 			/// <summary> The specular-glossiness texture </summary>
 			public TextureInfo specularGlossinessTexture;
 
-			public IEnumerator CreateMaterial(GLTFTexture.ImportResult[] textures, AlphaMode alphaMode, ShaderSettings shaderSettings, Action<Material> onFinish) {
+			public IEnumerator CreateMaterial(GLTFTexture.ImportResult[] textures, AlphaMode alphaMode, bool bTwoSide, ShaderSettings shaderSettings, Action<Material> onFinish) {
 				// Shader
 				Shader sh = null;
-				if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.SpecularBlend;
-				else sh = shaderSettings.Specular;
+				if (alphaMode == AlphaMode.BLEND)
+				{
+					if (bTwoSide)
+					{
+						sh = shaderSettings.SpecularBlendTwoSide;
+					}
+					else
+					{
+						sh = shaderSettings.SpecularBlend;
+					}
+				}
+				else
+				{
+					if (bTwoSide)
+					{
+						sh = shaderSettings.SpecularTwoSide;
+					}
+					else
+					{
+						sh = shaderSettings.Specular;
+					}
+				}
+				//if (alphaMode == AlphaMode.BLEND) sh = shaderSettings.SpecularBlend;
+				//else sh = shaderSettings.Specular;
 
 				// Material
 				Material mat = new Material(sh);
 				mat.color = diffuseFactor;
-				mat.SetColor("_SpecColor", specularFactor);
-				mat.SetFloat("_GlossyReflections", glossinessFactor);
+				if (ShaderSettings.bHDRPShader)
+				{
+					if (alphaMode == AlphaMode.BLEND)
+					{
+						mat.SetFloat("_SurfaceType", 1);
+						mat.SetInt("_MaterialID", 1);
+						mat.SetFloat("_AlphaCutoffEnable", 1);
+						URPHelper.SetupMaterialBlendMode(mat);
+					}
+					else if (alphaMode == AlphaMode.OPAQUE)
+					{
+						//mat.SetInt("_MaterialID", 1);//Standard
+						mat.SetInt("_MaterialID", 4);//Specular Color
+					}
+					if (bTwoSide)
+					{
+						mat.SetInt("_DoubleSidedEnable", 1);
+					}
+					mat.SetColor("_SpecularColor", specularFactor);
+					//mat.SetFloat("_GlossyReflections", glossinessFactor);
+					mat.SetFloat("_Smoothness", glossinessFactor);
+				}
+				else
+				{
+					mat.SetColor("_SpecColor", specularFactor);
+					mat.SetFloat("_GlossyReflections", glossinessFactor);
+				}
 
 				// Assign textures
 				if (textures != null) {
@@ -221,9 +394,21 @@ namespace Siccity.GLTFUtility {
 						} else {
 							IEnumerator en = textures[diffuseTexture.index].GetTextureCached(false, tex => {
 								if (tex != null) {
-									mat.SetTexture("_MainTex", tex);
-									if (diffuseTexture.extensions != null) {
-										diffuseTexture.extensions.Apply(diffuseTexture, mat, "_MainTex");
+									if (ShaderSettings.bHDRPShader)
+									{
+										mat.SetTexture("_BaseColorMap", tex);
+										if (diffuseTexture.extensions != null)
+										{
+											diffuseTexture.extensions.Apply(diffuseTexture, mat, "_BaseColorMap");
+										}
+									}
+									else
+									{
+										mat.SetTexture("_MainTex", tex);
+										if (diffuseTexture.extensions != null)
+										{
+											diffuseTexture.extensions.Apply(diffuseTexture, mat, "_MainTex");
+										}
 									}
 								}
 							});
@@ -238,10 +423,23 @@ namespace Siccity.GLTFUtility {
 							mat.EnableKeyword("_SPECGLOSSMAP");
 							IEnumerator en = textures[specularGlossinessTexture.index].GetTextureCached(false, tex => {
 								if (tex != null) {
-									mat.SetTexture("_SpecGlossMap", tex);
-									mat.EnableKeyword("_SPECGLOSSMAP");
-									if (specularGlossinessTexture.extensions != null) {
-										specularGlossinessTexture.extensions.Apply(specularGlossinessTexture, mat, "_SpecGlossMap");
+									if (ShaderSettings.bHDRPShader)
+									{
+										mat.SetTexture("_SpecularColorMap", tex);
+										mat.EnableKeyword("_SPECGLOSSMAP");
+										if (specularGlossinessTexture.extensions != null)
+										{
+											specularGlossinessTexture.extensions.Apply(specularGlossinessTexture, mat, "_SpecularColorMap");
+										}
+									}
+									else
+									{
+										mat.SetTexture("_SpecGlossMap", tex);
+										mat.EnableKeyword("_SPECGLOSSMAP");
+										if (specularGlossinessTexture.extensions != null)
+										{
+											specularGlossinessTexture.extensions.Apply(specularGlossinessTexture, mat, "_SpecGlossMap");
+										}
 									}
 								}
 							});
