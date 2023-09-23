@@ -337,7 +337,7 @@ namespace Siccity.GLTFUtility {
 					// Blend shapes
 					for (int i = 0; i < keep.Count; i++) {
 						//Debug.Log($"Shape {keep[i].name}");
-						mesh.AddBlendShapeFrame(keep[i].name, 1f, keep[i].pos, keep[i].norm, keep[i].tan);
+						mesh.AddBlendShapeFrame(keep[i].name, 100f, keep[i].pos, keep[i].norm, keep[i].tan);
 					}
 
 					if (normals.Count == 0 && onlyTriangles)
