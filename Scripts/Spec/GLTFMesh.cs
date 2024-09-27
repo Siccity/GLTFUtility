@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -251,6 +252,8 @@ namespace Siccity.GLTFUtility {
 					} else return new Vector3[vertCount];
 				}
 
+				private Regex blendShapeRegex = new Regex("^(.+?)\\s*(?:\\(\\s*(\\d+)\\s*(?:of|\\/)\\s*(\\d+)\\s*\\)\\s*)?$");
+
 				public Mesh ToMesh() {
 					Mesh mesh = new Mesh();
 					if (verts.Count >= ushort.MaxValue) mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
@@ -295,6 +298,7 @@ namespace Siccity.GLTFUtility {
 
 					List<BlendShape> keep = new List<BlendShape>();
 					Dictionary<string, BlendShape> lookup = new Dictionary<string, BlendShape>();
+
 					for (int i = 0; i < blendShapes.Count; i++)
 					{
 						//Debug.Log($"Shape {blendShapes[i].name} for prim {blendShapes[i].prim}");
@@ -318,7 +322,7 @@ namespace Siccity.GLTFUtility {
 							temp.tan = new Vector3[verts.Count];
 							for (int k = 0; k < verts.Count; k++)
                             {
-								temp.pos[k] = new Vector3(0,0,0);
+								temp.pos[k] = new Vector3(0, 0, 0);
 								temp.norm[k] = new Vector3(0, 0, 0);
 								temp.tan[k] = new Vector3(0, 0, 0);
 							}
@@ -335,9 +339,19 @@ namespace Siccity.GLTFUtility {
                         }
 					}
 					// Blend shapes
+
+					string blendShapeName;
+					float blendShapeWeight;
+					Match regexMatch;
 					for (int i = 0; i < keep.Count; i++) {
-						//Debug.Log($"Shape {keep[i].name}");
-						mesh.AddBlendShapeFrame(keep[i].name, 100f, keep[i].pos, keep[i].norm, keep[i].tan);
+						regexMatch = blendShapeRegex.Match(keep[i].name);
+
+						if (regexMatch.Groups[2].Value == "")
+							blendShapeWeight = 100f;
+						else
+							blendShapeWeight = 100f * (float.Parse(regexMatch.Groups[2].Value) / float.Parse(regexMatch.Groups[3].Value));
+
+						mesh.AddBlendShapeFrame(regexMatch.Groups[1].Value, blendShapeWeight, keep[i].pos, keep[i].norm, keep[i].tan);
 					}
 
 					if (normals.Count == 0 && onlyTriangles)
@@ -351,6 +365,9 @@ namespace Siccity.GLTFUtility {
 						mesh.tangents = tangents.ToArray();
 
 					mesh.name = name;
+
+					mesh.Optimize();
+
 					return mesh;
 				}
 
@@ -381,6 +398,8 @@ namespace Siccity.GLTFUtility {
 						uv[i].y = 1 - uv[i].y;
 					}
 				}
+
+				
 			}
 
 			private MeshData[] meshData;
