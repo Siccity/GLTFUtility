@@ -121,10 +121,9 @@ namespace Siccity.GLTFUtility {
 			// 8-[chunkLength+8] - chunkData = json data.
 			stream.Read(buffer, 0, 8);
 			uint chunkLength = System.BitConverter.ToUInt32(buffer, 0);
-			TextReader reader = new StreamReader(stream);
-			char[] jsonChars = new char[chunkLength];
-			reader.Read(jsonChars, 0, (int) chunkLength);
-			string json = new string(jsonChars);
+			byte[] jsonBytes = new byte[chunkLength];
+			stream.Read(jsonBytes, 0, (int) chunkLength);
+			string json = Encoding.Default.GetString(jsonBytes);
 
 			// Chunk
 			binChunkStart = chunkLength + 20;
