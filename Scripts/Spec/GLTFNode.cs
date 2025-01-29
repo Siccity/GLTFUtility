@@ -43,10 +43,10 @@ namespace Siccity.GLTFUtility {
 		}
 
 		/// <summary> Set local position, rotation and scale </summary>
-		public void ApplyTRS(Transform transform) {
+		public void ApplyTRS(Transform transform, float importScale = 1.0f) {
 			if(matrix!=Matrix4x4.identity)
 				matrix.UnpackTRS(ref translation, ref rotation, ref scale); 
-			transform.localPosition = translation;
+			transform.localPosition = translation * importScale;
 			transform.localRotation = rotation;
 			transform.localScale = scale;
 		}
@@ -57,11 +57,14 @@ namespace Siccity.GLTFUtility {
 			GLTFSkin.ImportTask skinTask;
 			List<GLTFCamera> cameras;
 
-			public ImportTask(List<GLTFNode> nodes, GLTFMesh.ImportTask meshTask, GLTFSkin.ImportTask skinTask, List<GLTFCamera> cameras) : base(meshTask, skinTask) {
+			float importScale;
+
+			public ImportTask(List<GLTFNode> nodes, GLTFMesh.ImportTask meshTask, GLTFSkin.ImportTask skinTask, List<GLTFCamera> cameras, float importScale=1.0f) : base(meshTask, skinTask) {
 				this.nodes = nodes;
 				this.meshTask = meshTask;
 				this.skinTask = skinTask;
 				this.cameras = cameras;
+				this.importScale = importScale;
 				//task = new Task(() => { });
 			}
 
@@ -96,7 +99,7 @@ namespace Siccity.GLTFUtility {
 				}
 				// Apply TRS
 				for (int i = 0; i < Result.Length; i++) {
-					nodes[i].ApplyTRS(Result[i].transform);
+					nodes[i].ApplyTRS(Result[i].transform, this.importScale);
 				}
 				// Setup components
 				for (int i = 0; i < Result.Length; i++) {
