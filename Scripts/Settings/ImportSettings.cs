@@ -28,7 +28,6 @@ namespace Siccity.GLTFUtility {
 		[Range(1, 64)]
 		public float packMargin = 4;
 
-		[Range(-1000f, 1000f)]
 		public float unitScale = 1.0f;
 
 		[Tooltip("Script used to process extra data.")]

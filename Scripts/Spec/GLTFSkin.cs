@@ -78,7 +78,7 @@ namespace Siccity.GLTFUtility {
 					Vector4 row2 = m.GetRow(2);
 					row2.x = -row2.x;
 					Vector4 row3 = m.GetRow(3);
-					row3 *= new Vector4(-1.0f, importScale, importScale, importScale);
+					row3 = Vector4.scale(row3, new Vector4(-1.0f, importScale, importScale, importScale));
 					m.SetColumn(0, row0);
 					m.SetColumn(1, row1);
 					m.SetColumn(2, row2);
