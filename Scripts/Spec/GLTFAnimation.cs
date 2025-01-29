@@ -106,9 +106,9 @@ namespace Siccity.GLTFUtility {
 						AnimationCurve posY = new AnimationCurve();
 						AnimationCurve posZ = new AnimationCurve();
 						for (int k = 0; k < keyframeInput.Length; k++) {
-							posX.AddKey(CreateKeyframe(k, keyframeInput, pos, x => -x.x, interpolationMode));
-							posY.AddKey(CreateKeyframe(k, keyframeInput, pos, x => x.y, interpolationMode));
-							posZ.AddKey(CreateKeyframe(k, keyframeInput, pos, x => x.z, interpolationMode));
+							posX.AddKey(CreateKeyframe(k, keyframeInput, pos, x => -x.x*importSettings.unitScale, interpolationMode));
+							posY.AddKey(CreateKeyframe(k, keyframeInput, pos, x => x.y*importSettings.unitScale, interpolationMode));
+							posZ.AddKey(CreateKeyframe(k, keyframeInput, pos, x => x.z*importSettings.unitScale, interpolationMode));
 						}
 						result.clip.SetCurve(relativePath, typeof(Transform), "localPosition.x", posX);
 						result.clip.SetCurve(relativePath, typeof(Transform), "localPosition.y", posY);

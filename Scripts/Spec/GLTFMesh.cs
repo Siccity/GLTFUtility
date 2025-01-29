@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,7 +63,7 @@ namespace Siccity.GLTFUtility {
 					public int prim;
 				}
 
-				public MeshData(GLTFMesh gltfMesh, GLTFAccessor.ImportResult[] accessors, GLTFBufferView.ImportResult[] bufferViews) {
+				public MeshData(GLTFMesh gltfMesh, GLTFAccessor.ImportResult[] accessors, GLTFBufferView.ImportResult[] bufferViews, float importScale = 1.0f) {
 					name = gltfMesh.name;
 					if (gltfMesh.primitives.Count == 0) {
 						Debug.LogWarning("0 primitives in mesh");
@@ -100,7 +100,7 @@ namespace Siccity.GLTFUtility {
 								int vertCount = verts.Count();
 								submeshTris.Add(asyncMesh.tris.Reverse().Select(x => x + vertCount).ToList());
 
-								verts.AddRange(asyncMesh.verts.Select(x => new Vector3(-x.x, x.y, x.z)));
+								verts.AddRange(asyncMesh.verts.Select(x => new Vector3(-x.x*importScale, x.y*importScale, x.z*importScale)));
 
 								if (asyncMesh.norms != null) {
 									normals.AddRange(asyncMesh.norms.Select(v => { v.x = -v.x; return v; }));
@@ -136,13 +136,13 @@ namespace Siccity.GLTFUtility {
 							else {
 								int vertStartIndex = verts.Count;
 								submeshVertexStart.Add(vertStartIndex);
-
+								
 								// Verts - (X points left in GLTF)
 								if (primitive.attributes.POSITION.HasValue) {
-									IEnumerable<Vector3> newVerts = accessors[primitive.attributes.POSITION.Value].ReadVec3(true).Select(v => { v.x = -v.x; return v; });
+									IEnumerable<Vector3> newVerts = accessors[primitive.attributes.POSITION.Value].ReadVec3(true).Select(v => { v.x = -v.x; return v*importScale; });
 									verts.AddRange(newVerts);
 								}
-
+								
 								submeshVertexCount.Add(verts.Count - vertStartIndex);
 
 								int vertCount = verts.Count;
@@ -222,7 +222,7 @@ namespace Siccity.GLTFUtility {
 							if (primitive.targets != null) {
 								for (int k = 0; k < primitive.targets.Count; k++) {
 									BlendShape blendShape = new BlendShape();
-									blendShape.pos = GetMorphWeights(primitive.targets[k].POSITION, submeshVertexStart[i], finalVertCount, accessors);
+									blendShape.pos = GetMorphWeights(primitive.targets[k].POSITION, submeshVertexStart[i], finalVertCount, accessors, importScale);
 									blendShape.norm = GetMorphWeights(primitive.targets[k].NORMAL, submeshVertexStart[i], finalVertCount, accessors);
 									blendShape.tan = GetMorphWeights(primitive.targets[k].TANGENT, submeshVertexStart[i], finalVertCount, accessors);
 									blendShape.startvert = submeshVertexStart[i];
@@ -237,13 +237,13 @@ namespace Siccity.GLTFUtility {
 					}
 				}
 
-				private Vector3[] GetMorphWeights(int? accessor, int vertStartIndex, int vertCount, GLTFAccessor.ImportResult[] accessors) {
+				private Vector3[] GetMorphWeights(int? accessor, int vertStartIndex, int vertCount, GLTFAccessor.ImportResult[] accessors, float importScale = 1.0f) {
 					if (accessor.HasValue) {
 						if (accessors[accessor.Value] == null) {
 							Debug.LogWarning("Accessor is null");
 							return new Vector3[vertCount];
 						}
-						Vector3[] accessorData = accessors[accessor.Value].ReadVec3(true).Select(v => { v.x = -v.x; return v; }).ToArray();
+						Vector3[] accessorData = accessors[accessor.Value].ReadVec3(true).Select(v => { v.x = -v.x; v.x*=importScale; v.y*=importScale; v.z*=importScale; return v; }).ToArray();
 						if (accessorData.Length != vertCount) {
 							Vector3[] resized = new Vector3[vertCount];
 							Array.Copy(accessorData, 0, resized, vertStartIndex, accessorData.Length);
@@ -415,7 +415,7 @@ namespace Siccity.GLTFUtility {
 
 					meshData = new MeshData[meshes.Count];
 					for (int i = 0; i < meshData.Length; i++) {
-						meshData[i] = new MeshData(meshes[i], accessorTask.Result, bufferViewTask.Result);
+						meshData[i] = new MeshData(meshes[i], accessorTask.Result, bufferViewTask.Result, importSettings.unitScale);
 					}
 				});
 			}

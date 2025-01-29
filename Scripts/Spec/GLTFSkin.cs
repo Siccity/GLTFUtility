@@ -14,6 +14,8 @@ namespace Siccity.GLTFUtility {
 		public int? skeleton;
 		public string name;
 
+		public float importScale;
+
 		public class ImportResult {
 			public Matrix4x4[] inverseBindMatrices;
 			public int[] joints;
@@ -53,10 +55,10 @@ namespace Siccity.GLTFUtility {
 			}
 		}
 
-		public ImportResult Import(GLTFAccessor.ImportResult[] accessors) {
+		public ImportResult Import(GLTFAccessor.ImportResult[] accessors, float importScale=1.0f) {
 			ImportResult result = new ImportResult();
 			result.joints = joints;
-
+			this.importScale = importScale;
 			// Inverse bind matrices
 			if (inverseBindMatrices.HasValue) {
 				result.inverseBindMatrices = accessors[inverseBindMatrices.Value].ReadMatrix4x4();
@@ -76,7 +78,7 @@ namespace Siccity.GLTFUtility {
 					Vector4 row2 = m.GetRow(2);
 					row2.x = -row2.x;
 					Vector4 row3 = m.GetRow(3);
-					row3.x = -row3.x;
+					row3 = Vector4.Scale(row3, new Vector4(-importScale, importScale, importScale, 1.0f));
 					m.SetColumn(0, row0);
 					m.SetColumn(1, row1);
 					m.SetColumn(2, row2);
@@ -88,13 +90,13 @@ namespace Siccity.GLTFUtility {
 		}
 
 		public class ImportTask : Importer.ImportTask<ImportResult[]> {
-			public ImportTask(List<GLTFSkin> skins, GLTFAccessor.ImportTask accessorTask) : base(accessorTask) {
+			public ImportTask(List<GLTFSkin> skins, GLTFAccessor.ImportTask accessorTask, float importScale=1.0f) : base(accessorTask) {
 				task = new Task(() => {
 					if (skins == null) return;
 
 					Result = new ImportResult[skins.Count];
 					for (int i = 0; i < Result.Length; i++) {
-						Result[i] = skins[i].Import(accessorTask.Result);
+						Result[i] = skins[i].Import(accessorTask.Result, importScale);
 					}
 				});
 			}
