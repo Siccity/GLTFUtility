@@ -161,7 +161,7 @@ namespace Siccity.GLTFUtility {
 
 								// Tangents - (X points left in GLTF)
 								if (primitive.attributes.TANGENT.HasValue) {
-									tangents.AddRange(accessors[primitive.attributes.TANGENT.Value].ReadVec4(true).Select(v => { v.y = -v.y; v.z = -v.z; return v; }));
+									tangents.AddRange(accessors[primitive.attributes.TANGENT.Value].ReadVec4(true).Select(v => { v.y = -v.y; v.z = -v.z; return -v; }));
 								}
 
 								// Vertex colors
